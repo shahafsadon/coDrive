@@ -1,21 +1,15 @@
 FROM gcc:latest
 
-# Install cmake AND git
-RUN apt-get update && apt-get install -y cmake git
+RUN apt-get update && apt-get install -y cmake
 
-# Set up the app directory
-WORKDIR /usr/src/app
-COPY . .
+COPY . /usr/src/mytest
 
-# Create the build directory
+WORKDIR /usr/src/mytest
+
 RUN mkdir build
-WORKDIR /usr/src/app/build
+WORKDIR /usr/src/mytest/build
 
-# Run cmake (this will download gtest)
-RUN cmake ..
+RUN cmake .. && make
 
-# Run make (this will compile your code and tests)
-RUN make
-
-# Set the default command to run your tests
+# Run tests
 CMD ["./runTests"]
