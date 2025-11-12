@@ -5,77 +5,75 @@
 #include <memory> // 
 #include <stdexcept>
 
-// ---SCRUM-29 Stubs---
-// needed signatures for file compilation
-struct Command {
-    virtual ~Command() = default;
-};
-
-struct AddCommand : public Command {
-};
-
-struct GetCommand : public Command {
-};
-
-struct SearchCommand : public Command {
-};
-
-// Temporary scrub to assure "RED" tests
-class Parser {
-public :
-    Parser() {}
-
-    std::unique_ptr<Command> parse(const std::string& input) {
-        return nullptr;
-    }
-};
+#include "../src/CommandParser.h"
+#include "../src/ICommand.h"
+#include "../src/ConcreteCommands.h"
 
 // ---Test Fixture---
-// Parser object for tests
 class ParserTest : public ::testing::Test {
 protected :
-    Parser parser;
+    CommandParser parser;
 };
 
 //---Tests---
-// "RED" test
+// "RED" test now "GREEN"
 TEST_F(ParserTest, ShouldParseAddCommand) {
     std::string input = "add file1.txt content";
-    std::unique_ptr<Command> cmd = parser.parse(input);
+    std::unique_ptr<ICommand> cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
+
+    // Check that it's the correct command typee
+    AddArticleCommand* addCmd = dynamic_cast<AddArticleCommand*>(cmd.get());
+    ASSERT_NE(addCmd, nullptr);
 }
 
-// "RED" test
+// "RED" test now "GREEN"
 TEST_F(ParserTest, ShouldParseGetCommand) {
     std::string input = "get file1.txt ";
-    std::unique_ptr<Command> cmd = parser.parse(input);
+    std::unique_ptr<ICommand> cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
+
+    // Check that it's the correct command type
+    GetArticleCommand* getCmd = dynamic_cast<GetArticleCommand*>(cmd.get());
+    ASSERT_NE(getCmd, nullptr);
 }
 
-// "RED" test
+// "RED" test now "GREEN"
 TEST_F(ParserTest, ShouldParseSearchCommand) {
     std::string input = "search content";
-    std::unique_ptr<Command> cmd = parser.parse(input);
+    std::unique_ptr<ICommand> cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
+
+    // Check that it's the correct command type
+    SearchArticleCommand* searchCmd = dynamic_cast<SearchArticleCommand*>(cmd.get());
+    ASSERT_NE(searchCmd, nullptr);
 }
 
-// "GREEN" test
+// "GREEN" test MODIFIED to stay "Green"
 TEST_F(ParserTest, ShouldIgnoreInvalidCommand) {
     std::string input = "g";
-    std::unique_ptr<Command> cmd = parser.parse(input);
+    std::unique_ptr<ICommand> cmd = parser.parse(input);
 
-    EXPECT_EQ(cmd, nullptr);
+    ASSERT_NE(cmd, nullptr);
+
+    // That is specifically an InvalidCommand.
+    InvalidCommand* invalidCmd = dynamic_cast<InvalidCommand*>(cmd.get());
+    ASSERT_NE(invalidCmd, nullptr);
 }
 
-// "GREEN" test
+// "GREEN" test MODIFIED to stay "Green"
 TEST_F(ParserTest, ShouldIgnoreIncompleteCommand) {
     std::string input = "add";
-    std::unique_ptr<Command> cmd = parser.parse(input);
+    std::unique_ptr<ICommand> cmd = parser.parse(input);
 
-    EXPECT_EQ(cmd, nullptr);
+    ASSERT_NE(cmd, nullptr);
+
+    // That is specifically an InvalidCommand.
+    InvalidCommand* invalidCmd = dynamic_cast<InvalidCommand*>(cmd.get());
+    ASSERT_NE(invalidCmd, nullptr);
 }
 
 // --- Main Function ---
