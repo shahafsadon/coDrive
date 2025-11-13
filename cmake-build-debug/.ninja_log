@@ -1,0 +1,9 @@
+# ninja log v6
+12	1087	7847338066807948	CMakeFiles/app_logic.dir/src/CommandParser.cpp.obj	9fa00dfed126e03e
+1091	1288	7847338077603761	libapp_logic.a	42fa947d9096d227
+17	1828	7847338066854776	_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.obj	41bd8ca01a89bc8e
+23	2083	7847338066916988	CMakeFiles/runTests.dir/tests/CLIParserTest.cpp.obj	f974136aacb6cdf8
+5	7933	7847338066744065	_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.obj	b4a6658bf1b4e58
+7935	10854	7847338146038237	lib/libgtest.a	fe8071ec989231a6
+10855	10934	7847338175227375	lib/libgtest_main.a	549a1725d765944b
+10935	14499	7847338176036904	runTests.exe	1f58dd57d2d54222
