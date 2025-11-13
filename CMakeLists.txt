@@ -20,10 +20,6 @@ add_library(app_logic
     src/ICommand.h
 )
 
-# add_executable(runApp src/main.cpp)
-#
-# target_link_libraries(runApp app_logic
-
 add_executable(runTests tests/CLIParserTest.cpp)
 
 target_link_libraries(runTests gtest gtest_main app_logic)
