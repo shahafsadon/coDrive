@@ -1,0 +1,21 @@
+# ninja log v6
+2	74	7847337423430828	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	c53299fcde7329da
+2	74	7847337423430828	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-mkdir	c53299fcde7329da
+74	924	7847337431943291	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	f023342653b1685
+74	924	7847337431943291	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-download	f023342653b1685
+925	990	7847337432601107	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	5ee919f103345930
+925	990	7847337432601107	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-update	5ee919f103345930
+990	1057	7847337433267492	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	520379af210ecf51
+990	1057	7847337433267492	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-patch	520379af210ecf51
+1057	1121	7847337433912471	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	98a38674d5b5b2ab
+1057	1121	7847337433912471	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-configure	98a38674d5b5b2ab
+1121	1186	7847337434568328	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	5b2ed70f73c85796
+1121	1186	7847337434568328	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-build	5b2ed70f73c85796
+1186	1247	7847337435179783	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	508b5133667d446f
+1186	1247	7847337435179783	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-install	508b5133667d446f
+1247	1311	7847337435818072	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	ba58f724c27a68f1
+1247	1311	7847337435818072	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-test	ba58f724c27a68f1
+1311	1398	7847337436689970	CMakeFiles/googletest-populate-complete	c33330207bb69202
+1311	1398	7847337436689970	googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	c33330207bb69202
+1311	1398	7847337436689970	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/CMakeFiles/googletest-populate-complete	c33330207bb69202
+1311	1398	7847337436689970	C:/Users/user/coDrive/cmake-build-debug/_deps/googletest-subbuild/googletest-populate-prefix/src/googletest-populate-stamp/googletest-populate-done	c33330207bb69202
