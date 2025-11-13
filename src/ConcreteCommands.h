@@ -6,9 +6,15 @@
  * @brief Execution: for invalid command
  */
 class InvalidCommand : public ICommand {
+private:
+    std::string error_message_; // Saves error message
+
 public:
-    void execute() override {
-        // Nothing for now
+    // Constructor to include error message
+    InvalidCommand(const std::string& message) : error_message_(message) {}
+
+    std::string execute() override {
+        return "ERROR " + error_message_;
     }
 };
 
@@ -23,8 +29,10 @@ public:
     AddArticleCommand(const std::string& filename, const std::string& text)
         : filename_(filename), text_(text) {}
 
-    void execute() override {
-        // ToDo:
+    std::string execute() override {
+        // ToDo: (RLE_Engine)
+
+        return "";
     }
 };
 
@@ -37,8 +45,10 @@ private:
 public:
     GetArticleCommand(const std::string& filename) : filename_(filename) {}
 
-    void execute() override {
-        // ToDo:
+    std::string execute() override {
+        // ToDo: (RLE_Engine)
+
+        return "";
     }
 };
 
@@ -51,7 +61,9 @@ private:
 public:
     SearchArticleCommand(const std::string& content) : content_(content) {}
 
-    void execute() override {
-        // ToDo:
+    std::string execute() override {
+        // ToDo: (RLE_Engine)
+
+        return "";
     }
 };

@@ -5,5 +5,7 @@
 class ICommand {
 public:
     virtual ~ICommand() = default;
-    virtual void execute() = 0;
+
+    // execute() returns a string to be printed on the console.
+    virtual std::string execute() = 0;
 };
