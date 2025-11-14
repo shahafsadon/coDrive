@@ -1,38 +1,44 @@
 #include "RLECompressor.h"
 
-// NOTE for coDrive:
-// This is the minimal version of the RLE encoder.
-// Just enough to make the tests green.
-// We'll revisit this in the refactor step and clean up anything weird.
+// Note for team:
+// Refactored version is same behavior as Green phase,
+// but logic is broken into smaller helpers and naming is clearer.
 
 std::string RLECompressor::compress(const std::string& input) {
 
-    // Edge case: empty input. Tests expect empty output.
+    // Basic sanity check, empty string stays empty.
     if (input.empty()) {
         return "";
     }
 
-    std::string out;
-    char current = input[0];   // track which char we're counting
-    int count = 1;             // how many times it repeats
+    std::string output;
+    char currentChar = input[0];   // char we are currently counting
+    int runLength = 1;             // number of consecutive chars
 
-    // Scan through the string and count consecutive duplicates
+    // Iterate over the rest of the characters
     for (size_t i = 1; i < input.size(); ++i) {
-        if (input[i] == current) {
-            count++;    // same char: continue counting
-        } else {
-            // Different char: flush the previous block
-            // NOTE: concatenating char + string is slightly ugly,
-            // but ok for now (we'll polish it in refactor).
-            out += current + std::to_string(count);
 
-            current = input[i];   // start tracking the next char
-            count = 1;
+        if (input[i] == currentChar) {
+            // Same char, increase the run count
+            runLength++;
+        } else {
+            // Different char, push previous block into output
+            output += buildRunBlock(currentChar, runLength);
+
+            // Start tracking the new character
+            currentChar = input[i];
+            runLength = 1;
         }
     }
 
-    // Flush the last block after loop ends
-    out += current + std::to_string(count);
+    // Don't forget to flush the final block
+    output += buildRunBlock(currentChar, runLength);
 
-    return out;
+    return output;
+}
+
+// Helper function to build the encoded block
+std::string RLECompressor::buildRunBlock(char ch, int count) const {
+    // Using simple string operations, keeps things readable.
+    return std::string(1, ch) + std::to_string(count);
 }
