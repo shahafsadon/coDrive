@@ -1,25 +1,51 @@
 cmake_minimum_required(VERSION 3.14)
-project(my_project)
+project(coDrive)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# GoogleTest via FetchContent
 include(FetchContent)
+
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+        googletest
+        URL https://github.com/google/googletest/archive/refs/heads/main.zip
 )
 
+# Prevent override of parent compiler flags
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(googletest)
 
+
+# App Logic Library
 add_library(app_logic
-    src/CommandParser.cpp
-    src/CommandParser.h
-    src/ConcreteCommands.h
-    src/ICommand.h
+        src/CommandParser.cpp
+        src/RLECompressor.cpp
+        src/RLEDecompressor.cpp
+        src/FileManager.cpp
 )
 
-add_executable(runTests tests/CLIParserTest.cpp)
 
-target_link_libraries(runTests gtest gtest_main app_logic)
+# Tests target
+add_executable(runTests
+        tests/CLIParserTest.cpp
+        tests/RLETest.cpp
+)
+
+target_link_libraries(runTests
+        gtest
+        gtest_main
+        app_logic
+)
+# MAIN APPLICATION EXECUTABLE
+add_executable(coDriveApp
+        src/main.cpp
+)
+
+target_link_libraries(coDriveApp
+        app_logic
+)
+
+enable_testing()
+add_test(NAME AllTests COMMAND runTests)

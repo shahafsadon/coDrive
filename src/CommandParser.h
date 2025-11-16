@@ -1,23 +1,33 @@
 #pragma once
-#include <string>
 #include <memory>
+#include <string>
+#include <sstream>
 #include "ICommand.h"
+#include "FileManager.h"
 
-/** 
- * @brief commands parser which gets an undefined 
- * command and turn it to a specific command
- * @param private functions used for SRP violation
+/**
+ * @brief Converts raw user input into concrete command objects.
+ *        Each command receives a reference to the shared FileManager.
  */
 class CommandParser {
-public:
-    std::unique_ptr<ICommand> parse(const std::string& inputLine);
 private:
-    // Helper to try parsing 'add'
-    std::unique_ptr<ICommand> tryParseAdd(std::stringstream& ss, const std::string& commandType);
-    
-    // Helper to try parsing 'get'
-    std::unique_ptr<ICommand> tryParseGet(std::stringstream& ss, const std::string& commandType);
-    
-    // Helper to try parsing 'search'
-    std::unique_ptr<ICommand> tryParseSearch(std::stringstream& ss, const std::string& commandType);
+ // Reference to the FileManager used across all commands
+ FileManager& file_manager_;
+
+public:
+ /**
+  * @brief Constructor that injects the FileManager dependency.
+  */
+ explicit CommandParser(FileManager& fm);
+
+ /**
+  * @brief Parses a full line of user input and returns
+  *        the matching command implementation.
+  */
+ std::unique_ptr<ICommand> parse(const std::string& input);
+
+private:
+ std::unique_ptr<ICommand> tryParseAdd(std::stringstream& ss);
+ std::unique_ptr<ICommand> tryParseGet(std::stringstream& ss);
+ std::unique_ptr<ICommand> tryParseSearch(std::stringstream& ss);
 };

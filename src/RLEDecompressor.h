@@ -2,16 +2,22 @@
 #include <string>
 #include <stdexcept>
 
-// RLEDecompressor handles decoding strings encoded by RLE.
-// Example: "a3b2" to "aaabb".
+/**
+ * Basic RLE decompressor that can reverse the exact format
+ * produced by RLECompressor:
+ *
+ *     <char><count>
+ *
+ * Works with ANY character (letters, spaces, punctuation, etc.)
+ * because we only distinguish between:
+ *     - non-digit → a symbol
+ *     - digit → part of the number
+ */
 class RLEDecompressor {
 public:
     std::string decompress(const std::string& input);
 
 private:
-    // Helper: append "count" copies of character "ch" to output.
-    void appendRun(std::string& output, char ch, int count) const;
-
-    // Helper: checks if a char is a valid letter for RLE.
-    bool isValidSymbol(char c) const;
+    // Helper to append a character 'count' times
+    void appendRun(std::string& output, char symbol, int count);
 };

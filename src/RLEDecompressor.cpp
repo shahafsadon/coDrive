@@ -1,59 +1,50 @@
 #include "RLEDecompressor.h"
+#include <cctype>
 
-// Note for team:
-// This is a refactored version of the Green decode logic.
-// Same behavior, but split into smaller helpers and with basic
-// validation for malformed input.
+/**
+ * Appends 'symbol' to 'output' exactly 'count' times.
+ */
+void RLEDecompressor::appendRun(std::string& output, char symbol, int count) {
+    if (count <= 0) return;
 
-std::string RLEDecompressor::decompress(const std::string& input) {
-
-    if (input.empty()) {
-        return "";
+    output.reserve(output.size() + count);
+    for (int i = 0; i < count; ++i) {
+        output.push_back(symbol);
     }
+}
 
+/**
+ * Decompresses RLE format: <char><count>
+ *
+ * We do NOT restrict characters — any character is allowed.
+ * Only digits are treated as part of the count.
+ */
+std::string RLEDecompressor::decompress(const std::string& input) {
     std::string output;
-    char currentChar = '\0';       // symbol we're currently decoding
-    std::string number;            // the digits after the symbol
+    char currentChar = '\0';
+    std::string number;
 
     for (char c : input) {
-
-        if (std::isalpha(c)) {
-            // Flush previous block before starting a new one
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            // The digit is part of the count
+            number.push_back(c);
+        } else {
+            // New symbol encountered → write previous run
             if (currentChar != '\0' && !number.empty()) {
                 int count = std::stoi(number);
                 appendRun(output, currentChar, count);
             }
 
-            // Start a new run
             currentChar = c;
             number.clear();
         }
-        else if (std::isdigit(c)) {
-            number.push_back(c);
-        }
-        else {
-            // Basic guard against weird inputs, just preventing silent failures.
-            throw std::runtime_error("Invalid character in RLE input.");
-        }
     }
 
-    // Flush final block
+    // Write the last pending run
     if (currentChar != '\0' && !number.empty()) {
         int count = std::stoi(number);
         appendRun(output, currentChar, count);
     }
 
     return output;
-}
-
-// Adds count copies of "ch" to the output.
-// Team note: keeping this small and simple.
-void RLEDecompressor::appendRun(std::string& output, char ch, int count) const {
-    output.append(count, ch);
-}
-
-// For future extension (symbols allowed in RLE)
-// Currently unused, but left for clarity/symmetry.
-bool RLEDecompressor::isValidSymbol(char c) const {
-    return std::isalpha(c);
 }

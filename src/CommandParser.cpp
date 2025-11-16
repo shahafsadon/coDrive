@@ -1,100 +1,84 @@
-/** including sstream in order to test the strings
- * including CommandParser.h for undefined command
- * including ConcreteCommand to practice defined commands
- */
 #include "CommandParser.h"
-#include <string>
-#include <memory>
-#include <sstream>
 #include "ConcreteCommands.h"
 
-using namespace std;
-
-/** @brief Analyzes undefined commands to defined commands
- * @param inputLine - Holds commands
- * @return Unique pointer to current command
- * or invalid command if not exists
+/**
+ * @brief Helper function to remove leading and trailing whitespace.
  */
-unique_ptr<ICommand> CommandParser::parse(const string& inputLine) {
-
-    // To check each string in the command alone
-    stringstream ss(inputLine);
-    string command;
-
-    ss >> command; // Reads first word
-
-    // For SRP violation
-    if (command == "add") {
-        return tryParseAdd(ss, command);
-    }
-    
-    if (command == "get") {
-        return tryParseGet(ss, command);
-    }
-    
-    if (command == "search") {
-        return tryParseSearch(ss, command);
-    }
-
-    // REFACTOR: Pass a specific error message for unknown commands
-    return make_unique<InvalidCommand>("Unknown command '" + command + "'.");
+static std::string trim(const std::string& s) {
+    size_t start = s.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return "";
+    size_t end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
 }
 
-// ---Command Logic "add"---
-unique_ptr<ICommand> CommandParser::tryParseAdd(stringstream& ss, const string& commandType) {
-    string fileName;
-    string text;
+CommandParser::CommandParser(FileManager& fm)
+    : file_manager_(fm) {}
 
+/**
+ * @brief Splits the input into the command name and parameters,
+ *        then dispatches to the correct parsing function.
+ */
+std::unique_ptr<ICommand> CommandParser::parse(const std::string& inputLine) {
+
+    std::stringstream ss(inputLine);
+    std::string command;
+    ss >> command;
+
+    if (command == "add")    return tryParseAdd(ss);
+    if (command == "get")    return tryParseGet(ss);
+    if (command == "search") return tryParseSearch(ss);
+
+    return std::make_unique<InvalidCommand>("Unknown command '" + command + "'.");
+}
+
+/**
+ * @brief Parses: add <filename> <text>
+ */
+std::unique_ptr<ICommand> CommandParser::tryParseAdd(std::stringstream& ss) {
+    std::string fileName;
     ss >> fileName;
-    getline(ss, text);
+    fileName = trim(fileName);
 
-    if (!text.empty() && text[0] == ' ') {
-        text = text.substr(1);
-    }
-    
-    // Validation: command is invalid if arguments are missing
+    std::string text;
+    std::getline(ss, text);
+    text = trim(text);
+
     if (fileName.empty() || text.empty()) {
-        return make_unique<InvalidCommand>("'add' requires a filename and content."); 
+        return std::make_unique<InvalidCommand>(
+            "'add' requires a filename and content.");
     }
-    
-    return make_unique<AddArticleCommand>(fileName, text);
+
+    return std::make_unique<AddArticleCommand>(fileName, text, file_manager_);
 }
 
-// ---Command Logic "get"---
-unique_ptr<ICommand> CommandParser::tryParseGet(stringstream& ss, const string& commandType) {
-    string fileName;
-
+/**
+ * @brief Parses: get <filename>
+ */
+std::unique_ptr<ICommand> CommandParser::tryParseGet(std::stringstream& ss) {
+    std::string fileName;
     ss >> fileName;
-    
-    // Validation: command is invalid if arguments are missing
+    fileName = trim(fileName);
+
     if (fileName.empty()) {
-        return make_unique<InvalidCommand>("'get' required file."); 
+        return std::make_unique<InvalidCommand>(
+            "'get' requires a filename.");
     }
 
-    // Check for extra arguments
-    string extra;
-    if (ss >> extra) {
-        return make_unique<InvalidCommand>("'get' takes only one argument (filename).");
-    }
-    
-    return make_unique<GetArticleCommand>(fileName);
+    return std::make_unique<GetArticleCommand>(fileName, file_manager_);
 }
 
-// ---Command Logic "search"---
-unique_ptr<ICommand> CommandParser::tryParseSearch(stringstream& ss, const string& commandType) {
-    string content;
-    getline(ss, content);
+/**
+ * @brief Parses: search <text>
+ */
+std::unique_ptr<ICommand> CommandParser::tryParseSearch(std::stringstream& ss) {
+    std::string content;
+    std::getline(ss, content);
+    content = trim(content);
 
-    if (!content.empty() && content[0] == ' ') {
-        content = content.substr(1);
-    }
-    
-    // Validation: command is invalid if arguments are missing
     if (content.empty()) {
-        return make_unique<InvalidCommand>("'search' required content."); 
+        return std::make_unique<InvalidCommand>(
+            "'search' requires content to search.");
     }
-    
-    return make_unique<SearchArticleCommand>(content);
+
+    return std::make_unique<SearchArticleCommand>(content, file_manager_);
 }
-
-
