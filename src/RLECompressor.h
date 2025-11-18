@@ -1,8 +1,14 @@
 #pragma once
 #include <string>
 
-// Just the basic interface for now.
-// We'll fill in the real logic once the tests tell us what we need.
+/**
+ * Simple Run-Length Encoding (RLE) compressor.
+ * Goes over the input text and replaces each sequence
+ * of identical characters with:   <char><count>
+ *
+ * Example:
+ *     "aaabb"  →  "a3b2"
+ */
 class RLECompressor {
 public:
     std::string compress(const std::string& input);

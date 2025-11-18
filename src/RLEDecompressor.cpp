@@ -1,44 +1,50 @@
 #include "RLEDecompressor.h"
+#include <cctype>
 
-// NOTE:
-// Same idea here, minimal decode logic.
-// Reads something like "a3b2" and expands it to "aaabb".
-// If we later need to handle weird input (multi-digit counts etc.),
-// we’ll deal with it in refactor.
+/**
+ * Appends 'symbol' to 'output' exactly 'count' times.
+ */
+void RLEDecompressor::appendRun(std::string& output, char symbol, int count) {
+    if (count <= 0) return;
 
-std::string RLEDecompressor::decompress(const std::string& input) {
-
-    if (input.empty()) {
-        return "";
+    output.reserve(output.size() + count);
+    for (int i = 0; i < count; ++i) {
+        output.push_back(symbol);
     }
+}
 
-    std::string out;
-    char currentChar = '\0';   // the letter we are currently decoding
-    std::string number;        // the digits after the letter (.."12")
+/**
+ * Decompresses RLE format: <char><count>
+ *
+ * We do NOT restrict characters — any character is allowed.
+ * Only digits are treated as part of the count.
+ */
+std::string RLEDecompressor::decompress(const std::string& input) {
+    std::string output;
+    char currentChar = '\0';
+    std::string number;
 
     for (char c : input) {
-        if (std::isalpha(c)) {
-            // If we already had a block waiting, flush it
+        if (std::isdigit(static_cast<unsigned char>(c))) {
+            // The digit is part of the count
+            number.push_back(c);
+        } else {
+            // New symbol encountered → write previous run
             if (currentChar != '\0' && !number.empty()) {
                 int count = std::stoi(number);
-                out.append(count, currentChar);
+                appendRun(output, currentChar, count);
             }
 
-            // Start a new block
             currentChar = c;
             number.clear();
         }
-        else {
-            // Digit: add it to the number for this block
-            number += c;
-        }
     }
 
-    // Flush the last block after loop ends
+    // Write the last pending run
     if (currentChar != '\0' && !number.empty()) {
         int count = std::stoi(number);
-        out.append(count, currentChar);
+        appendRun(output, currentChar, count);
     }
 
-    return out;
+    return output;
 }

@@ -1,7 +1,23 @@
-# Prerequisites
-*.d
+# CLion / JetBrains
+.idea/
+*.iml
 
-# Compiled Object files
+# Build directories
+cmake-build-debug/
+cmake-build-release/
+cmake-build-*/
+build/
+out/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+install_manifest.txt
+
+# Object files
 *.slo
 *.lo
 *.o
@@ -13,20 +29,12 @@
 
 # Linker files
 *.ilk
-
-# Debugger Files
 *.pdb
 
-# Compiled Dynamic libraries
+# Libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
@@ -37,5 +45,15 @@
 *.out
 *.app
 
-# debug information files
+# Debug info
+*.dSYM/
 *.dwo
+
+# Misc
+*.log
+*.tmp
+*.swp
+.DS_Store
+
+# Ignore runtime folder created by the program
+articles/
