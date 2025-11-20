@@ -8,13 +8,20 @@
 #include "../src/CommandParser.h"
 #include "../src/ICommand.h"
 #include "../src/ConcreteCommands.h"
+#include "../src/FileManager.h" 
 
 using namespace std;
 
-// ---Test Fixture---
+// --- Test Fixture ---
 class ParserTest : public ::testing::Test {
 protected :
+    FileManager fm; // Adds fileManager to run tests
     CommandParser parser;
+
+public:
+    ParserTest() // Builder for Injection
+        : fm(), // Builds fileManager
+          parser(fm) {} // Builds Parser and inject to
 };
 
 //---Tests---
