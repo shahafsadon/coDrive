@@ -21,10 +21,10 @@ coDrive
 ├── Dockerfile                  # Container definition
 └── README.md
 
-#How to Run (Using Docker)
-#Step 1: Build the Image
-#docker build -t compressor-app .
-#Step 2: Run the Tests
-#docker run compressor-app ./runTests
-#Step 3: Run the Application
-#docker run -it compressor-app
+# How to Run (Using Docker)
+# Step 1: Build the Image
+# docker build -t compressor-app .
+# Step 2: Run the Tests
+# docker run compressor-app ./runTests
+# Step 3: Run the Application
+# docker run -it compressor-app
