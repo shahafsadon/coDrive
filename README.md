@@ -1,5 +1,5 @@
 ## Project Structure
-'''
+```
 coDrive
 ├── src/                         # Application Logic
 │   ├── CommandParser.cpp        # Handles input parsing and dependency injection
@@ -17,7 +17,7 @@ coDrive
 ├── CMakeLists.txt               # Primary build configuration
 ├── Dockerfile                   # Container definition
 └── README.md                    # Documentation
-'''
+```
 # How to Run (Using Docker)
 Step 1: Build the Image
 
