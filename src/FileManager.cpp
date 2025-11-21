@@ -6,42 +6,27 @@
 
 namespace fs = std::filesystem;
 
-/**
- * @brief Loads the base folder path from the environment variable
- *        ARTICLES_FOLDER. If the variable does not exist, no base
- *        path is used and file operations will fail gracefully.
- */
-FileManager::FileManager() {
-    char* env_path = std::getenv("ARTICLES_FOLDER");
+FileManager::FileManager() {}
 
-    if (!env_path) {
-        // No valid folder path provided
-        base_path_ = "";
-        return;
-    }
+std::string FileManager::getBasePath() const {
+    const char* env = std::getenv("ARTICLES_FOLDER");
+    if (!env) return "";
+    std::string base = env;
 
-    base_path_ = std::string(env_path);
-
-    // Ensure the folder path ends with a slash
-    if (!base_path_.empty() &&
-        base_path_.back() != '/' &&
-        base_path_.back() != '\\')
+    if (!base.empty() &&
+        base.back() != '/' &&
+        base.back() != '\\')
     {
-        base_path_ += "/";
+        base += "/";
     }
+
+    return base;
 }
 
-/**
- * @brief Returns the full path of the requested filename
- *        inside the base folder.
- */
 std::string FileManager::resolvePath(const std::string& filename) const {
-    return (fs::path(base_path_) / filename).string();
+    return (fs::path(getBasePath()) / filename).string();
 }
 
-/**
- * @brief Writes compressed data into a file using binary mode.
- */
 bool FileManager::writeCompressed(const std::string& filename,
                                   const std::string& compressed_data)
 {
@@ -56,9 +41,6 @@ bool FileManager::writeCompressed(const std::string& filename,
     return true;
 }
 
-/**
- * @brief Reads the full content of a compressed file.
- */
 std::optional<std::string> FileManager::readCompressed(const std::string& filename) {
     std::string full = resolvePath(filename);
 
@@ -72,39 +54,32 @@ std::optional<std::string> FileManager::readCompressed(const std::string& filena
     return buffer.str();
 }
 
-/**
- * @brief Searches for the given text inside all decompressed files
- *        located in the base folder.
- */
 std::vector<std::string> FileManager::searchInFiles(const std::string& search_text) {
     std::vector<std::string> results;
 
-    // Validate that the folder exists
-    if (!fs::exists(base_path_) || !fs::is_directory(base_path_)) {
+    std::string base = getBasePath();
+
+    if (!fs::exists(base) || !fs::is_directory(base)) {
         return results;
     }
 
-    for (const auto& entry : fs::directory_iterator(base_path_)) {
+    for (const auto& entry : fs::directory_iterator(base)) {
         if (!entry.is_regular_file()) continue;
 
         std::string filename = entry.path().filename().string();
 
-        // Read the compressed content of the file
         auto compressed = readCompressed(filename);
         if (!compressed.has_value()) continue;
 
         RLEDecompressor dec;
         std::string decompressed;
 
-        // Decompress the data safely
         try {
             decompressed = dec.decompress(compressed.value());
-        }
-        catch (...) {
-            continue; // Skip corrupted files
+        } catch (...) {
+            continue;
         }
 
-        // Search inside the decompressed text
         if (decompressed.find(search_text) != std::string::npos) {
             results.push_back(filename);
         }

@@ -31,6 +31,7 @@ add_library(app_logic
 add_executable(runTests
         tests/CLIParserTest.cpp
         tests/RLETest.cpp
+        tests/ApplicationTest.cpp
 )
 
 target_link_libraries(runTests

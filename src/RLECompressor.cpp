@@ -1,36 +1,48 @@
 #include "RLECompressor.h"
+#include <cctype>
 
 /**
- * Compresses the given string using a basic RLE method.
- * We count how many times the same character repeats,
- * and store: <character><repeat_count>.
+ * ESCAPE-BASED RLE
+ * - Normal printable characters are encoded as <char><count>.
+ * - Digits and '\' must be escaped, because they would break decoding.
+ * - Escaped characters are written as:  \x  (one escape per occurrence).
  */
 std::string RLECompressor::compress(const std::string& input) {
-    if (input.empty()) {
-        return "";
-    }
+    if (input.empty()) return "";  // No content: empty output
 
-    std::string result;
-    char current = input[0];
-    int count = 1;
+    std::string out;
+    char curr = input[0];   // Current character in the run
+    int count = 1;          // Length of the current run
 
-    for (size_t i = 1; i < input.size(); ++i) {
-        if (input[i] == current) {
-            // Same character continues
-            count++;
+    // Helper that writes the encoded form of character 'c' repeated 'n' times
+    auto flushRun = [&](char c, int n) {
+        // Safe to compress only if the character is not a digit and not '\'
+        if (!std::isdigit((unsigned char)c) && c != '\\') {
+            out += c;                   // Write the character
+            out += std::to_string(n);   // Write how many times it appears
         } else {
-            // New character → store previous one
-            result += current;
-            result += std::to_string(count);
+            // Digits and '\' must be escaped one-by-one
+            for (int i = 0; i < n; ++i) {
+                out += '\\';            // Escape marker
+                out += c;               // The literal character
+            }
+        }
+    };
 
-            current = input[i];
+    // Iterate through input and detect repeating runs
+    for (size_t i = 1; i < input.size(); ++i) {
+        char c = input[i];
+
+        if (c == curr) {
+            count++;    // Same run continues
+        } else {
+            flushRun(curr, count);  // Write previous run
+            curr = c;               // Start new run
             count = 1;
         }
     }
 
-    // Store last run
-    result += current;
-    result += std::to_string(count);
+    flushRun(curr, count);  // Flush last run
 
-    return result;
+    return out;             // Return encoded result
 }

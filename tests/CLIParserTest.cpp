@@ -1,100 +1,102 @@
-// Required libraries
-// <memory> -> for the smart pointer "unique_ptr" deletes held memory
 #include <gtest/gtest.h>
+#include <memory>
 #include <string>
-#include <memory> 
-#include <stdexcept>
-
 #include "../src/CommandParser.h"
-#include "../src/ICommand.h"
 #include "../src/ConcreteCommands.h"
-#include "../src/FileManager.h" 
+#include "../src/FileManager.h"
 
-using namespace std;
-
-// --- Test Fixture ---
+/**
+ * @brief Test fixture providing a shared FileManager and CommandParser
+ *        for all parser-related tests.
+ */
 class ParserTest : public ::testing::Test {
-protected :
-    FileManager fm; // Adds fileManager to run tests
-    CommandParser parser;
+protected:
+    FileManager fm;       // Dummy FileManager (not actually writing files here)
+    CommandParser parser; // Parser under test
 
 public:
-    ParserTest() // Builder for Injection
-        : fm(), // Builds fileManager
-          parser(fm) {} // Builds Parser and inject to
+    ParserTest() : fm(), parser(fm) {}
 };
 
-//---Tests---
-
-// "RED" test now "GREEN"
+/**
+ * @brief Ensures that a valid 'add' input produces AddArticleCommand.
+ */
 TEST_F(ParserTest, ShouldParseAddCommand) {
-    string input = "add file1.txt content";
-    unique_ptr<ICommand> cmd = parser.parse(input);
+    std::string input = "add file1 someText123";
+    auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
-
-    // Check that it's the correct command type
-    AddArticleCommand* addCmd = dynamic_cast<AddArticleCommand*>(cmd.get());
-    ASSERT_NE(addCmd, nullptr);
+    EXPECT_NE(dynamic_cast<AddArticleCommand*>(cmd.get()), nullptr);
 }
 
-// "RED" test now "GREEN"
+/**
+ * @brief Ensures that a valid 'get' input produces GetArticleCommand.
+ */
 TEST_F(ParserTest, ShouldParseGetCommand) {
-    string input = "get file1.txt ";
-    unique_ptr<ICommand> cmd = parser.parse(input);
+    std::string input = "get file1";
+    auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
-
-    // Check that it's the correct command type
-    GetArticleCommand* getCmd = dynamic_cast<GetArticleCommand*>(cmd.get());
-    ASSERT_NE(getCmd, nullptr);
+    EXPECT_NE(dynamic_cast<GetArticleCommand*>(cmd.get()), nullptr);
 }
 
-// "RED" test now "GREEN"
+/**
+ * @brief Ensures that a valid 'search' input produces SearchArticleCommand.
+ */
 TEST_F(ParserTest, ShouldParseSearchCommand) {
-    string input = "search content";
-    unique_ptr<ICommand> cmd = parser.parse(input);
+    std::string input = "search abc123";
+    auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
-
-    // Check that it's the correct command type
-    SearchArticleCommand* searchCmd = dynamic_cast<SearchArticleCommand*>(cmd.get());
-    ASSERT_NE(searchCmd, nullptr);
+    EXPECT_NE(dynamic_cast<SearchArticleCommand*>(cmd.get()), nullptr);
 }
 
-// "GREEN" test MODIFIED to stay "Green"
+/**
+ * @brief Invalid command keyword should generate InvalidCommand.
+ */
 TEST_F(ParserTest, ShouldIgnoreInvalidCommand) {
-    string input = "g";
-    unique_ptr<ICommand> cmd = parser.parse(input);
+    std::string input = "gibberish";
+    auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
+    EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
 
-    // That is specifically an InvalidCommand.
-    InvalidCommand* invalidCmd = dynamic_cast<InvalidCommand*>(cmd.get());
-    ASSERT_NE(invalidCmd, nullptr);
-
-    // This will notify the user about the ERROR
-    EXPECT_EQ(cmd->execute(), "ERROR Unknown command 'g'.");
+    // Invalid commands must return empty output
+    EXPECT_EQ(cmd->execute(), "");
 }
 
-// "GREEN" test MODIFIED to stay "Green"
-TEST_F(ParserTest, ShouldIgnoreIncompleteCommand) {
-    string input = "add";
-    unique_ptr<ICommand> cmd = parser.parse(input);
+/**
+ * @brief 'add' with no arguments must be treated as invalid.
+ */
+TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_AddWithoutArgs) {
+    std::string input = "add";
+    auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
-
-    // That is specifically an InvalidCommand.
-    InvalidCommand* invalidCmd = dynamic_cast<InvalidCommand*>(cmd.get());
-    ASSERT_NE(invalidCmd, nullptr);
-
-    // This will notify the user about the ERROR
-    EXPECT_EQ(cmd->execute(), "ERROR 'add' requires a filename and content.");
+    EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
+    EXPECT_EQ(cmd->execute(), "");
 }
 
-// --- Main Function ---
-// This runs all the tests.
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+/**
+ * @brief 'get' without filename must be treated as invalid.
+ */
+TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_GetWithoutArgs) {
+    std::string input = "get";
+    auto cmd = parser.parse(input);
+
+    ASSERT_NE(cmd, nullptr);
+    EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
+    EXPECT_EQ(cmd->execute(), "");
+}
+
+/**
+ * @brief 'search' without content must be treated as invalid.
+ */
+TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_SearchWithoutArgs) {
+    std::string input = "search";
+    auto cmd = parser.parse(input);
+
+    ASSERT_NE(cmd, nullptr);
+    EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
+    EXPECT_EQ(cmd->execute(), "");
 }

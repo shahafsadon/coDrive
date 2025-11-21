@@ -6,32 +6,27 @@
 #include "RLEDecompressor.h"
 
 /**
- * @brief Command returned when the parser fails to identify a valid command.
+ * @brief Represents an invalid or incomplete command.
+ *        Returns empty output as required by the assignment.
  */
 class InvalidCommand : public ICommand {
-private:
-    std::string error_message_;   // error text provided by the parser
-
 public:
-    explicit InvalidCommand(const std::string& message)
-        : error_message_(message) {}
+    InvalidCommand() {}
 
     std::string execute() override {
-        // The assignment requires printing ERROR before the message.
-        return "ERROR " + error_message_;
+        return "";   // Silent behavior
     }
 };
 
 
 /**
- * @brief Handles creation of a new article file.
- *        The content is compressed using RLE before being written.
+ * @brief Handles writing a compressed article into storage.
  */
 class AddArticleCommand : public ICommand {
 private:
-    std::string filename_;
-    std::string text_;
-    FileManager& file_manager_;
+    std::string filename_;       // Target filename
+    std::string text_;           // Raw text before compression
+    FileManager& file_manager_;  // Shared file manager
 
 public:
     AddArticleCommand(const std::string& filename,
@@ -43,57 +38,55 @@ public:
         RLECompressor compressor;
         std::string compressed = compressor.compress(text_);
 
-        // Write the compressed data to disk
+        // Write compressed data; on failure return empty output
         bool success = file_manager_.writeCompressed(filename_, compressed);
         if (!success) {
-            return "ERROR failed to write file.";
+            return "";   // Silent failure
         }
 
-        // According to the task: success returns an empty line
-        return "";
+        return "";       // Success also returns empty
     }
 };
 
 
 /**
- * @brief Retrieves and decompresses the content of an article file.
+ * @brief Handles reading and decompressing an article.
  */
 class GetArticleCommand : public ICommand {
 private:
-    std::string filename_;
-    FileManager& file_manager_;
+    std::string filename_;       // File to load
+    FileManager& file_manager_;  // File system helper
 
 public:
     GetArticleCommand(const std::string& filename, FileManager& fm)
         : filename_(filename), file_manager_(fm) {}
 
     std::string execute() override {
-        // Try reading compressed content
+        // Attempt to read compressed bytes
         auto compressed = file_manager_.readCompressed(filename_);
         if (!compressed.has_value()) {
-            return "ERROR file not found.";
+            return "";   // Silent if file missing
         }
 
         RLEDecompressor decompressor;
+
         try {
-            return decompressor.decompress(compressed.value());
+            return decompressor.decompress(compressed.value());  // Decompressed content
         }
         catch (...) {
-            // Any malformed input or decoding issue
-            return "ERROR invalid compressed data.";
+            return "";   // Silent on corrupted data
         }
     }
 };
 
 
 /**
- * @brief Searches all article files for the given text.
- *        The search is done on the *decompressed* content.
+ * @brief Searches all saved articles for a specific substring.
  */
 class SearchArticleCommand : public ICommand {
 private:
-    std::string content_;
-    FileManager& file_manager_;
+    std::string content_;        // Search phrase
+    FileManager& file_manager_;  // File iterator and reader
 
 public:
     SearchArticleCommand(const std::string& content, FileManager& fm)
@@ -102,20 +95,17 @@ public:
     std::string execute() override {
         auto results = file_manager_.searchInFiles(content_);
 
-        // Empty result → print an empty line as required
         if (results.empty()) {
-            return "";
+            return "";    // No matches: empty output
         }
 
-        // Build newline-separated file list
         std::string output;
         for (const auto& name : results) {
-            output += name + "\n";
+         output += name + " "; // Append matching filenames
         }
 
-        // Remove trailing newline
         if (!output.empty()) {
-            output.pop_back();
+            output.pop_back(); // remove trailing space
         }
 
         return output;
