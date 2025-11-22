@@ -1,34 +1,74 @@
-## Project Structure
+# coDrive Project
+
+
+This project implements a **compressed article storage system** using a custom **RLE-based encoding** that supports *every ASCII character*, including digits, symbols, spaces, and backslashes.
+
+
+The project includes:
+- Full application logic (CLI-based)
+- RLE compression/decompression
+- File I/O with environment-based folder selection
+- Command parsing (add / get / search)
+- Comprehensive GoogleTest suite
+- Docker integration for easy building & running
+---
+## Project Structure:
 ```
-coDrive
-├── src/                         # Application Logic
-│   ├── CommandParser.cpp        # Handles input parsing and dependency injection
-│   ├── ConcreteCommands.h       # Commands logic (add, get, search)
-│   ├── FileManager.cpp          # Handles file I/O and environment variables
-│   ├── ICommand.h               # Commands flexibility (OCP)
-│   ├── main.cpp                 # Application entry point & main loop
-│   ├── RLECompressor.cpp        # Compressing txt
-│   └── RLEDecompressor.cpp      # Decompressing txt
+coDrive/
+├── src/                          # Application Logic
+│   ├── Application.h             # Main application class
+│   ├── CommandParser.cpp         # CLI parsing (add, get, search)
+│   ├── CommandParser.h
+│   ├── ConcreteCommands.h        # add/get/search command classes
+│   ├── FileManager.cpp           # File I/O + environment-based paths
+│   ├── FileManager.h
+│   ├── ICommand.h                # Base command interface
+│   ├── main.cpp                  # Program entry point
+│   ├── RLECompressor.cpp         # Escape-safe RLE compression
+│   ├── RLECompressor.h
+│   ├── RLEDecompressor.cpp       # Escape-safe RLE decompression
+│   └── RLEDecompressor.h
 │
-├── tests/                       # Unit Tests (gtest)
-│   ├── CLIParserTest.cpp        # Tests for Parser functionality
-│   └── RLETest.cpp              # Tests for RLE engine functionality
+├── tests/                        # Unit Tests (GoogleTest)
+│   ├── ApplicationTest.cpp       # Full integration tests
+│   ├── CLIParserTest.cpp         # Command parser tests
+│   └── RLETest.cpp               # Compression/Decompression tests
 │
-├── CMakeLists.txt               # Primary build configuration
-├── Dockerfile                   # Container definition
-└── README.md                    # Documentation
+├── CMakeLists.txt                # Build configuration
+├── Dockerfile                    # Docker build/run setup
+├── README.md                     # Documentation
+└── .gitignore                    # Ignored files/folders
 ```
-# How to Run (Using Docker)
-Step 1: Build the Image
+---
+# How to Build & Run (Docker):
+**Step 1: Clone the repository**
 
-docker build -t compressor-app .
+**git clone <your-repo-url>**
 
-Step 2: Run the Tests
+**cd coDrive**
 
-docker run compressor-app ./runTests
+--
 
-Step 3: Run the Application
+**Step 2: Build the Docker Image**
 
-docker run -it compressor-app
+**docker build -t compressor-app .**
 
+--
+
+**Step 3: Run ALL Tests**
+
+**docker run compressor-app ./runTests**
+
+--
+
+**Step 4: Run the Application**
+
+**docker run -it compressor-app**
+
+**Note:**
+The application has no interactive prompt.
+After running the container, simply type commands (add, get, search) directly into the terminal and the output will appear immediately.
+---
+## Example Run:
+![Example Run](images/Example-run.png)
 

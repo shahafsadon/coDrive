@@ -2,14 +2,14 @@
 #include <string>
 
 /**
- * Simple Run-Length Encoding (RLE) compressor.
- * Goes over the input text and replaces each sequence
- * of identical characters with:   <char><count>
+ * @brief Simple Run-Length Encoding (RLE) compressor.
+ *        Encodes repeated characters as <char><count>.
+ *        Does not handle escaping; actual logic is in the .cpp file.
  *
  * Example:
- *     "aaabb"  →  "a3b2"
+ *     "aaabb" to "a3b2"
  */
 class RLECompressor {
 public:
-    std::string compress(const std::string& input);
+    std::string compress(const std::string& input);   // Encodes input using RLE
 };

@@ -11,23 +11,24 @@
  */
 class CommandParser {
 private:
- // Reference to the FileManager used across all commands
- FileManager& file_manager_;
+ FileManager& file_manager_;   // Shared FileManager used by all parsed commands
 
 public:
  /**
   * @brief Constructor that injects the FileManager dependency.
+  *        Parser stores the reference for future command creation.
   */
  explicit CommandParser(FileManager& fm);
 
  /**
-  * @brief Parses a full line of user input and returns
-  *        the matching command implementation.
+  * @brief Parses a full line of user input and returns the
+  *        appropriate command object based on the keyword.
   */
  std::unique_ptr<ICommand> parse(const std::string& input);
 
 private:
- std::unique_ptr<ICommand> tryParseAdd(std::stringstream& ss);
- std::unique_ptr<ICommand> tryParseGet(std::stringstream& ss);
- std::unique_ptr<ICommand> tryParseSearch(std::stringstream& ss);
+ // Helper methods for parsing specific command formats
+ std::unique_ptr<ICommand> tryParseAdd(std::stringstream& ss);     // Handles "add"
+ std::unique_ptr<ICommand> tryParseGet(std::stringstream& ss);     // Handles "get"
+ std::unique_ptr<ICommand> tryParseSearch(std::stringstream& ss);  // Handles "search"
 };
