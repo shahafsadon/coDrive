@@ -20,18 +20,24 @@ static void setArticlesFolderAbs(const std::string& folderName) {
 }
 
 /**
- * @brief Test: Add a file and retrieve it.
- *        Confirms compression + storage + decompression work together.
+ * @brief Test: Add a file and retrieve it (updated for HTTP-like responses).
  */
 TEST(AppTest, AddAndGet) {
     setArticlesFolderAbs("test_articles");
 
     Application app;
 
-    EXPECT_EQ(app.process("add fileA hello123"), "");   // Add content
+    // POST returns: "201 Created\n"
+    EXPECT_EQ(app.process("POST fileA hello123"), "201 Created\n");
 
-    std::string result = app.process("get fileA");      // Retrieve content
-    EXPECT_EQ(result, "hello123");
+    // GET returns:
+    // "200 Ok\n\n<content>"
+    std::string expected =
+        "200 Ok\n"
+        "\n"
+        "hello123";
+
+    EXPECT_EQ(app.process("GET fileA"), expected);
 
     std::filesystem::remove_all(std::filesystem::absolute("test_articles"));
 }
@@ -46,10 +52,14 @@ TEST(AppTest, AddAndGet_WithNumbersAndAscii) {
 
     std::string content = "heLLo 9912 !! %% @@ 123abcXYZ";
 
-    EXPECT_EQ(app.process("add asciiTest " + content), "");
+    EXPECT_EQ(app.process("POST asciiTest " + content), "201 Created\n");
 
-    std::string result = app.process("get asciiTest");
-    EXPECT_EQ(result, content);   // Must decompress exactly the same text
+    std::string expected =
+        "200 Ok\n"
+        "\n" +
+        content;
+
+    EXPECT_EQ(app.process("GET asciiTest"), expected);
 
     std::filesystem::remove_all(std::filesystem::absolute("test_articles2"));
 }
@@ -62,15 +72,18 @@ TEST(AppTest, SearchMultipleFiles) {
 
     Application app;
 
-    app.process("add f1 abcdef");
-    app.process("add f2 zzzabczzz");
-    app.process("add f3 none");
+    app.process("POST f1 abcdef");
+    app.process("POST f2 zzzabczzz");
+    app.process("POST f3 none");
 
     std::string result = app.process("search abc");
 
-    EXPECT_NE(result.find("f1"), std::string::npos);  // Should match
-    EXPECT_NE(result.find("f2"), std::string::npos);  // Should match
-    EXPECT_EQ(result.find("f3"), std::string::npos);  // Should NOT match
+    // SEARCH returns:
+    // "200 Ok\n\nf1 f2"   (order not guaranteed, so only partial checks)
+    EXPECT_NE(result.find("200 Ok\n"), std::string::npos);
+    EXPECT_NE(result.find("f1"), std::string::npos);
+    EXPECT_NE(result.find("f2"), std::string::npos);
+    EXPECT_EQ(result.find("f3"), std::string::npos);
 
     std::filesystem::remove_all(std::filesystem::absolute("test_articles3"));
 }
@@ -83,15 +96,16 @@ TEST(AppTest, SearchExactMatchAndNonMatch) {
 
     Application app;
 
-    app.process("add t1 hello world");
-    app.process("add t2 hi there");
-    app.process("add t3 well hello!!");
+    app.process("POST t1 hello world");
+    app.process("POST t2 hi there");
+    app.process("POST t3 well hello!!");
 
     std::string r1 = app.process("search hello");
 
-    EXPECT_NE(r1.find("t1"), std::string::npos);  // contains 'hello'
-    EXPECT_NE(r1.find("t3"), std::string::npos);  // contains 'hello'
-    EXPECT_EQ(r1.find("t2"), std::string::npos);  // does NOT contain 'hello'
+    EXPECT_NE(r1.find("200 Ok\n"), std::string::npos);
+    EXPECT_NE(r1.find("t1"), std::string::npos);  // must match
+    EXPECT_NE(r1.find("t3"), std::string::npos);  // must match
+    EXPECT_EQ(r1.find("t2"), std::string::npos);  // must NOT match
 
     std::filesystem::remove_all(std::filesystem::absolute("test_articles4"));
 }

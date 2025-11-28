@@ -1,11 +1,19 @@
-#pragma once //In order for the file to compile once and not each time its being included
+#pragma once
 #include <string>
 
-// Each command will implement this interface
+class FileManager;
+
+/**
+ * @brief Base interface for all commands.
+ *        Each command executes using the shared FileManager.
+ */
 class ICommand {
 public:
     virtual ~ICommand() = default;
 
-    // execute() returns a string to be printed on the console.
-    virtual std::string execute() = 0;
+    /**
+     * @brief Execute the command using the provided FileManager.
+     *        Returns a string to be printed.
+     */
+    virtual std::string execute(FileManager& fm) = 0;
 };
