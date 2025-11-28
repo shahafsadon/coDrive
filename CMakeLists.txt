@@ -41,20 +41,33 @@ add_executable(runTests
         tests/ApplicationTest.cpp
 )
 
+# ADD SERVER EXECUTABLE HERE
+add_executable(server
+    src/server/server.cpp
+    src/server/ClientHandler.cpp
+)
+
+
+# For threading (SCRUM-32)
+find_package(Threads REQUIRED)
+target_link_libraries(server Threads::Threads)
+
+
 target_link_libraries(runTests
         gtest
         gtest_main
         app_logic
 )
 
+# Enable testing
 enable_testing()
 add_test(NAME AllTests COMMAND runTests)
 
 # Main Application Executable
 add_executable(coDriveApp
-        src/main.cpp
+    src/main.cpp
 )
 
 target_link_libraries(coDriveApp
-        app_logic
+    app_logic
 )
