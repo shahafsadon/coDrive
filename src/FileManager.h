@@ -4,34 +4,27 @@
 #include <vector>
 
 /**
- * @brief Manages reading and writing of compressed article files.
- *        All file operations use a base folder defined by the environment.
+ * @brief FileManager handles reading/writing of RLE-compressed article files.
  */
 class FileManager {
 public:
-    FileManager();
-    // Loads base folder path from environment (ARTICLES_FOLDER)
+ FileManager();
 
-    /**
-     * @brief Writes compressed data into a file.
-     *        Returns true on success, false on I/O failure.
-     */
-    bool writeCompressed(const std::string& filename,
-                         const std::string& compressed_data);
+ bool addArticle(const std::string& filename,
+                 const std::string& text);
 
-    /**
-     * @brief Reads the raw compressed content of a file.
-     *        Returns std::if the file cannot be opened.
-     */
-    std::optional<std::string> readCompressed(const std::string& filename);
+ std::optional<std::string> getArticle(const std::string& filename);
+ std::vector<std::string> searchInFiles(const std::string& keyword);
 
-    /**
-     * @brief Searches all stored files for occurrences of search_text.
-     *        Search is performed on decompressed content.
-     */
-    std::vector<std::string> searchInFiles(const std::string& search_text);
+ // MUST be public for commands
+ bool writeCompressed(const std::string& filename,
+                      const std::string& compressed_data);
+
+ bool deleteFile(const std::string& filename);
+
+ std::optional<std::string> readCompressed(const std::string& filename);
 
 private:
-    std::string getBasePath() const;            // Returns base folder used for storage
-    std::string resolvePath(const std::string& filename) const;  // Builds full path
+ std::string getBasePath() const;
+ std::string resolvePath(const std::string& filename) const;
 };

@@ -12,22 +12,29 @@ FetchContent_Declare(
         URL https://github.com/google/googletest/archive/refs/heads/main.zip
 )
 
-# Prevent override of parent compiler flags
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
 FetchContent_MakeAvailable(googletest)
 
-
-# App Logic Library
+# Application Logic Library
 add_library(app_logic
+        src/Application.cpp
         src/CommandParser.cpp
+        src/FileManager.cpp
         src/RLECompressor.cpp
         src/RLEDecompressor.cpp
-        src/FileManager.cpp
+        src/commands/AddArticleCommand.cpp
+        src/commands/GetArticleCommand.cpp
+        src/commands/SearchArticleCommand.cpp
+        src/commands/DeleteArticleCommand.cpp
+        src/commands/InvalidCommand.cpp
 )
 
+target_include_directories(app_logic PUBLIC
+        src
+        src/commands
+)
 
-# Tests target
+# Unit Tests
 add_executable(runTests
         tests/CLIParserTest.cpp
         tests/RLETest.cpp
@@ -52,14 +59,15 @@ target_link_libraries(runTests
         app_logic
 )
 
-# MAIN APPLICATION EXECUTABLE
+# Enable testing
+enable_testing()
+add_test(NAME AllTests COMMAND runTests)
+
+# Main Application Executable
 add_executable(coDriveApp
-        src/main.cpp
+    src/main.cpp
 )
 
 target_link_libraries(coDriveApp
-        app_logic
+    app_logic
 )
-
-enable_testing()
-add_test(NAME AllTests COMMAND runTests)
