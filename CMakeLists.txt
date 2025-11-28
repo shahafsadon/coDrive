@@ -47,12 +47,10 @@ add_executable(server
     src/server/ClientHandler.cpp
 )
 
-
 # For threading (SCRUM-32)
-find_package(Threads REQUIRED)
-target_link_libraries(server Threads::Threads)
+target_link_libraries(server PRIVATE app_logic pthread)
 
-
+# Link GoogleTest and app_logic to the test executable
 target_link_libraries(runTests
         gtest
         gtest_main
