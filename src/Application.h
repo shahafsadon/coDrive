@@ -8,10 +8,12 @@
  */
 class Application {
 private:
-    FileManager fm_;
+    FileManager fileManager_;
     CommandParser parser_;
 
 public:
-    Application();
+    Application();                 // Default ctor for tests
+    Application(FileManager& fm);  // ctor for server
+
     std::string process(const std::string& input);
 };
