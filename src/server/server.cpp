@@ -18,9 +18,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     int port = std::stoi(argv[1]);
-
-    // SCRUM-28: Create server socket
-    // Create an IPv4 TCP socket (blocking by default)
+    // Create shared Application instance
+    Application app;
+    // Create server socket and create an IPv4 TCP socket (blocking by default)
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("[SERVER ERROR] socket()");
@@ -64,10 +64,11 @@ int main(int argc, char* argv[]) {
             continue;
         }
         std::cout << "[SERVER] Client connected" << std::endl;
-        
-        // SCRUM-35: Launch a new thread to handle the client
-        std::thread clientThread(handleClient, client_socket);
-        // SCRUM-36: detach will come later — not now
+        // Handle each client in a separate thread
+        std::thread clientThread([client_socket, &app]() {
+        handleClient(client_socket, app);
+        });
+        // Detach the thread to allow independent execution
         clientThread.detach();
     }   
 

@@ -1,14 +1,7 @@
 #include "ClientHandler.h"
-#include <iostream>
 #include <cstring>
-
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <unistd.h>
-
-#include "../FileManager.h"
-#include "../CommandParser.h"
 
 
 
@@ -23,11 +16,11 @@ static std::string readCommand(int clientSocket)
 
     while (true) {
         int bytes = recv(clientSocket, buffer, sizeof(buffer), 0);
-
+        // Handle disconnection or error
         if (bytes <= 0) {
-            return ""; // client disconnected or error
+            return ""; 
         }
-
+        // Append received data to command
         for (int i = 0; i < bytes; i++) {
             command.push_back(buffer[i]);
             if (buffer[i] == '\n') {
@@ -38,36 +31,24 @@ static std::string readCommand(int clientSocket)
 }
 
 /**
- *  @brief Handle communication with a single connected client.
+ *  @brief Handle client commands in a loop until disconnection.
  */
-void handleClient(int clientSocket)
+void handleClient(int clientSocket, Application& app)
 {
-    std::cout << "[SERVER] Handling new client..." << std::endl;
-
-    FileManager fm;
-    CommandParser parser(fm);
-
     while (true) {
-
-        // SCRUM-38: read one full command
+        // Read command from client
         std::string cmdLine = readCommand(clientSocket);
-
-        // SCRUM-39: client disconnected
-        if (cmdLine.empty()) {
-            std::cout << "[SERVER] Client disconnected." << std::endl;
+        // Break on disconnection or error
+        if (cmdLine.empty())
             break;
-        }
-
-        // Parse and execute command
-        auto cmd = parser.parse(cmdLine);
-        std::string result = cmd->execute(fm);
-
-        // Always end with newline when sending to client
-        if (result.empty() || result.back() != '\n')
-            result.push_back('\n');
-
-        send(clientSocket, result.c_str(), result.size(), 0);
+        // Process command and get response
+        std::string response = app.process(cmdLine);
+        // Ensure response ends with newline
+        if (response.empty() || response.back() != '\n')
+            response.push_back('\n');
+        // Send response back to client
+        send(clientSocket, response.c_str(), response.size(), 0);
     }
-
+    // Close client socket on exit
     close(clientSocket);
 }
