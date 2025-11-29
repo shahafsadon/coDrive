@@ -2,6 +2,8 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <shared_mutex>
+
 
 /**
  * @brief FileManager handles reading/writing of RLE-compressed article files.
@@ -27,4 +29,6 @@ public:
 private:
  std::string getBasePath() const;
  std::string resolvePath(const std::string& filename) const;
+ mutable std::shared_mutex mutex_;
+
 };

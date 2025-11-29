@@ -18,8 +18,10 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     int port = std::stoi(argv[1]);
-    // Create shared Application instance
-    Application app;
+    // Initialize FileManager and Application instances
+    FileManager fm;
+    Application app(fm);
+
     // Create server socket and create an IPv4 TCP socket (blocking by default)
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {

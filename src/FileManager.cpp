@@ -3,6 +3,9 @@
 #include <filesystem>
 #include <sstream>
 
+#include <mutex>           
+#include <shared_mutex> 
+
 #include "RLECompressor.h"
 #include "RLEDecompressor.h"
 
@@ -38,6 +41,8 @@ std::string FileManager::resolvePath(const std::string& filename) const {
 bool FileManager::writeCompressed(const std::string& filename,
                                   const std::string& data)
 {
+    // Added mutex lock for thread safety 
+    std::unique_lock<std::shared_mutex> lock(mutex_); 
     std::string full = resolvePath(filename);
 
     std::ofstream out(full, std::ios::binary);
@@ -49,7 +54,8 @@ bool FileManager::writeCompressed(const std::string& filename,
 }
 
 bool FileManager::deleteFile(const std::string& filename) {
-
+    // Added mutex lock for thread safety
+    std::unique_lock<std::shared_mutex> lock(mutex_); 
     std::string full = resolvePath(filename);
 
     if (!std::filesystem::exists(full)) {
@@ -63,6 +69,8 @@ bool FileManager::deleteFile(const std::string& filename) {
  * Reads compressed file from disk.
  */
 std::optional<std::string> FileManager::readCompressed(const std::string& filename) {
+    // Added mutex lock for thread safety
+    std::shared_lock<std::shared_mutex> lock(mutex_);
     std::string full = resolvePath(filename);
 
     std::ifstream in(full, std::ios::binary);
@@ -82,7 +90,6 @@ bool FileManager::addArticle(const std::string& filename,
 {
     RLECompressor comp;
     std::string compressed = comp.compress(text);
-
     return writeCompressed(filename, compressed);
 }
 
