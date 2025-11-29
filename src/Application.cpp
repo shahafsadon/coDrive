@@ -1,12 +1,14 @@
 #include "Application.h"
 
-Application::Application()
-    : fileManager_(), parser_(fileManager_) {}
-
+// Default ctor for tests
 Application::Application(FileManager& fm)
-    : fileManager_(fm), parser_(fileManager_) {}
+    : fm_(fm), parser_(fm_) {}
+
+// Production ctor
+Application::Application()
+    : fm_(internalFm_), parser_(fm_) {}
 
 std::string Application::process(const std::string& input) {
     auto cmd = parser_.parse(input);
-    return cmd->execute(fileManager_);
+    return cmd->execute(fm_);
 }

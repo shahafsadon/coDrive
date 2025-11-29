@@ -24,8 +24,10 @@ static void setArticlesFolderAbs(const std::string& folderName) {
  */
 TEST(AppTest, AddAndGet) {
     setArticlesFolderAbs("test_articles");
+    // Create FileManager and Application instances
+    FileManager fm;
+    Application app(fm);
 
-    Application app;
 
     // POST returns: "201 Created\n"
     EXPECT_EQ(app.process("POST fileA hello123"), "201 Created\n");
