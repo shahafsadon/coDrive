@@ -1,9 +1,12 @@
 #include "Application.h"
 
 Application::Application()
-    : fm_(), parser_(fm_) {}
+    : fileManager_(), parser_(fileManager_) {}
+
+Application::Application(FileManager& fm)
+    : fileManager_(fm), parser_(fileManager_) {}
 
 std::string Application::process(const std::string& input) {
     auto cmd = parser_.parse(input);
-    return cmd->execute(fm_);
+    return cmd->execute(fileManager_);
 }

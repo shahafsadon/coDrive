@@ -8,10 +8,14 @@
  */
 class Application {
 private:
-    FileManager fm_;
+    FileManager fileManager_;
     CommandParser parser_;
 
 public:
-    Application();
+    // Default ctor for tests
+    Application();                 
+    // ctor for server
+    Application(FileManager& fm);  
+    // Process a raw command string and return formatted output.
     std::string process(const std::string& input);
 };
