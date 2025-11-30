@@ -22,6 +22,11 @@ std::unique_ptr<ICommand> CommandParser::parse(const std::string& input) {
 
     std::stringstream ss(input);
     std::string keyword;
+    // Check for empty input
+    if (trim(input).empty()) {
+        return std::make_unique<InvalidCommand>();
+    }
+    // Extract the command keyword
     ss >> keyword;
 
     if (keyword == "POST")
@@ -52,13 +57,13 @@ std::unique_ptr<ICommand> CommandParser::tryParsePost(std::stringstream& ss) {
     if (!text.empty() && text[0] == ' ')
         text.erase(0, 1);
 
-    if (fileName.empty() || text.empty()) {
+    // FINAL VALIDATION
+    if (fileName.empty() || trim(text).empty()) {
         return std::make_unique<InvalidCommand>();
     }
 
     return std::make_unique<AddArticleCommand>(fileName, text);
 }
-
 
 std::unique_ptr<ICommand> CommandParser::tryParseGet(std::stringstream& ss) {
 
@@ -78,20 +83,28 @@ std::unique_ptr<ICommand> CommandParser::tryParseSearch(std::stringstream& ss) {
     std::string phrase;
     std::getline(ss, phrase);
 
+    // Remove leading space
     if (!phrase.empty() && phrase[0] == ' ')
         phrase.erase(0, 1);
 
-    if (phrase.empty()) {
+    // FINAL VALIDATION: phrase must contain non-space content
+    if (trim(phrase).empty()) {
         return std::make_unique<InvalidCommand>();
     }
 
     return std::make_unique<SearchArticleCommand>(phrase);
 }
+
 std::unique_ptr<ICommand> CommandParser::tryParseDelete(std::stringstream& ss) {
 
     std::string fileName;
     ss >> fileName;
     fileName = trim(fileName);
+
+    // FINAL VALIDATION if name is empty
+    if (fileName.empty()) {
+        return std::make_unique<InvalidCommand>();
+    }
 
     return std::make_unique<DeleteArticleCommand>(fileName);
 }
