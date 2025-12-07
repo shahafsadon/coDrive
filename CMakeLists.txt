@@ -40,8 +40,8 @@ target_include_directories(app_logic PUBLIC
 
 # SERVER EXECUTABLE
 add_executable(Server
-        src/server/server.cpp
-        src/server/ClientHandler.cpp
+        src/Server/server.cpp
+        src/Server/ClientHandler.cpp
 
         # These are needed because server.cpp uses Application / Parser / FM
         src/Application.cpp
