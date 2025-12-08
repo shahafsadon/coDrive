@@ -13,6 +13,13 @@ static std::string trim(const std::string& s) {
     size_t end = s.find_last_not_of(" \t\r\n");
     return s.substr(start, end - start + 1);
 }
+// Helper to convert a string to uppercase for case-insensitive commands
+static std::string toUpper(const std::string& s) {
+    std::string out = s;
+    for (char& c : out)
+        c = std::toupper(static_cast<unsigned char>(c));
+    return out;
+}
 
 CommandParser::CommandParser(FileManager& fm)
     : file_manager_(fm) {}
@@ -29,6 +36,9 @@ std::unique_ptr<ICommand> CommandParser::parse(const std::string& input) {
     // Extract the command keyword
     ss >> keyword;
 
+    // Make the command case-insensitive
+    keyword = toUpper(keyword);
+
     if (keyword == "POST")
         return tryParsePost(ss);
 
@@ -38,7 +48,7 @@ std::unique_ptr<ICommand> CommandParser::parse(const std::string& input) {
     if (keyword == "DELETE")
         return tryParseDelete(ss);
 
-    if (keyword == "search")
+    if (keyword == "SEARCH")
         return tryParseSearch(ss);
 
     return std::make_unique<InvalidCommand>();
