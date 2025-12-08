@@ -80,20 +80,27 @@ All relevant explanations, system structure, and architectural decisions are doc
 
 ---
 # How to Build & Run (Docker):
-**Step 1: Build the Docker Image**
+**Step 1: Run the Server Using Docker**
 
+Build the Docker Image
 ```
 docker build -t compressor-app .
 ```
-**step 2: Run the Server Container**
-
-Start the server container:
+Stop the existing container
+```
+docker stop codrive-server
+```
+Remove the container
+```
+docker rm codrive-server
+```
+Run the Server Container
 ```
 docker run -d -p 8080:8080 --name codrive-server compressor-app
 ```
-**step 3: Run the C++ Client**
+**step 2: Run the C++ Client**
 
-Enter the running container::
+Enter the running container:
 ```
 docker exec -it codrive-server bash
 ```
@@ -106,7 +113,7 @@ Run the C++ client:
 ./Client 127.0.0.1 8080
 ```
 
-**step 4: Run the Python Client**
+**step 3: Run the Python Client**
 
 Enter the running container:
 ```
