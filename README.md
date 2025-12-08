@@ -96,7 +96,7 @@ docker rm codrive-server
 ```
 Run the Server Container
 ```
-docker run -d -p 8080:8080 --name codrive-server compressor-app
+docker run -p 8080:8080 --name codrive-server compressor-app
 ```
 **step 2: Run the C++ Client**
 
