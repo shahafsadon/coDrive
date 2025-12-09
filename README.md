@@ -90,11 +90,11 @@ Run tests(optional)
 ```
 docker run --rm -it --entrypoint=/bin/bash compressor-app -c "./runTests"
 ```
-Stop the existing container
+Stop the existing container (if needed)
 ```
 docker stop codrive-server
 ```
-Remove the container
+Remove the container (if needed)
 ```
 docker rm codrive-server
 ```
