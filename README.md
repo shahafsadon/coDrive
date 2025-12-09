@@ -86,6 +86,10 @@ Build the Docker Image
 ```
 docker build -t compressor-app .
 ```
+tests(optional)
+```
+docker run --rm -it --entrypoint=/bin/bash compressor-app -c "./runTests"
+```
 Stop the existing container
 ```
 docker stop codrive-server
