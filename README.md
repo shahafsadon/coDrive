@@ -86,7 +86,7 @@ Build the Docker Image
 ```
 docker build -t compressor-app .
 ```
-tests(optional)
+Run tests(optional)
 ```
 docker run --rm -it --entrypoint=/bin/bash compressor-app -c "./runTests"
 ```
@@ -102,7 +102,7 @@ Run the Server Container
 ```
 docker run -p 8080:8080 --name codrive-server compressor-app
 ```
-**step 2: Run the C++ Client**
+**step 2: Run the C++ Client (new terminal)**
 
 Enter the running container:
 ```
@@ -117,7 +117,7 @@ Run the C++ client:
 ./Client 127.0.0.1 8080
 ```
 
-**step 3: Run the Python Client**
+**step 3: Run the Python Client (new terminal)**
 
 Enter the running container:
 ```
