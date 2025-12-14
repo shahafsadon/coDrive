@@ -57,3 +57,7 @@ install_manifest.txt
 
 # Ignore runtime folder created by the program
 articles/
+
+# NodeJS
+node_modules/
+npm-debug.log*
