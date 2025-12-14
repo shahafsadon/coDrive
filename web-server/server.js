@@ -6,10 +6,9 @@ const PORT = 3000;
 // Middleware
 app.use(express.json());
 
-// Test route
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok' });
-});
+// Routes
+const healthRoutes = require('./routes/health.routes');
+app.use('/api', healthRoutes);
 
 // Start server
 app.listen(PORT, () => {
