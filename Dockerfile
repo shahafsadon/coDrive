@@ -20,6 +20,6 @@ WORKDIR /usr/src/mytest/build
 # Build with CMake
 RUN cmake .. && make
 
-# Run the server with default port 8080
+# Run the Server with default port 8080
 ENTRYPOINT ["./Server"]
 CMD ["8080"]

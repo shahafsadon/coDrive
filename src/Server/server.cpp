@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
     // Basic argument validation — port must be provided
     if (argc < 2) {
-        std::cerr << "[USAGE] server <port>" << std::endl;
+        std::cerr << "[USAGE] Server <port>" << std::endl;
         return 1;
     }
     int port = std::stoi(argv[1]);
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     FileManager fm;
     Application app(fm);
 
-    // Create server socket and create an IPv4 TCP socket (blocking by default)
+    // Create Server socket and create an IPv4 TCP socket (blocking by default)
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("[SERVER ERROR] socket()");

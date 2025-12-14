@@ -43,7 +43,7 @@ add_executable(Server
         src/Server/server.cpp
         src/Server/ClientHandler.cpp
 
-        # These are needed because server.cpp uses Application / Parser / FM
+        # These are needed because Server.cpp uses Application / Parser / FM
         src/Application.cpp
         src/CommandParser.cpp
         src/FileManager.cpp
@@ -61,7 +61,7 @@ add_executable(Server
 target_include_directories(Server PUBLIC
         src
         src/commands
-        src/server
+        src/Server
 )
 
 # Threading (Linux)
