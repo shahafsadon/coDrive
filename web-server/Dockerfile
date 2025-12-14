@@ -1,20 +1,20 @@
 # Use official Node.js LTS image
 FROM node:20-alpine
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy package files first (for caching)
+# Copy package files first (for Docker cache optimization)
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install --only=production
 
-# Copy the rest of the app
+# Copy the rest of the application
 COPY . .
 
-# Expose app port
+# Expose the application port
 EXPOSE 3000
 
-# Start the Server
+# Start the server
 CMD ["node", "server.js"]
