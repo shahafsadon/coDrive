@@ -10,7 +10,7 @@ app.use(express.json());
 const healthRoutes = require('./routes/health.routes');
 app.use('/api', healthRoutes);
 
-// Start server
+// Start Server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

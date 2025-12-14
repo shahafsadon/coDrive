@@ -1,0 +1,25 @@
+# Run all services together in a shared network
+services:
+
+  # Node.js Web Server
+  web-server:
+    build:
+      context: ./web-server
+    container_name: codrive-web
+    ports:
+      - "3000:3000"
+    networks:
+      - codrive-net
+
+  # C++ Server
+  cpp-server:
+    build:
+      context: .
+    container_name: codrive-cpp
+    networks:
+      - codrive-net
+
+# Shared bridge network
+networks:
+  codrive-net:
+    driver: bridge
