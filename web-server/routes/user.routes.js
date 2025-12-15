@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
+const authenticateRequest = require('../middleware/authMiddleware');
+
 const {
     registerUser,
     getUserById,
@@ -10,6 +12,6 @@ const {
 router.post('/', registerUser);
 
 // GET /api/users/:id
-router.get('/:id', getUserById);
+router.get('/:id', authenticateRequest, getUserById);
 
 module.exports = router;
