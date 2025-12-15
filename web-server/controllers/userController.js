@@ -1,6 +1,7 @@
 const {
     createUser,
     findUserByUsername,
+    findUserById,
 } = require('../models/user.model');
 
 // POST /api/users
@@ -27,10 +28,28 @@ const registerUser = (req, res) => {
     // Create user
     const user = createUser({ username, password, name, image });
 
-    // Return created user (without password ideally, but for now OK)
-    return res.status(201).json(user);
+    // Exclude password from response
+    const { password: _, ...safeUser } = user;
+    return res.status(201).json(safeUser);
+};
+
+// GET /api/users/:id
+const getUserById = (req, res) => {
+    const { id } = req.params;
+
+    const user = findUserById(id);
+    if (!user) {
+        return res.status(404).json({
+            error: 'User not found',
+        });
+    }
+
+    // Exclude password
+    const { password, ...safeUser } = user;
+    return res.status(200).json(safeUser);
 };
 
 module.exports = {
     registerUser,
+    getUserById,
 };
