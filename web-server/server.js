@@ -11,3 +11,8 @@ app.use('/api', apiRoutes);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+const errorHandler = require('./middleware/errorMiddleware');
+
+// must be AFTER routes
+app.use(errorHandler);
