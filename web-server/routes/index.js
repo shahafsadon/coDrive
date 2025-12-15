@@ -15,3 +15,7 @@ router.use('/users', userRoutes);
 router.use('/tokens', tokenRoutes);
 
 module.exports = router;
+
+const filesRoutes = require('./files.routes');
+
+router.use('/files', filesRoutes);
