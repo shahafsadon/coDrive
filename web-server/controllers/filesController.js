@@ -1,7 +1,8 @@
 const cppClient = require('../services/cppServerClient');
 const { 
     getRootNodes,
-    createNode        
+    createNode,
+    removeNode         
 } = require('../models/fileSystem.model');
 
 // SCRUM 317 – send CREATE command to C++ server
@@ -13,7 +14,7 @@ async function createFile(req, res, next) {
             return res.status(400).json({ error: 'Filename is required' });
         }
 
-        const rawResponse = await cppClient.send(`CREATE ${filename}`);
+        const rawResponse = await cppClient.send(`POST ${filename} _`);
 
         res.locals.cppResponse = rawResponse.trim();
         res.locals.filename = filename;
@@ -28,9 +29,9 @@ async function createFile(req, res, next) {
 function formatCreateFileResponse(req, res) {
     const cppResponse = res.locals.cppResponse;
 
-    if (cppResponse.startsWith('200')) {
+    if (cppResponse.startsWith('200') || cppResponse.startsWith('201')) {
         createNode({
-            name: res.locals.filename,  
+            name: res.locals.filename,
             type: 'file',
             ownerId: req.user.id
         });
@@ -85,39 +86,84 @@ async function getFileContent(req, res, next) {
 // SCRUM 314–315: map C++ response to HTTP + JSON
 function formatFileContent(req, res) {
     const cppResponse = res.locals.cppResponse;
-    // Successful response
-    if (cppResponse.startsWith('200')) {
+    const statusCode = parseInt(cppResponse, 10);
+
+    if (statusCode === 200) {
         return res.status(200).json({
             content: cppResponse.substring(4)
         });
     }
 
-    // File not found
-    if (cppResponse.startsWith('404')) {
-        return res.status(404).json({
-            error: 'File not found'
-        });
+    if (statusCode === 404) {
+        return res.status(404).json({ error: 'File not found' });
     }
 
-    // Server error
-    if (cppResponse.startsWith('500')) {
-        return res.status(500).json({
-            error: 'Server error'
-        });
+    if (statusCode === 500) {
+        return res.status(500).json({ error: 'Server error' });
     }
 
-    // Fallback for unexpected responses
     return res.status(502).json({
         error: 'Bad response from C++ server',
         raw: cppResponse
     });
 }
 
-// Export controller functions
+// SCRUM-322 – send DELETE command to the C++ server
+async function deleteFile(req, res, next) {
+    try {
+        const fileId = req.params.id;
+
+        // Validate file existence in in-memory store
+        const nodes = getRootNodes(req.user.id);
+        const node = nodes.find(n => n.id === fileId);
+
+        if (!node) {
+            return res.status(404).json({ error: 'File not found' });
+        }
+
+        // Send DELETE command to C++ server with filename
+        const rawResponse = await cppClient.send(`DELETE ${node.name}`);
+
+        res.locals.cppResponse = rawResponse.trim();
+        res.locals.fileId = fileId;
+
+        next();
+    } catch (err) {
+        next(err);
+    }
+}
+
+// SCRUM-323–325: handle DELETE response + update in-memory state
+function formatDeleteFileResponse(req, res) {
+    const cppResponse = res.locals.cppResponse;
+    const statusCode = parseInt(cppResponse, 10);
+
+    if (statusCode === 200 || statusCode === 204) {
+        removeNode(req.user.id, res.locals.fileId);
+        return res.status(204).end();
+    }
+
+    if (statusCode === 404) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (statusCode === 500) {
+        return res.status(500).json({ error: 'Server error' });
+    }
+
+    return res.status(502).json({
+        error: 'Bad response from C++ server',
+        raw: cppResponse
+    });
+}
+
 module.exports = {
     listRootFiles,
     createFile,
     formatCreateFileResponse,
     getFileContent,
-    formatFileContent
+    formatFileContent,
+    deleteFile,
+    formatDeleteFileResponse
 };
+
