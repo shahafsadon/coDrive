@@ -21,12 +21,13 @@ class TcpClient {
   }
 
   // Send a command to the C++ server (queued, sequential execution)
-  async send(command) {
+  send(command) {
     return new Promise((resolve, reject) => {
       this.queue.push({ command, resolve, reject });
-      this._pumpQueue().catch(reject);
+      this._pumpQueue().catch(() => {});
     });
   }
+
 
   // Close the TCP connection explicitly
   async close() {
