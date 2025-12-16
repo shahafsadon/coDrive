@@ -6,6 +6,13 @@ function errorHandler(err, req, res, next) {
         });
     }
 
+    // C++ server unavailable
+    if (err.message === 'CPP_SERVER_UNAVAILABLE') {
+        return res.status(502).json({
+            error: 'C++ server unavailable',
+        });
+    }
+
     // Fallback
     return res.status(500).json({
         error: 'Internal server error',
