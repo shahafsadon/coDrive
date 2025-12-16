@@ -1,6 +1,62 @@
 const cppClient = require('../services/cppServerClient');
-const { getRootNodes } = require('../models/fileSystem.model');
+const { 
+    getRootNodes,
+    createNode        
+} = require('../models/fileSystem.model');
 
+// SCRUM 317 – send CREATE command to C++ server
+async function createFile(req, res, next) {
+    try {
+        const { filename } = req.body;
+
+        if (!filename || filename.trim() === '') {
+            return res.status(400).json({ error: 'Filename is required' });
+        }
+
+        const rawResponse = await cppClient.send(`CREATE ${filename}`);
+
+        res.locals.cppResponse = rawResponse.trim();
+        res.locals.filename = filename;
+
+        next();
+    } catch (err) {
+        next(err);
+    }
+}
+
+// Map CREATE response to HTTP + JSON
+function formatCreateFileResponse(req, res) {
+    const cppResponse = res.locals.cppResponse;
+
+    if (cppResponse.startsWith('200')) {
+        createNode({
+            name: res.locals.filename,  
+            type: 'file',
+            ownerId: req.user.id
+        });
+
+        return res.status(201).end();
+    }
+
+    if (cppResponse.startsWith('409')) {
+        return res.status(409).json({
+            error: 'File already exists'
+        });
+    }
+
+    if (cppResponse.startsWith('500')) {
+        return res.status(500).json({
+            error: 'Server error'
+        });
+    }
+
+    return res.status(502).json({
+        error: 'Bad response from C++ server',
+        raw: cppResponse
+    });
+}
+
+// List root files for authenticated user
 function listRootFiles(req, res, next) {
     try {
         const userId = req.user.id;
@@ -60,6 +116,8 @@ function formatFileContent(req, res) {
 // Export controller functions
 module.exports = {
     listRootFiles,
+    createFile,
+    formatCreateFileResponse,
     getFileContent,
     formatFileContent
 };
