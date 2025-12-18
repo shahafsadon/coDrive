@@ -10,7 +10,11 @@ const {
     createFile,
     formatCreateFileResponse,
     deleteFile,
-    formatDeleteFileResponse
+    formatDeleteFileResponse,
+
+    // SCRUM-239
+    updateFile,
+    formatUpdateFileResponse
 } = require('../controllers/filesController');
 
 // List root files
@@ -31,6 +35,13 @@ router.get(
     formatFileContent
 );
 
+// SCRUM-239 – Update file or folder (rename)
+router.patch(
+    '/:id',
+    authMiddleware,
+    updateFile,
+    formatUpdateFileResponse
+);
 
 // Create file
 router.post('/', authMiddleware, createFile, formatCreateFileResponse);

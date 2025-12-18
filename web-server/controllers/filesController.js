@@ -30,7 +30,6 @@ async function createFile(req, res, next) {
     }
 }
 
-
 // Map CREATE response to HTTP + JSON
 function formatCreateFileResponse(req, res) {
     const cppResponse = res.locals.cppResponse;
@@ -66,7 +65,6 @@ function formatCreateFileResponse(req, res) {
         raw: cppResponse
     });
 }
-
 
 // List root files for authenticated user
 function listRootFiles(req, res, next) {
@@ -140,7 +138,6 @@ async function deleteFile(req, res, next) {
     try {
         const fileId = req.params.id;
 
-        // Validate file existence in in-memory store
         const nodes = getRootNodes(req.user.id);
         const node = nodes.find(n => n.id === fileId);
 
@@ -148,7 +145,6 @@ async function deleteFile(req, res, next) {
             return res.status(404).json({ error: 'File not found' });
         }
 
-        // Send DELETE command to C++ server with filename
         const rawResponse = await cppClient.send(`DELETE ${node.name}`);
 
         res.locals.cppResponse = rawResponse.trim();
@@ -184,6 +180,40 @@ function formatDeleteFileResponse(req, res) {
     });
 }
 
+// SCRUM-239 – Update file or folder (metadata only)
+async function updateFile(req, res, next) {
+    try {
+        const userId = req.user.id;
+        const fileId = req.params.id;
+        const { name } = req.body;
+
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            return res.status(400).json({
+                error: 'Name is required'
+            });
+        }
+
+        const node = getNodeById(userId, fileId);
+        if (!node) {
+            return res.status(404).json({
+                error: 'File or folder not found'
+            });
+        }
+
+        // Update metadata only (no C++ call)
+        res.locals.node = node;
+        res.locals.newName = name;
+        next();
+    } catch (err) {
+        next(err);
+    }
+}
+
+function formatUpdateFileResponse(req, res) {
+    res.locals.node.name = res.locals.newName;
+    return res.status(204).end();
+}
+
 module.exports = {
     listRootFiles,
     createFile,
@@ -192,5 +222,7 @@ module.exports = {
     getFileContent,
     formatFileContent,
     deleteFile,
-    formatDeleteFileResponse
+    formatDeleteFileResponse,
+    updateFile,              // SCRUM-239
+    formatUpdateFileResponse
 };
