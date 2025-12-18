@@ -42,6 +42,7 @@ target_include_directories(app_logic PUBLIC
 add_executable(Server
         src/Server/server.cpp
         src/Server/ClientHandler.cpp
+        src/Server/ThreadPool.cpp
 
         # These are needed because Server.cpp uses Application / Parser / FM
         src/Application.cpp

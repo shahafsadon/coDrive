@@ -4,11 +4,13 @@
 #include <unistd.h>
 #include "ClientHandler.h"
 #include <thread>
+#include "ThreadPool.h"
+
 
 /**
  * @brief Entry point for the server application. 
  *        Sets up the server socket, listens for incoming connections,
- *        and spawns a new thread to handle each client.
+ *        and dispatches each client to a thread pool for handling.
  */
 int main(int argc, char* argv[]) {
 
@@ -21,6 +23,13 @@ int main(int argc, char* argv[]) {
     // Initialize FileManager and Application instances
     FileManager fm;
     Application app(fm);
+    
+    // SCRUM-351: Initialize thread pool (fixed-size, bounded concurrency)
+    size_t numThreads = std::thread::hardware_concurrency();
+    if (numThreads == 0) {
+        numThreads = 4; // Fallback if hardware_concurrency is unavailable
+    }
+    ThreadPool threadPool(numThreads);
 
     // Create Server socket and create an IPv4 TCP socket (blocking by default)
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -37,9 +46,10 @@ int main(int argc, char* argv[]) {
     address.sin_port = htons(port);       // Convert to network byte order
 
     if (bind(server_fd, (sockaddr*)&address, sizeof(address)) < 0) {
+        // Cannot run without binding
         perror("[SERVER ERROR] bind()");
         close(server_fd);
-        exit(EXIT_FAILURE);   // Cannot run without binding
+        exit(EXIT_FAILURE);   
     }
     std::cout << "[SERVER] Bound to port " << port << std::endl;
 
@@ -66,15 +76,11 @@ int main(int argc, char* argv[]) {
             continue;
         }
         std::cout << "[SERVER] Client connected" << std::endl;
-        // Handle each client in a separate thread
-        std::thread clientThread([client_socket, &app]() {
-        handleClient(client_socket, app);
+        // SCRUM-351: Enqueue client handling task to the thread pool
+        threadPool.enqueue([client_socket, &app]() {
+            handleClient(client_socket, app);
+            close(client_socket);
         });
-        // Detach the thread to allow independent execution
-        clientThread.detach();
-    }   
 
-    // Cleanup when program exits
-    close(server_fd);
-    return 0;
+    }   
 }
