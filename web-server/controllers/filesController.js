@@ -1,8 +1,9 @@
 const cppClient = require('../services/cppServerClient');
-const { 
+const {
     getRootNodes,
     createNode,
-    removeNode         
+    removeNode,
+    getNodeById              // SCRUM-233
 } = require('../models/fileSystem.model');
 
 // SCRUM 317+226 – send CREATE command to C++ server
@@ -76,6 +77,22 @@ function listRootFiles(req, res, next) {
     } catch (err) {
         next(err);
     }
+}
+
+// SCRUM-233 – Get file or folder details by id
+function getFileById(req, res) {
+    const userId = req.user.id;
+    const fileId = req.params.id;
+
+    const node = getNodeById(userId, fileId);
+
+    if (!node) {
+        return res.status(404).json({
+            error: 'File or folder not found'
+        });
+    }
+
+    return res.status(200).json(node);
 }
 
 // SCRUM 312–313: send GET command to C++ server
@@ -171,9 +188,9 @@ module.exports = {
     listRootFiles,
     createFile,
     formatCreateFileResponse,
+    getFileById,             // SCRUM-233
     getFileContent,
     formatFileContent,
     deleteFile,
     formatDeleteFileResponse
 };
-

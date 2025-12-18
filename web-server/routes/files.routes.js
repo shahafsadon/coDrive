@@ -4,6 +4,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const {
     listRootFiles,
+    getFileById,                 // SCRUM-233
     getFileContent,
     formatFileContent,
     createFile,
@@ -15,8 +16,21 @@ const {
 // List root files
 router.get('/', authMiddleware, listRootFiles);
 
-// Get file content via C++ server
-router.get('/:path', authMiddleware, getFileContent, formatFileContent);
+// SCRUM-233 – Get file or folder details by id (metadata)
+router.get(
+    '/:id',
+    authMiddleware,
+    getFileById
+);
+
+// SCRUM-312 – Get file content via C++ server
+router.get(
+    '/content/:path',
+    authMiddleware,
+    getFileContent,
+    formatFileContent
+);
+
 
 // Create file
 router.post('/', authMiddleware, createFile, formatCreateFileResponse);
