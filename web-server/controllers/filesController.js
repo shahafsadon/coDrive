@@ -5,19 +5,23 @@ const {
     removeNode         
 } = require('../models/fileSystem.model');
 
-// SCRUM 317 – send CREATE command to C++ server
+// SCRUM 317+226 – send CREATE command to C++ server
 async function createFile(req, res, next) {
     try {
-        const { filename } = req.body;
+        const { name } = req.body;
 
-        if (!filename || filename.trim() === '') {
-            return res.status(400).json({ error: 'Filename is required' });
+        // Validation
+        if (!name || typeof name !== 'string' || name.trim() === '') {
+            return res.status(400).json({
+                error: 'File name is required'
+            });
         }
 
-        const rawResponse = await cppClient.send(`POST ${filename} _`);
+        // Send CREATE command to C++ server
+        const rawResponse = await cppClient.send(`POST ${name} _`);
 
         res.locals.cppResponse = rawResponse.trim();
-        res.locals.filename = filename;
+        res.locals.filename = name;
 
         next();
     } catch (err) {
@@ -25,18 +29,23 @@ async function createFile(req, res, next) {
     }
 }
 
+
 // Map CREATE response to HTTP + JSON
 function formatCreateFileResponse(req, res) {
     const cppResponse = res.locals.cppResponse;
 
     if (cppResponse.startsWith('200') || cppResponse.startsWith('201')) {
-        createNode({
+        const node = createNode({
             name: res.locals.filename,
             type: 'file',
             ownerId: req.user.id
         });
 
-        return res.status(201).end();
+        res
+            .status(201)
+            .location(`/api/files/${node.id}`)
+            .end();
+        return;
     }
 
     if (cppResponse.startsWith('409')) {
@@ -56,6 +65,7 @@ function formatCreateFileResponse(req, res) {
         raw: cppResponse
     });
 }
+
 
 // List root files for authenticated user
 function listRootFiles(req, res, next) {

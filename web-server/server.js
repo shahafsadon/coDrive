@@ -2,7 +2,11 @@ const express = require('express');
 const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({
+    type: ['application/json', 'application/*+json'],
+    limit: '1mb'
+}));
+
 
 // main API router
 const apiRoutes = require('./routes');
