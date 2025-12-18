@@ -8,9 +8,12 @@
 #include <condition_variable>
 #include <functional>
 
+// A simple thread pool implementation 
 class ThreadPool {
+
 public:
-    explicit ThreadPool(size_t numThreads);
+    // Constructor to initialize the thread pool with a given number of threads and maximum queue size
+    ThreadPool(size_t numThreads, size_t maxQueueSize);
     ~ThreadPool();
 
     // Disable copy & assignment
@@ -28,6 +31,7 @@ private:
     std::mutex queueMutex;
     std::condition_variable condition;
     bool stop;
+    size_t maxQueueSize;
 };
 
 #endif // THREAD_POOL_H
