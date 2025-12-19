@@ -4,17 +4,20 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const {
     listRootFiles,
-    getFileById,                 // SCRUM-233
+    getFileById,                
     getFileContent,
     formatFileContent,
     createFile,
     formatCreateFileResponse,
     deleteFile,
     formatDeleteFileResponse,
-
-    // SCRUM-239
     updateFile,
-    formatUpdateFileResponse
+    formatUpdateFileResponse,
+    // permission-related handlers 
+    getPermissions,
+    addPermission,
+    updatePermission,
+    deletePermission
 } = require('../controllers/filesController');
 
 // List root files
@@ -53,5 +56,36 @@ router.delete(
     deleteFile,
     formatDeleteFileResponse
 );
+
+
+// File permissions
+// Get permissions of a file/folder
+router.get(
+    '/:id/permissions',
+    authMiddleware,
+    getPermissions
+);
+
+// Add permission
+router.post(
+    '/:id/permissions',
+    authMiddleware,
+    addPermission
+);
+
+// Update permission
+router.patch(
+    '/:id/permissions/:pid',
+    authMiddleware,
+    updatePermission
+);
+
+// Delete permission
+router.delete(
+    '/:id/permissions/:pid',
+    authMiddleware,
+    deletePermission
+);
+
 
 module.exports = router;

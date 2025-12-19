@@ -19,6 +19,7 @@ function createNode({ name, type, ownerId, parentId = null }) {
         type,       // 'file' | 'folder'
         ownerId,
         parentId,   // null = root
+        permissions: []
     };
 
     const store = getUserStore(ownerId);
@@ -47,5 +48,5 @@ module.exports = {
     createNode,
     getNodeById,
     getRootNodes,
-    removeNode,          // ← FIX: export
+    removeNode,          
 };

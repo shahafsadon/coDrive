@@ -3,8 +3,9 @@ const {
     getRootNodes,
     createNode,
     removeNode,
-    getNodeById              // SCRUM-233
+    getNodeById              
 } = require('../models/fileSystem.model');
+const { randomUUID } = require('crypto');
 
 // SCRUM 317+226 – send CREATE command to C++ server
 async function createFile(req, res, next) {
@@ -91,6 +92,110 @@ function getFileById(req, res) {
     }
 
     return res.status(200).json(node);
+}
+
+function getPermissions(req, res) {
+    const userId = req.user.id;
+    const fileId = req.params.id;
+
+    const node = getNodeById(userId, fileId);
+
+    if (!node) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (node.ownerId !== userId) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    return res.status(200).json(node.permissions || []);
+}
+
+function addPermission(req, res) {
+    const requesterId = req.user.id;
+    const fileId = req.params.id;
+    const { userId, access } = req.body;
+
+    if (!userId || !access || !['read', 'write'].includes(access)) {
+        return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    const node = getNodeById(requesterId, fileId);
+
+    if (!node) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (node.ownerId !== requesterId) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const permission = {
+        id: randomUUID(),
+        userId,
+        access
+    };
+
+    node.permissions.push(permission);
+
+    return res.status(201).json(permission);
+}
+
+function updatePermission(req, res) {
+    const requesterId = req.user.id;
+    const fileId = req.params.id;
+    const permissionId = req.params.pid;
+    const { access } = req.body;
+
+    if (!access || !['read', 'write'].includes(access)) {
+        return res.status(400).json({ error: 'Invalid input' });
+    }
+
+    const node = getNodeById(requesterId, fileId);
+
+    if (!node) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (node.ownerId !== requesterId) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const permission = node.permissions.find(p => p.id === permissionId);
+
+    if (!permission) {
+        return res.status(404).json({ error: 'Permission not found' });
+    }
+
+    permission.access = access;
+
+    return res.status(204).end();
+}
+
+function deletePermission(req, res) {
+    const requesterId = req.user.id;
+    const fileId = req.params.id;
+    const permissionId = req.params.pid;
+
+    const node = getNodeById(requesterId, fileId);
+
+    if (!node) {
+        return res.status(404).json({ error: 'File not found' });
+    }
+
+    if (node.ownerId !== requesterId) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const index = node.permissions.findIndex(p => p.id === permissionId);
+
+    if (index === -1) {
+        return res.status(404).json({ error: 'Permission not found' });
+    }
+
+    node.permissions.splice(index, 1);
+
+    return res.status(204).end();
 }
 
 // SCRUM 312–313: send GET command to C++ server
@@ -218,11 +323,16 @@ module.exports = {
     listRootFiles,
     createFile,
     formatCreateFileResponse,
-    getFileById,             // SCRUM-233
+    getFileById,            
     getFileContent,
     formatFileContent,
     deleteFile,
     formatDeleteFileResponse,
-    updateFile,              // SCRUM-239
-    formatUpdateFileResponse
+    updateFile,              
+    formatUpdateFileResponse,
+    // permissions
+    getPermissions,
+    addPermission,
+    updatePermission,
+    deletePermission
 };

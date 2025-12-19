@@ -1,22 +1,7 @@
-function errorHandler(err, req, res, next) {
-    // Invalid JSON body
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return res.status(400).json({
-            error: 'Invalid JSON format',
-        });
-    }
-
-    // C++ server unavailable
-    if (err.message === 'CPP_SERVER_UNAVAILABLE') {
-        return res.status(502).json({
-            error: 'C++ server unavailable',
-        });
-    }
-
-    // Fallback
-    return res.status(500).json({
-        error: 'Internal server error',
+function errorMiddleware(err, req, res, next) {
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal server error'
     });
 }
 
-module.exports = errorHandler;
+module.exports = errorMiddleware;
