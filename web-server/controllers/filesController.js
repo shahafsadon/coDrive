@@ -10,9 +10,15 @@ const { randomUUID } = require('crypto');
 // SCRUM 317+226 – send CREATE command to C++ server
 async function createFile(req, res, next) {
     try {
+        if (!req.body || typeof req.body !== 'object') {
+            return res.status(400).json({
+                error: 'Request body is required'
+            });
+        }
+
         const { name } = req.body;
 
-        // Validation
+        // Validation 
         if (!name || typeof name !== 'string' || name.trim() === '') {
             return res.status(400).json({
                 error: 'File name is required'
@@ -77,6 +83,7 @@ function listRootFiles(req, res, next) {
         next(err);
     }
 }
+
 
 // SCRUM-233 – Get file or folder details by id
 function getFileById(req, res) {
@@ -288,6 +295,11 @@ function formatDeleteFileResponse(req, res) {
 // SCRUM-239 – Update file or folder (metadata only)
 async function updateFile(req, res, next) {
     try {
+        if (!req.body || typeof req.body !== 'object') {
+            return res.status(400).json({
+                error: 'Request body is required'
+            });
+        }
         const userId = req.user.id;
         const fileId = req.params.id;
         const { name } = req.body;
