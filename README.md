@@ -1,164 +1,612 @@
 # coDrive Project
 
-### **TCP Server, Multi-Client Support, Command Execution & System Architecture**
+### **RESTful Web API, File Management & Distributed System Architecture**
 
 
-This assignment extends the functionality implemented in Assignment 1 by transforming the local command-execution engine into a fully operational TCP server capable of handling multiple clients simultaneously.
-The server accepts commands from remote clients (C++ or Python), processes them using the internal logic of Assignment 1, and returns responses in the exact format required.
+This project implements a cloud-like file management system that exposes a RESTful Web API.
+The system is built as an extension of Assignment 2 and adds a NodeJS-based web server on top
+of the existing C++ server.
 
-#### **The main goals of Assignment 2 were:**
+The NodeJS server exposes HTTP endpoints under `/api/*` and acts as a client to the C++ server
+(from Assignment 2), which handles the actual file operations via TCP sockets.
+This design allows reuse of the core business logic while adding a modern web interface.
 
-● Implementing a multithreaded TCP server
+### Assignment 3 introduces:
+- A RESTful API implemented in NodeJS (Express, MVC architecture)
+- User management and authentication using user IDs
+- File and folder management endpoints
+- A permission model for sharing files with other users
+- Proper HTTP status codes and JSON responses
+- Thread pool–based concurrency in the C++ server
 
-● Supporting multiple concurrent clients
-
-● Integrating the command system from Assignment 1
-
-● Preserving the exact I/O format for all commands
-
-● Ensuring correctness, synchronization, and clean architecture
-
-● Providing clients (C++ & Python) that can connect and send valid commands
-
+All API endpoints return JSON responses and are designed according to the specification provided
+in the assignment instructions.
 ---
-## Project Structure:
+### Project Structure
+
+The project is organized into two main parts:  
+the original C++ backend server (Assignment 2) and the new NodeJS web server layer
+introduced in Assignment 3.
 ```
 coDrive/
+├─ src/
+│  ├─ server/                 # C++ TCP server (from Assignment 2)
+│  │  ├─ server.cpp            # TCP server entry point
+│  │  ├─ ClientHandler.cpp    # Handles a single TCP client
+│  │  └─ ClientHandler.h
+│  │
+│  ├─ commands/               # Command implementations (Assignment 2)
+│  │                           # (Kept for backward compatibility)
+│  │
+│  └─ client/                 # C++ / Python clients (Assignment 2)
 │
-├── src/
-│   ├── server/
-│   │   ├── server.cpp             # Entry point: starts TCP server on given port
-│   │   ├── ClientHandler.cpp      # Per-client thread logic (read - process - respond)
-│   │   └── ClientHandler.h
-│   │
-│   ├── commands/                  # All command implementations (OCP-compliant)
-│   │   ├── AddArticleCommand.cpp
-│   │   ├── GetArticleCommand.cpp
-│   │   ├── DeleteArticleCommand.cpp
-│   │   ├── SearchArticleCommand.cpp
-│   │   └── InvalidCommand.cpp
-│   │
-│   ├── Client/                    # Both C++ and Python clients for remote access
-│   │   ├── Client.cpp             # C++ client TCP logic
-│   │   ├── Client.h
-│   │   ├── mainClient.cpp         # C++ client entry point
-│   │   └── Client.py              # Python client implementation
-│   │
-│   ├── Application.cpp            # High-level for command execution
-│   ├── Application.h
-│   ├── CommandParser.cpp          # Converts raw input to ICommand objects
-│   ├── CommandParser.h
-│   ├── FileManager.cpp            # File storage, retrieval, and RLE handling
-│   ├── FileManager.h
-│   ├── RLECompressor.cpp          # Implements basic RLE compression
-│   ├── RLEDecompressor.cpp        # Implements basic RLE decompression
-│   └── main.cpp                   # (Optional) Local CLI tester from Assignment 1
+├─ web-server/                # === Assignment 3 Core ===
+│  ├─ controllers/            # HTTP request handling logic
+│  │  ├─ authController.js    # Authentication & tokens
+│  │  ├─ filesController.js   # Files & folders CRUD
+│  │  ├─ searchController.js  # Search endpoint
+│  │  ├─ userController.js    # Users management
+│  │  └─ healthController.js  # Health check endpoint
+│  │
+│  ├─ middleware/             # Express middlewares
+│  │  ├─ authMiddleware.js    # User authentication via headers
+│  │  └─ errorMiddleware.js   # Centralized error handling
+│  │
+│  ├─ models/                 # In-memory data models
+│  │  ├─ user.model.js        # Users data structure
+│  │  └─ fileSystem.model.js  # Files, folders & permissions
+│  │
+│  ├─ routes/                 # REST API routing
+│  │  ├─ files.routes.js
+│  │  ├─ user.routes.js
+│  │  ├─ token.routes.js
+│  │  ├─ search.js
+│  │  ├─ health.routes.js
+│  │  └─ index.js             # Routes aggregation
+│  │
+│  ├─ services/               # Integration services
+│  │  ├─ tcpClient.js         # Communication with C++ TCP server
+│  │  └─ cppServerClient.js   # Abstraction over TCP protocol
+│  │
+│  ├─ server.js               # Express server entry point
+│  ├─ package.json
+│  ├─ Dockerfile              # Web server Docker image
+│  └─ package-lock.json
 │
-├── tests/                         # Unit tests from Assignment 1 (GTest)
-│   ├── CLIParserTest.cpp          # Tests of CommandParser logic
-│   ├── RLETest.cpp                # Tests for RLE compression/decompression
-│   └── ApplicationTest.cpp        # Tests for Application (command execution)
-│
-├── Dockerfile                     # Builds & runs server inside container
-├── CMakeLists.txt                 # Build configuration for server, clients, and tests
-└── README.md                      # Documentation (this file)
+├─ docker-compose.yml         # Runs both Node.js web server & C++ server
+├─ Dockerfile                 # C++ server Docker image
+├─ CMakeLists.txt             # C++ build configuration
+└─ README.md                  # Project documentation
+> Note:  
+ The C++ TCP server and command infrastructure from Assignment 2
+ are kept unchanged and reused as a backend service.
+ Assignment 3 focuses on exposing this functionality through
+ a RESTful web API with authentication, permissions, and Docker support.
 ```
----
-### Design Reflection – Guided Questions Summary
-
-During the transition from Assignment 1 to Assignment 2, our system required several structural changes, but these changes aligned with the principles of being open for extension yet closed for modification (OCP).
-First, splitting the single command-handling file from Assignment 1 into dedicated command classes in Assignment 2 did require us to touch existing files, but this was an intentional refactor meant to increase modularity rather than a violation of OCP.
-
-When introducing new commands such as DELETE and search, we did not need to modify deep logic inside the system; the only adjustments involved normalizing the command keywords (e.g., uppercase/lowercase alignment) and adding parsing logic to extract the search phrase.
-Similarly, updating the command input format did not require internal behavioral changes - we extended existing classes rather than rewriting them.
-
-The shift from console-based I/O to TCP socket communication also did not force modifications to business logic.
-Only the new networking components (server + clients) were added or updated accordingly, meaning the core application logic remained unchanged and reusable.
-
-Overall, the design choices allowed us to expand the system while preserving previously stable logic.
-All relevant explanations, system structure, and architectural decisions are documented in the updated README, ensuring clarity for future reviewers and maintainers.
-
 ---
 # How to Build & Run (Docker):
-**Step 1: Run the Server Using Docker**
+### Step 1: Running the Servers Using Docker
 
-Build the Docker Image
-```
-docker build -t compressor-app .
-```
-Stop the existing container
-```
-docker stop codrive-server
-```
-Remove the container
-```
-docker rm codrive-server
-```
-Run the Server Container
-```
-docker run -p 8080:8080 --name codrive-server compressor-app
-```
-**step 2: Run the C++ Client**
+The entire system (C++ server + Node.js web server) is started using a single command.
 
-Enter the running container:
+Open a terminal in the root directory of the project (coDrive/).
+
+Run the following command:
 ```
-docker exec -it codrive-server bash
+docker-compose up --build
 ```
-Navigate to the build directory:
+What This Command Does:
+
+- Builds the C++ server container
+
+- Builds the Node.js web server container
+
+- Starts both containers on the same Docker network
+
+- Ensures the web server can communicate with the C++ server internally
+
+After a successful startup, you should see:
+![Server Running](images/server-run.png)
+
+### Step 2: User Registration & Authentication Flow
+
+All interactions with the system are performed on behalf of a specific user.
+Therefore, the first step after starting the servers is to create a user and authenticate
+
+**To register a new user, send a POST request to the users endpoint.**
+
+Example:
 ```
-cd /usr/src/mytest/build
+$user = Invoke-RestMethod `
+  -Method POST `
+  -Uri http://localhost:3000/api/users `
+  -ContentType "application/json" `
+  -Body (@{
+      username = "demo"
+      password = "123"
+      name     = "Demo User"
+  } | ConvertTo-Json)
+  ```
+What happens in this step:
+
+- A new user is created in the system
+
+- The server returns a user object
+
+- The response includes a unique user ID
+
+- The returned id uniquely identifies this user and is required in later steps.
+
+
+**After the user is created, authenticate using the same credentials.**
+
+Example:
 ```
-Run the C++ client:
+$login = Invoke-RestMethod `
+  -Method POST `
+-Uri http://localhost:3000/api/tokens `
+  -ContentType "application/json" `
+-Body (@{
+username = "demo"
+password = "123"
+} | ConvertTo-Json)
 ```
-./Client 127.0.0.1 8080
+What happens in this step:
+
+- The credentials are validated
+
+- The server returns the userId associated with this user
+
+- This userId represents the authenticated user context
+
+All protected API endpoints require a user context.
+
+The user ID returned from authentication must be passed in the request headers:
+
+```
+x-user-id: <USER_ID>
 ```
 
-**step 3: Run the Python Client**
+Example:
+```
+-Headers @{ "x-user-id" = "1766410886999673" }
+```
+From this point on:
 
-Enter the running container:
-```
-docker exec -it codrive-server bash
-```
-Navigate to the Python client directory:
-```
-cd /usr/src/mytest/src/Client
-```
-Run the Python client:
-```
-python3 Client.py 127.0.0.1 8080
-```
-### NOTES: 
-● The server is multi-threaded and supports multiple C++ and Python clients simultaneously.
+- Every request (files, permissions, search, etc.)
 
-● Both clients communicate with the server using TCP port 8080.
+- Is executed as this user
 
-● You may run multiple clients in parallel in separate terminal tabs.
+- And is authorized according to ownership and permissions
+ 
+### Important Notes
 
-● Once connected, each client should see that the server accepts the connection and can immediately begin sending commands.
+- User IDs are generated dynamically and will differ between runs
 
+- The README intentionally does not rely on fixed IDs
+
+- Each step produces identifiers that must be reused in subsequent steps
+
+- This flow is mandatory before performing any file or permission operations
+
+## File Management Flow:
+
+After a user is authenticated, all file and folder operations are executed in the context of that user.
+
+Each request must include the x-user-id header, which identifies the acting user.
+
+**Option 1 - List Root Files**
+
+To retrieve all files and folders located at the root level of the user’s file system:
+```
+Invoke-RestMethod `
+  -Method GET `
+  -Uri http://localhost:3000/api/files `
+  -Headers @{ "x-user-id" = <USER_ID> }
+```
+What happens in this step:
+
+- The server returns all files owned by the user at the root level
+
+- Initially, this list is empty for a new user
+
+- The response also includes a count of returned items
+
+**Option 2 - Create a New File or Folder**
+
+To create a new file (or folder) under the root directory:
+```
+Invoke-RestMethod `
+  -Method POST `
+  -Uri http://localhost:3000/api/files `
+  -Headers @{ "x-user-id" = <USER_ID> } `
+  -ContentType "application/json" `
+  -Body (@{
+      name = "example"
+  } | ConvertTo-Json)
+```
+
+What happens in this step:
+
+- A new file entity is created
+
+- The server generates a unique file ID
+
+- The file is associated with the authenticated user
+
+- The new file appears in subsequent list requests
+
+- The returned file ID is required for all file-specific operations.
+
+**Option 3 - Retrieve a Specific File by ID**
+
+To fetch metadata of a specific file or folder:
+```
+Invoke-RestMethod `
+  -Method GET `
+  -Uri http://localhost:3000/api/files/<FILE_ID> `
+  -Headers @{ "x-user-id" = <USER_ID> }
+```
+What happens in this step:
+
+- The server returns the file’s metadata
+
+- Includes name, type, owner, parent, and permissions
+
+- Only accessible if the user owns the file or has permissions
+
+**Option 4 - Update File Metadata**
+
+To rename an existing file or folder:
+```
+Invoke-RestMethod `
+  -Method PATCH `
+-Uri http://localhost:3000/api/files/<FILE_ID> `
+  -Headers @{ "x-user-id" = <USER_ID> } `
+-ContentType "application/json" `
+-Body (@{
+name = "new-name"
+} | ConvertTo-Json)
+```
+
+What happens in this step:
+
+- The file name is updated
+
+- No content is returned on success
+
+- If the file does not exist or access is denied, an error is returned
+
+**Option 5 - Error Handling (Invalid File ID)**
+
+Attempting to update or access a non-existing file ID:
+```
+Invoke-RestMethod `
+  -Method PATCH `
+  -Uri http://localhost:3000/api/files/invalid-id `
+  -Headers @{ "x-user-id" = <USER_ID> } `
+  -ContentType "application/json" `
+  -Body (@{
+      name = "new-name"
+  } | ConvertTo-Json)
+```
+
+Expected behavior:
+
+- The server responds with a 404 Not Found
+
+- An explanatory error message is returned
+
+**Option 6 - Validation Errors**
+
+Creating a file without mandatory fields:
+```
+Invoke-RestMethod `
+  -Method POST `
+  -Uri http://localhost:3000/api/files `
+  -Headers @{ "x-user-id" = <USER_ID> } `
+  -ContentType "application/json" `
+  -Body (@{} | ConvertTo-Json)
+```
+Expected behavior:
+
+- The server responds with 400 Bad Request
+
+- Indicates that required fields are missing
+
+**Option 7 - Delete a File**
+
+To delete a file or folder:
+```
+Invoke-RestMethod `
+  -Method DELETE `
+  -Uri http://localhost:3000/api/files/<FILE_ID> `
+  -Headers @{ "x-user-id" = <USER_ID> }
+```
+
+What happens in this step:
+
+- The file is removed from the user’s file system
+
+- The operation is permanent
+
+- The deleted file no longer appears in list requests
+
+## Permissions Management Flow:
+
+The system supports fine-grained access control for files and folders.
+Each file can have explicit permissions that grant other users access.
+
+Permissions are always defined per file and per user.
+
+**What Is a Permission?**
+
+A permission object represents access granted to another user on a specific file.
+
+Each permission contains:
+
+- id – unique permission identifier
+
+- userId – the user receiving access
+
+- access – access level (read or write)
+
+Only the file owner is allowed to manage permission
+
+**Option 8 - List Permissions of a File**
+
+To retrieve all permissions assigned to a specific file:
+```
+Invoke-RestMethod `
+  -Method GET `
+  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
+  -Headers @{ "x-user-id" = <OWNER_USER_ID> }
+```
+
+What happens in this step:
+
+- The server returns all permissions associated with the file
+
+- Initially, this list is empty
+
+- The response includes a count of permission entries
+
+**Option 9 - Grant Permission to Another User**
+
+To grant access to another user:
+```
+Invoke-RestMethod `
+  -Method POST `
+  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
+  -Headers @{ "x-user-id" = <OWNER_USER_ID> } `
+  -ContentType "application/json" `
+  -Body (@{
+      userId = "<TARGET_USER_ID>"
+      access = "read"
+  } | ConvertTo-Json)
+```
+
+What happens in this step:
+
+- A new permission entry is created
+
+- The target user gains access to the file
+
+- The server returns a permission object with a unique permission ID
+
+Supported access levels:
+
+- read - read-only access
+
+- write - read and modify access
+
+**Option 10 - Update an Existing Permission**
+
+To modify the access level of an existing permission:
+```
+Invoke-RestMethod `
+  -Method PATCH `
+  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
+  -Headers @{ "x-user-id" = <OWNER_USER_ID> } `
+  -ContentType "application/json" `
+  -Body (@{
+      access = "write"
+  } | ConvertTo-Json)
+```
+What happens in this step:
+
+- The permission access level is updated
+
+- Only the file owner can perform this operation
+
+- If the permission ID does not exist, an error is returned
+
+**Option 11 - Remove a Permission**
+
+To revoke access from a user:
+```
+Invoke-RestMethod `
+  -Method DELETE `
+-Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
+-Headers @{ "x-user-id" = <OWNER_USER_ID> }
+```
+
+What happens in this step:
+
+- The permission entry is deleted
+
+- The target user immediately loses access
+
+- The file owner always retains full access
+
+### Authorization Rules:
+
+Only the file owner can:
+
+- Add permissions
+
+- Modify permissions
+
+- Delete permissions
+
+Users with read access:
+
+- Can view file metadata
+
+Users with write access:
+
+- Can update file metadata
+
+## Search API Flow:
+
+The system supports searching files and folders by name.
+Search results are always scoped to the authenticated user and respect permission rules.
+
+**Option 12 - Search Files by Query**
+
+To search for files or folders whose name contains a given query string:
+```
+Invoke-RestMethod `
+  -Method GET `
+  -Uri http://localhost:3000/api/search/<QUERY> `
+  -Headers @{ "x-user-id" = <USER_ID> }
+```
+
+What happens in this step:
+
+- The server searches all files visible to the user
+
+- A match occurs if the file or folder name contains the query string
+
+Results include:
+
+- Files owned by the user
+
+- Files shared with the user via permissions
+
+### Search Behavior Notes:
+
+- Search is case-sensitive / case-insensitive according to the implementation
+
+- Only files the user is authorized to access are returned
+
+- Each result includes full file metadata (id, name, type, owner, etc.)
+
+- An empty result set is returned if no matches are found
 ---
+# Example Run (Docker):
 
-## Example Run:
+**Services Startup and Server Initialization**
 
-### Server - Startup & Client Connections
-The server starts successfully, binds to port **8080**, enters listening mode,  
-and displays a log message each time a new client (C++ or Python) connects.
+The c++ and web services are successfully built and started, with the server listening for connections and accepting a client.
+![Server Running](images/server-run.png)
 
-![Server Running](images/server.png)
+**User Registration**
 
+A new user is registered in the system via the /api/users endpoint, creating a unique user identity that will be used in all subsequent authenticated operations.
+![](images/1.png)
 
-### Python Client - Example Commands
-The Python client connects to the server and demonstrates valid and invalid commands,  
-including POST, GET, DELETE, and search operations.
+**User Authentication (Login)**
 
-![Python Client Example](images/py-client.png)
-
-
-### C++ Client - Example Commands
-The C++ client also connects successfully and performs multiple requests to verify  
-the server’s functionality and consistency with the Python client.
-
-![C++ Client Example](images/c-client.png)
+Using the credentials of the user created in the previous step, the user logs in via the /api/tokens endpoint and receives the userId that represents the authenticated context for all following requests.
+![](images/2.png)
 
 
+**Initial File Listing**
 
+Using the authenticated user ID obtained in the previous step, the root file list is requested, showing an empty directory for a newly created user.
+![](images/3.png)
+
+
+**Creating a New File**
+
+Based on the authenticated user context established earlier, a new file named `"aaa"` is created at the root level using the `/api/files` endpoint.
+
+![](images/4.png)
+
+
+**Verifying File Creation**
+
+Following the file creation step, the file list is retrieved again to confirm that the newly created file appears in the user’s root directory.
+
+![](images/5.png)
+
+**Retrieve File Metadata by ID**
+
+Using the file ID obtained in the previous listing step, the metadata of the specific file is retrieved to demonstrate direct access to a single resource.
+![](images/6.png)
+
+**Create an Additional File**
+
+Still using the same authenticated user, a second file ("bbbb") is created to demonstrate handling multiple files under the same user context.
+![](images/7.png)
+
+**List Files After Adding a Second File**
+
+The file list is retrieved again to verify that both files created in the previous steps are present in the root directory.
+![](images/8.png)
+
+**Update File Name**
+
+Using the file ID of the second file from the previous step, a PATCH request is sent to update the file name, demonstrating file metadata modification.
+![](images/9.png)
+
+**Verify Updated File State**
+
+The file list is retrieved one final time to confirm that the file update operation was successful and the new file name is reflected in the system.
+![](images/10.png)
+
+**File Update on Non-Existing Resource**
+
+A PATCH /api/files/{id} request fails with an error indicating that the specified file or folder does not exist.
+![](images/11.png)
+
+**File Creation Validation Error**
+
+An attempt to create a file via POST /api/files fails because the required file name is missing from the request body.
+![](images/12.png)
+
+**File Deletion**
+
+A file is deleted using a DELETE /api/files/{id} request with the authenticated user context provided in the request headers.
+![](images/13.png)
+
+**Updated File Listing**
+
+The authenticated user retrieves the file list via GET /api/files, showing the newly created file in the root directory.
+![](images/14.png)
+
+**File Permissions Listing**
+
+The authenticated user retrieves the permissions for a specific file via GET /api/files/{id}/permissions, resulting in an empty permissions list.
+![](images/15.png)
+
+**Grant File Permission**
+
+A permission is added to a file via POST /api/files/{id}/permissions, granting read access to another user.
+![](images/16.png)
+
+**Updated File Permissions**
+
+The authenticated user retrieves the file permissions via GET /api/files/{id}/permissions, showing the newly granted access entry.
+![](images/17.png)
+
+**Update File Permission**
+
+An existing file permission is updated via PATCH /api/files/{id}/permissions/{permissionId}, changing the access level to write.
+![](images/18.png)
+
+**Verified Permission Update**
+
+The file permissions are retrieved via GET /api/files/{id}/permissions, confirming that the access level was successfully updated to write.
+![](images/19.png)ץ
+
+**Revoke File Permission**
+
+A file permission is removed via DELETE /api/files/{id}/permissions/{permissionId}, revoking the previously granted access.
+![](images/20.png)
+
+**Permissions Removed Confirmation**
+
+The file permissions are retrieved via GET /api/files/{id}/permissions, confirming that all permissions have been successfully removed.
+![](images/21.png)
