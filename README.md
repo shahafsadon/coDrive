@@ -499,6 +499,7 @@ Results include:
 **Services Startup and Server Initialization**
 
 The c++ and web services are successfully built and started, with the server listening for connections and accepting a client.
+
 ![Server Running](images/server-run.png)
 
 **User Registration**
@@ -515,6 +516,7 @@ Using the credentials of the user created in the previous step, the user logs in
 **Initial File Listing**
 
 Using the authenticated user ID obtained in the previous step, the root file list is requested, showing an empty directory for a newly created user.
+
 ![](images/3.png)
 
 
@@ -539,6 +541,7 @@ Using the file ID obtained in the previous listing step, the metadata of the spe
 **Create an Additional File**
 
 Still using the same authenticated user, a second file ("bbbb") is created to demonstrate handling multiple files under the same user context.
+
 ![](images/7.png)
 
 **List Files After Adding a Second File**
@@ -599,7 +602,7 @@ An existing file permission is updated via PATCH /api/files/{id}/permissions/{pe
 **Verified Permission Update**
 
 The file permissions are retrieved via GET /api/files/{id}/permissions, confirming that the access level was successfully updated to write.
-![](images/19.png)ץ
+![](images/19.png)
 
 **Revoke File Permission**
 
