@@ -6,7 +6,7 @@ function FileCard({ name, type }) {
     return (
         <div className="file-card">
             <div className="file-icon">{icon}</div>
-            <div className="file-name" title={name}>{name}</div>
+            <div className="file-name">{name}</div>
         </div>
     );
 }
