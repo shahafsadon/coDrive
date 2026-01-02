@@ -1,0 +1,60 @@
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+}
+
+.file-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: box-shadow 0.15s ease;
+}
+
+.file-card:hover {
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+}
+
+.file-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.file-name {
+    font-size: 13px;
+    color: #3c4043;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.empty-state {
+    color: #5f6368;
+    font-size: 14px;
+    padding: 32px;
+}
+
+
+.drive-container {
+    display: flex;
+    height: calc(100vh - 56px);
+}
+
+
+.drive-main {
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+
+.drive-title {
+    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 500;
+    color: #202124;
+}

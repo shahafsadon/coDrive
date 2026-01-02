@@ -1,0 +1,48 @@
+.topbar {
+    height: 56px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    font-family: Arial, sans-serif;
+}
+
+.topbar-left .logo {
+    font-size: 20px;
+    font-weight: 500;
+    color: #1a73e8;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.theme-toggle {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-email {
+    font-size: 14px;
+    color: #5f6368;
+}
+
+.logout-btn {
+    border: none;
+    background-color: transparent;
+    color: #1a73e8;
+    cursor: pointer;
+    font-size: 14px;
+}
