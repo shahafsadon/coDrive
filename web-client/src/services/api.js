@@ -1,10 +1,14 @@
 const API_BASE_URL = "/api";
 
 async function request(method, path, body = null, headers = {}) {
+    const userId =
+        localStorage.getItem("userId") ||
+        localStorage.getItem("token");
     const options = {
         method,
         headers: {
             "Content-Type": "application/json",
+            ...(userId ? { "x-user-id": userId } : {}),
             ...headers,
         },
     };

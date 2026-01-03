@@ -127,8 +127,18 @@ export default function RegisterPage() {
 
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 {success && <p style={{ color: "green" }}>{success}</p>}
-
+                
                 <button type="submit">Register</button>
+                {/* Extra navigation link to login page */}
+                <p style={{ marginTop: "10px" }}>
+                    Already have an account?{" "}
+                    <span
+                        style={{ color: "blue", cursor: "pointer" }}
+                        onClick={() => navigate("/login")}
+                    >
+                        Login
+                    </span>
+                </p>
             </form>
         </div>
     );
