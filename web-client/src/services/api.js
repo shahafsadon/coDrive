@@ -1,40 +1,45 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = "/api";
 
-// generic GET helper
-export async function apiGet(path, headers = {}) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-        method: 'GET',
+async function request(method, path, body = null, headers = {}) {
+    const options = {
+        method,
         headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             ...headers,
         },
-    });
-    // check for HTTP errors
+    };
+
+    if (body !== null) {
+        options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(`${API_BASE_URL}${path}`, options);
+
+    // 204 No Content DELETE / PATCH
+    if (response.status === 204) {
+        return null;
+    }
+
     if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        const text = await response.text();
+        throw new Error(text || `API error: ${response.status}`);
     }
     // backend always returns JSON
     return response.json();
 }
 
-// generic POST helper, used mainly for auth
-export async function apiPost(path, body, headers = {}) {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...headers,
-        },
-        body: JSON.stringify(body),
-    });
+export function apiGet(path, headers = {}) {
+    return request("GET", path, null, headers);
+}
 
-    // backend always returns JSON
-    const data = await response.json().catch(() => ({}));
+export function apiPost(path, body, headers = {}) {
+    return request("POST", path, body, headers);
+}
 
-    if (!response.ok) {
-        // backend sends message on auth failure
-        throw new Error(data.message || 'Request failed');
-    }
+export function apiPatch(path, body, headers = {}) {
+    return request("PATCH", path, body, headers);
+}
 
-    return data;
+export function apiDelete(path, headers = {}) {
+    return request("DELETE", path, null, headers);
 }

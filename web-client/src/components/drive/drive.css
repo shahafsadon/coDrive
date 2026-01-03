@@ -69,3 +69,20 @@
     color: #d93025;
 }
 
+.drive-actions {
+    margin-bottom: 16px;
+}
+
+.new-file-btn {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.new-file-btn:hover {
+    background-color: #1669c1;
+}

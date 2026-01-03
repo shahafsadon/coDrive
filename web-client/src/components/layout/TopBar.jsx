@@ -1,21 +1,27 @@
-import './TopBar.css';
+import React from "react";
+import "./TopBar.css";
 
-function TopBar() {
+export default function TopBar() {
     return (
-        <header className="topbar">
-            <div className="topbar-left">
-                <span className="logo">coDrive</span>
-            </div>
+        <header className="top-bar">
+            <div className="logo">coDrive</div>
 
-            <div className="topbar-right">
-                <button className="theme-toggle">🌙</button>
-                <div className="user-info">
-                    <span className="user-email">user@email.com</span>
-                    <button className="logout-btn">Logout</button>
-                </div>
+            <button
+                className="new-btn"
+                onClick={() => {
+                    const name = prompt("Enter file name");
+                    if (name && window.createFileInDrive) {
+                        window.createFileInDrive(name);
+                    }
+                }}
+            >
+                + New
+            </button>
+
+            <div className="top-bar-right">
+                <span>user@email.com</span>
+                <button className="logout-btn">Logout</button>
             </div>
         </header>
     );
 }
-
-export default TopBar;

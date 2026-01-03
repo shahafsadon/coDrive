@@ -1,7 +1,17 @@
-import { apiGet } from './api';
+import { apiGet, apiPost, apiPatch, apiDelete } from "./api";
 
-export async function fetchRootFiles(userId) {
-    return apiGet('/files', {
-        'x-user-id': userId,
-    });
+export async function getFiles() {
+    return await apiGet("/files");
+}
+
+export async function createFile(name) {
+    return await apiPost("/files", { name });
+}
+
+export async function renameFile(id, newName) {
+    return await apiPatch(`/files/${id}`, { name: newName });
+}
+
+export async function deleteFile(id) {
+    return await apiDelete(`/files/${id}`);
 }
