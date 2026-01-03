@@ -24,7 +24,7 @@ async function request(method, path, body = null, headers = {}) {
         const text = await response.text();
         throw new Error(text || `API error: ${response.status}`);
     }
-
+    // backend always returns JSON
     return response.json();
 }
 
