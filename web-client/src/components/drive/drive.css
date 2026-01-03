@@ -58,3 +58,14 @@
     font-weight: 500;
     color: #202124;
 }
+
+.state-message {
+    margin-top: 40px;
+    font-size: 16px;
+    color: #5f6368;
+}
+
+.state-message.error {
+    color: #d93025;
+}
+
