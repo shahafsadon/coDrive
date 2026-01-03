@@ -47,3 +47,47 @@ body {
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
+
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-card input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.auth-card button {
+  width: 100%;
+  padding: 10px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.auth-card button:hover {
+  background: #1558b0;
+}

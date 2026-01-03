@@ -1,19 +1,20 @@
-import { apiPost } from './api';
+import { apiPost } from "./api";
 
-// auth logic is kept here, not inside the component
-export async function login(username, password) {
-    return apiPost('/tokens', {
-        username,
-        password,
+export function register(data) {
+    return apiPost("/users", data, {
+        // override: no auth header
+        "x-user-id": undefined
     });
 }
 
-// registration logic
-export async function register({ username, password, name, image }) {
-    return apiPost('/users', {
-        username,
-        password,
-        name,
-        image,
-    });
+
+export function login(username, password) {
+    return apiPost(
+        "/tokens",
+        { username, password },
+        {
+            // override: no auth header
+            "x-user-id": undefined
+        }
+    );
 }

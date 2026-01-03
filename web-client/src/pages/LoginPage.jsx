@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { login } from '../services/authService';
 import { useNavigate } from "react-router-dom";
 
-
 // LoginPage component handles user login
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -24,12 +23,10 @@ export default function LoginPage() {
         // call the login service
         try {
             setLoading(true);
-            const { token } = await login(username, password);
+            const { userId } = await login(username, password);
+            localStorage.setItem("userId", userId);
+            navigate("/drive");
 
-            // store token for later requests
-            localStorage.setItem('token', token);
-
-            // navigation will be handled in protected routes story
         } catch (err) {
             setError(err.message || 'Login failed');
         } finally {
@@ -39,40 +36,42 @@ export default function LoginPage() {
 
     // Return the login form UI
     return (
-        <div style={{ maxWidth: 400, margin: '40px auto' }}>
-            <h2>Login</h2>
+        <div className="auth-container">
+            <div className="auth-card">
+                <h2>Login</h2>
 
-            <form onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
+                <form onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
 
-                {error && <p style={{ color: 'red' }}>{error}</p>}
+                    {error && <p style={{ color: 'red' }}>{error}</p>}
 
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Login'}
-                </button>
-                {/* Extra navigation link to register page */}
-                <p style={{ marginTop: "10px" }}>
-                    Don&apos;t have an account?{" "}
-                    <span
-                        style={{ color: "blue", cursor: "pointer" }}
-                        onClick={() => navigate("/register")}
-                    >
-                        Register
-                    </span>
-                </p>
-            </form>
+                    <button type="submit" disabled={loading}>
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+
+                    <p style={{ marginTop: "12px", textAlign: "center" }}>
+                        Don&apos;t have an account?{" "}
+                        <span
+                            style={{ color: "#2563eb", cursor: "pointer" }}
+                            onClick={() => navigate("/register")}
+                        >
+                            Register
+                        </span>
+                    </p>
+                </form>
+            </div>
         </div>
     );
 }
