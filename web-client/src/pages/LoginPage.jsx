@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { login } from '../services/authService';
+import { useNavigate } from "react-router-dom";
+
 
 // LoginPage component handles user login
 export default function LoginPage() {
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -59,6 +62,16 @@ export default function LoginPage() {
                 <button type="submit" disabled={loading}>
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
+                {/* Extra navigation link to register page */}
+                <p style={{ marginTop: "10px" }}>
+                    Don&apos;t have an account?{" "}
+                    <span
+                        style={{ color: "blue", cursor: "pointer" }}
+                        onClick={() => navigate("/register")}
+                    >
+                        Register
+                    </span>
+                </p>
             </form>
         </div>
     );
