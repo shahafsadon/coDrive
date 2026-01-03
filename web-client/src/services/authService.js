@@ -7,3 +7,13 @@ export async function login(username, password) {
         password,
     });
 }
+
+// registration logic
+export async function register({ username, password, name, image }) {
+    return apiPost('/users', {
+        username,
+        password,
+        name,
+        image,
+    });
+}
