@@ -2,18 +2,57 @@
     height: 56px;
     background-color: #ffffff;
     border-bottom: 1px solid #e0e0e0;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 16px;
+
+    padding: 0 20px;
     font-family: Arial, sans-serif;
+}
+
+/* צד שמאל */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .topbar-left .logo {
     font-size: 20px;
     font-weight: 500;
     color: #1a73e8;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
+
+
+.new-btn {
+    background-color: #1a73e8;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 24px;
+
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 500;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.new-btn:hover {
+    background-color: #1558c0;
+}
+
 
 .topbar-right {
     display: flex;
@@ -28,6 +67,7 @@
     cursor: pointer;
 }
 
+
 .user-info {
     display: flex;
     align-items: center;
@@ -37,7 +77,12 @@
 .user-email {
     font-size: 14px;
     color: #5f6368;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
+
 
 .logout-btn {
     border: none;
@@ -45,4 +90,35 @@
     color: #1a73e8;
     cursor: pointer;
     font-size: 14px;
+}
+
+.logout-btn:hover {
+    text-decoration: underline;
+}
+
+.topbar-search {
+    flex: 1;
+    max-width: 500px;
+    display: flex;
+    align-items: center;
+
+    background-color: #f1f3f4;
+    border-radius: 24px;
+    padding: 6px 12px;
+    margin: 0 24px;
+}
+
+.topbar-search input {
+    border: none;
+    outline: none;
+    background: transparent;
+
+    flex: 1;
+    font-size: 14px;
+}
+
+.search-icon {
+    margin-right: 8px;
+    font-size: 16px;
+    color: #5f6368;
 }

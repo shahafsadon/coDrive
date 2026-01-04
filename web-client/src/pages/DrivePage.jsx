@@ -15,6 +15,7 @@ export default function DrivePage() {
     const loadFiles = async () => {
         try {
             setLoading(true);
+            setError(null);
             const data = await getFiles();
             setFiles(data);
         } catch (err) {
@@ -28,12 +29,23 @@ export default function DrivePage() {
     useEffect(() => {
         loadFiles();
 
-        window.createFileInDrive = async (name) => {
+        // Expose create action to TopBar
+        window.createFileInDrive = async () => {
+            const isFolder = window.confirm(
+                "Create folder?\nOK = Folder, Cancel = File"
+            );
+
+            const type = isFolder ? "folder" : "file";
+            const name = prompt(`Enter ${type} name`);
+
+            if (!name) return;
+
             try {
-                await createFile(name);
+                await createFile(name, type);
                 await loadFiles();
             } catch (err) {
-                alert("Failed to create file");
+                console.error(err);
+                alert("Failed to create " + type);
             }
         };
 
@@ -46,17 +58,23 @@ export default function DrivePage() {
         try {
             await renameFile(id, newName);
             await loadFiles();
-        } catch {
-            alert("Failed to rename file");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to rename item");
         }
     };
 
     const handleDelete = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this item?")) {
+            return;
+        }
+
         try {
             await deleteFile(id);
             await loadFiles();
-        } catch {
-            alert("Failed to delete file");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete item");
         }
     };
 
