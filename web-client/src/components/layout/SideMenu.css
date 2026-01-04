@@ -1,13 +1,19 @@
 .side-menu {
     width: 240px;
+    min-width: 240px;
     background-color: #ffffff;
     border-right: 1px solid #e0e0e0;
     padding-top: 16px;
-    height: calc(100vh - 56px); /* minus TopBar */
+    height: calc(100vh - 56px);
     font-family: Arial, sans-serif;
+    box-sizing: border-box;
 }
 
 .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
     padding: 10px 16px;
     font-size: 14px;
     color: #3c4043;
@@ -26,8 +32,16 @@
     font-weight: 500;
 }
 
+.menu-icon {
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/*
 @media (max-width: 768px) {
     .side-menu {
         display: none;
     }
 }
+*/

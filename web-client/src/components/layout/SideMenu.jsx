@@ -1,13 +1,32 @@
-import './SideMenu.css';
+import "./SideMenu.css";
 
 function SideMenu() {
     return (
         <aside className="side-menu">
-            <div className="menu-item active">My Drive</div>
-            <div className="menu-item">Recent</div>
-            <div className="menu-item">Starred</div>
-            <div className="menu-item">Shared</div>
-            <div className="menu-item">Trash</div>
+            <div className="menu-item active">
+                <span className="menu-icon">📁</span>
+                <span>My Drive</span>
+            </div>
+
+            <div className="menu-item">
+                <span className="menu-icon">🕒</span>
+                <span>Recent</span>
+            </div>
+
+            <div className="menu-item">
+                <span className="menu-icon">⭐</span>
+                <span>Starred</span>
+            </div>
+
+            <div className="menu-item">
+                <span className="menu-icon">👥</span>
+                <span>Shared</span>
+            </div>
+
+            <div className="menu-item">
+                <span className="menu-icon">🗑️</span>
+                <span>Trash</span>
+            </div>
         </aside>
     );
 }
