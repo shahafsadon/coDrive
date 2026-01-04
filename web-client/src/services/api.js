@@ -1,9 +1,7 @@
 const API_BASE_URL = "/api";
 
 async function request(method, path, body = null, headers = {}) {
-    const userId =
-        localStorage.getItem("userId") ||
-        localStorage.getItem("token");
+    const userId = localStorage.getItem("userId");
     const options = {
         method,
         headers: {
