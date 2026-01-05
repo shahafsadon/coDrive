@@ -1,46 +1,39 @@
-const cppClient = require('../services/cppServerClient');
+const { getUserStore } = require('../models/fileSystem.model');
 
-exports.search = async (req, res, next) => {
-  try {
-    const query = req.params.query;
-    // send SEARCH command to C++ server
-    const rawResponse = await cppClient.send(`SEARCH ${query}`);
-    // normalize response
-    const responseLine = rawResponse.trim();
-    // pass parsed response forward
-    res.locals.cppResponse = responseLine;
-    next();
-  } catch (err) {
-    next(err);
-  }
-};
+/**
+ * SEARCH FILES / FOLDERS
+ * GET /api/search/:query
+ */
+exports.search = (req, res) => {
+  const userId = req.user.id;
+  const query = req.params.query;
 
-exports.formatSearchResult = (req, res) => {
-  const cppResponse = res.locals.cppResponse;
-  // parse C++ server response and format HTTP response accordingly
-  if (cppResponse.startsWith('200')) {
-    return res.status(200).json({
-      result: cppResponse
+  if (!query || typeof query !== 'string') {
+    return res.status(400).json({
+      error: 'Search query is required'
     });
   }
 
-  // handle known error responses
-  if (cppResponse.startsWith('404')) {
-    return res.status(404).json({
-      error: 'Not found'
-    });
-  }
-  
-  // handle server error response
-  if (cppResponse.startsWith('500')) {
-    return res.status(500).json({
-      error: 'Server error'
-    });
-  }
+  const store = getUserStore(userId);
+  const q = query.toLowerCase();
 
-  // fallback – unexpected response
-  return res.status(502).json({
-    error: 'Bad response from C++ server',
-    raw: cppResponse
+  const results = Array.from(store.values()).filter(node => {
+    // search by name
+    if (node.name.toLowerCase().includes(q)) {
+      return true;
+    }
+
+    // search by content (files only)
+    if (
+        node.type === 'file' &&
+        typeof node.content === 'string' &&
+        node.content.toLowerCase().includes(q)
+    ) {
+      return true;
+    }
+
+    return false;
   });
+
+  return res.status(200).json(results);
 };
