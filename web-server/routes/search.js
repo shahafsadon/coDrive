@@ -1,14 +1,10 @@
 const express = require('express');
 const router = express.Router();
-// controllers
-const searchController = require('../controllers/searchController');
+
+const auth = require('../middleware/authMiddleware');
+const { search } = require('../controllers/searchController');
 
 // GET /api/search/:query
-router.get(
-  '/:query',
-  // Middlewares from searchController 
-  searchController.search,
-  searchController.formatSearchResult
-);
+router.get('/:query', auth, search);
 
 module.exports = router;
