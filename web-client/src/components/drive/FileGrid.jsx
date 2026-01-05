@@ -8,7 +8,14 @@ export default function FileGrid({ files, onRename, onDelete }) {
     }
 
     return (
-        <div className="file-grid">
+        <div
+            className="file-grid"
+            style={{
+                alignItems: "flex-start",
+                justifyContent: "flex-start",
+                paddingTop: "24px"
+            }}
+        >
             {files.map((file) => (
                 <FileCard
                     key={file.id}

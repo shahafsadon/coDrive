@@ -1,26 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import TopBar from "./TopBar";
 import SideMenu from "./SideMenu";
 
-// Layout component that includes TopBar, SideMenu, and an Outlet for nested routes
 export default function AppLayout() {
     const navigate = useNavigate();
+    const [createMode, setCreateMode] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem("userId");
         localStorage.removeItem("token");
+        localStorage.removeItem("username");
         navigate("/login");
     };
 
-    // Render the layout with TopBar, SideMenu, and main content area
+    const handleNewClick = () => {
+        setCreateMode(true);
+    };
+
     return (
         <div className="app-layout">
-            <TopBar onLogout={handleLogout} />
+            <TopBar
+                onNewFile={handleNewClick}
+                onLogout={handleLogout}
+            />
+
             <div className="app-body">
                 <SideMenu />
                 <main className="app-content">
-                    <Outlet />
+                    <Outlet context={{ createMode, setCreateMode }} />
                 </main>
             </div>
         </div>

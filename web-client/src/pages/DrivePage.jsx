@@ -1,91 +1,79 @@
-import React, { useEffect, useState } from "react";
-import {
-    getFiles,
-    createFile,
-    renameFile,
-    deleteFile,
-} from "../services/filesService";
+import { useEffect, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import FileGrid from "../components/drive/FileGrid";
+import { getFiles, createFile } from "../services/filesService";
 
 export default function DrivePage() {
     const [files, setFiles] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // מגיע מ-AppLayout
+    const { createMode, setCreateMode } = useOutletContext();
+
+    useEffect(() => {
+        loadFiles();
+    }, []);
 
     const loadFiles = async () => {
         try {
             setLoading(true);
-            setError(null);
             const data = await getFiles();
-            setFiles(data);
+            setFiles(Array.isArray(data) ? data : []);
         } catch (err) {
-            console.error(err);
-            setError("Failed to load files");
+            console.error("Failed to load files", err);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        loadFiles();
-
-        // Expose create action to TopBar
-        window.createFileInDrive = async () => {
-            const isFolder = window.confirm(
-                "Create folder?\nOK = Folder, Cancel = File"
-            );
-
-            const type = isFolder ? "folder" : "file";
-            const name = prompt(`Enter ${type} name`);
-
-            if (!name) return;
-
-            try {
-                await createFile(name, type);
-                await loadFiles();
-            } catch (err) {
-                console.error(err);
-                alert("Failed to create " + type);
-            }
-        };
-
-        return () => {
-            delete window.createFileInDrive;
-        };
-    }, []);
-
-    const handleRename = async (id, newName) => {
-        try {
-            await renameFile(id, newName);
-            await loadFiles();
-        } catch (err) {
-            console.error(err);
-            alert("Failed to rename item");
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this item?")) {
+    const handleCreate = async (uiType) => {
+        const name = prompt(`Enter ${uiType} name`);
+        if (!name) {
+            setCreateMode(false);
             return;
         }
 
         try {
-            await deleteFile(id);
+            await createFile(name, uiType);
             await loadFiles();
         } catch (err) {
-            console.error(err);
-            alert("Failed to delete item");
+            console.error("Failed to create item", err);
+            alert("Failed to create item");
+        } finally {
+            setCreateMode(false);
         }
     };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
-
     return (
-        <FileGrid
-            files={files}
-            onRename={handleRename}
-            onDelete={handleDelete}
-        />
+        <>
+            {loading && <div>Loading...</div>}
+
+            {!loading && <FileGrid files={files} />}
+
+            {createMode && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        background: "#fff",
+                        padding: "16px",
+                        border: "1px solid #ccc",
+                        borderRadius: "8px",
+                        zIndex: 1000
+                    }}
+                >
+                    <h3>Create new</h3>
+                    <button onClick={() => handleCreate("file")}>📄 File</button>
+                    <button onClick={() => handleCreate("folder")}>📁 Folder</button>
+                    <div style={{ marginTop: "8px" }}>
+                        <button onClick={() => setCreateMode(false)}>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
