@@ -40,7 +40,7 @@ coDrive/
 │  │
 │  └─ client/                 # C++ / Python clients (Assignment 2)
 │
-├─ web-server/                # === Assignment 3 Core ===
+├─ web-server/                # Assignment 3 Core 
 │  ├─ controllers/            # HTTP request handling logic
 │  │  ├─ authController.js    # Authentication & tokens
 │  │  ├─ filesController.js   # Files & folders CRUD
@@ -137,19 +137,22 @@ What happens in this step:
 
 - The returned id uniquely identifies this user and is required in later steps.
 
-
+- Store the user id for later use:
+ ```
+$USER_ID = $user.id
+ ```
 **After the user is created, authenticate using the same credentials.**
 
 Example:
 ```
 $login = Invoke-RestMethod `
   -Method POST `
--Uri http://localhost:3000/api/tokens `
+  -Uri http://localhost:3000/api/tokens `
   -ContentType "application/json" `
--Body (@{
-username = "demo"
-password = "123"
-} | ConvertTo-Json)
+  -Body (@{
+      username = "demo"
+      password = "123"
+  } | ConvertTo-Json)
 ```
 What happens in this step:
 
@@ -169,7 +172,7 @@ x-user-id: <USER_ID>
 
 Example:
 ```
--Headers @{ "x-user-id" = "1766410886999673" }
+$H = @{ "x-user-id" = $USER_ID }
 ```
 From this point on:
 
@@ -187,7 +190,7 @@ From this point on:
 
 - Each step produces identifiers that must be reused in subsequent steps
 
-- This flow is mandatory before performing any file or permission operations
+- This authentication flow is mandatory before performing any file or permission operations
 
 ## File Management Flow:
 
@@ -202,15 +205,13 @@ To retrieve all files and folders located at the root level of the user’s file
 Invoke-RestMethod `
   -Method GET `
   -Uri http://localhost:3000/api/files `
-  -Headers @{ "x-user-id" = <USER_ID> }
+  -Headers $H
 ```
 What happens in this step:
 
-- The server returns all files owned by the user at the root level
+- Returns all root-level files and folders owned by the user
 
-- Initially, this list is empty for a new user
-
-- The response also includes a count of returned items
+- Initially empty for a new user
 
 **Option 2 - Create a New File or Folder**
 
@@ -219,24 +220,18 @@ To create a new file (or folder) under the root directory:
 Invoke-RestMethod `
   -Method POST `
   -Uri http://localhost:3000/api/files `
-  -Headers @{ "x-user-id" = <USER_ID> } `
+  -Headers $H `
   -ContentType "application/json" `
   -Body (@{
-      name = "example"
+      name = "docs"
   } | ConvertTo-Json)
 ```
 
 What happens in this step:
 
-- A new file entity is created
+- If type is omitted, the server creates a folder by default
 
-- The server generates a unique file ID
-
-- The file is associated with the authenticated user
-
-- The new file appears in subsequent list requests
-
-- The returned file ID is required for all file-specific operations.
+- The response includes a generated file/folder ID
 
 **Option 3 - Retrieve a Specific File by ID**
 
@@ -245,37 +240,41 @@ To fetch metadata of a specific file or folder:
 Invoke-RestMethod `
   -Method GET `
   -Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers @{ "x-user-id" = <USER_ID> }
+  -Headers $H
 ```
 What happens in this step:
 
-- The server returns the file’s metadata
+- Returns file or folder metadata
 
-- Includes name, type, owner, parent, and permissions
+- If the entity is a folder, its children are included
 
-- Only accessible if the user owns the file or has permissions
+- Accessible only if the user owns the file or has permissions
 
-**Option 4 - Update File Metadata**
+**Option 4 – Update File or Folder**
 
 To rename an existing file or folder:
 ```
 Invoke-RestMethod `
   -Method PATCH `
--Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers @{ "x-user-id" = <USER_ID> } `
--ContentType "application/json" `
--Body (@{
-name = "new-name"
-} | ConvertTo-Json)
+  -Uri http://localhost:3000/api/files/<FILE_ID> `
+  -Headers $H `
+  -ContentType "application/json" `
+  -Body (@{
+      name = "new-name"
+  } | ConvertTo-Json)
 ```
 
 What happens in this step:
 
-- The file name is updated
+- File or folder name is updated
 
-- No content is returned on success
+- Server responds with 204 No Content
 
-- If the file does not exist or access is denied, an error is returned
+- No response body is returned on success
+
+Note:
+When using Invoke-RestMethod, a 204 No Content response produces no output.
+This behavior is expected and indicates a successful operation.
 
 **Option 5 - Error Handling (Invalid File ID)**
 
@@ -284,7 +283,7 @@ Attempting to update or access a non-existing file ID:
 Invoke-RestMethod `
   -Method PATCH `
   -Uri http://localhost:3000/api/files/invalid-id `
-  -Headers @{ "x-user-id" = <USER_ID> } `
+  -Headers $H `
   -ContentType "application/json" `
   -Body (@{
       name = "new-name"
@@ -304,7 +303,7 @@ Creating a file without mandatory fields:
 Invoke-RestMethod `
   -Method POST `
   -Uri http://localhost:3000/api/files `
-  -Headers @{ "x-user-id" = <USER_ID> } `
+  -Headers $H `
   -ContentType "application/json" `
   -Body (@{} | ConvertTo-Json)
 ```
@@ -321,37 +320,30 @@ To delete a file or folder:
 Invoke-RestMethod `
   -Method DELETE `
   -Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers @{ "x-user-id" = <USER_ID> }
+  -Headers $H
 ```
 
 What happens in this step:
 
-- The file is removed from the user’s file system
+- File or folder is permanently deleted
 
-- The operation is permanent
+- Deletion is recursive for folders
 
-- The deleted file no longer appears in list requests
+- Server responds with 204 No Content
 
 ## Permissions Management Flow:
 
 The system supports fine-grained access control for files and folders.
-Each file can have explicit permissions that grant other users access.
 
-Permissions are always defined per file and per user.
+A permission object contains:
 
-**What Is a Permission?**
+- id - unique permission identifier
 
-A permission object represents access granted to another user on a specific file.
+- userId - user receiving access
 
-Each permission contains:
+- access - read or write
 
-- id – unique permission identifier
-
-- userId – the user receiving access
-
-- access – access level (read or write)
-
-Only the file owner is allowed to manage permission
+Only the file owner may manage permissions.
 
 **Option 8 - List Permissions of a File**
 
@@ -360,12 +352,12 @@ To retrieve all permissions assigned to a specific file:
 Invoke-RestMethod `
   -Method GET `
   -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
-  -Headers @{ "x-user-id" = <OWNER_USER_ID> }
+  -Headers $H
 ```
 
 What happens in this step:
 
-- The server returns all permissions associated with the file
+- The server returns all permissions associated 
 
 - Initially, this list is empty
 
@@ -378,7 +370,7 @@ To grant access to another user:
 Invoke-RestMethod `
   -Method POST `
   -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
-  -Headers @{ "x-user-id" = <OWNER_USER_ID> } `
+  -Headers $H `
   -ContentType "application/json" `
   -Body (@{
       userId = "<TARGET_USER_ID>"
@@ -390,9 +382,7 @@ What happens in this step:
 
 - A new permission entry is created
 
-- The target user gains access to the file
-
-- The server returns a permission object with a unique permission ID
+- The target user gains access 
 
 Supported access levels:
 
@@ -407,7 +397,7 @@ To modify the access level of an existing permission:
 Invoke-RestMethod `
   -Method PATCH `
   -Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
-  -Headers @{ "x-user-id" = <OWNER_USER_ID> } `
+  -Headers $H `
   -ContentType "application/json" `
   -Body (@{
       access = "write"
@@ -419,25 +409,19 @@ What happens in this step:
 
 - Only the file owner can perform this operation
 
-- If the permission ID does not exist, an error is returned
-
 **Option 11 - Remove a Permission**
 
 To revoke access from a user:
 ```
 Invoke-RestMethod `
   -Method DELETE `
--Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
--Headers @{ "x-user-id" = <OWNER_USER_ID> }
+  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
+  -Headers $H
 ```
 
 What happens in this step:
 
 - The permission entry is deleted
-
-- The target user immediately loses access
-
-- The file owner always retains full access
 
 ### Authorization Rules:
 
@@ -469,30 +453,28 @@ To search for files or folders whose name contains a given query string:
 Invoke-RestMethod `
   -Method GET `
   -Uri http://localhost:3000/api/search/<QUERY> `
-  -Headers @{ "x-user-id" = <USER_ID> }
+  -Headers $H
 ```
 
-What happens in this step:
+**Search Notes:**
 
-- The server searches all files visible to the user
+- Search is case-insensitive
 
-- A match occurs if the file or folder name contains the query string
+- Results are scoped to the authenticated user
 
-Results include:
+- Files shared via permissions are included
 
-- Files owned by the user
-
-- Files shared with the user via permissions
-
-### Search Behavior Notes:
-
-- Search is case-sensitive / case-insensitive according to the implementation
-
-- Only files the user is authorized to access are returned
-
-- Each result includes full file metadata (id, name, type, owner, etc.)
+- Binary files (e.g. images) are matched by name only
 
 - An empty result set is returned if no matches are found
+
+### Final Notes
+
+- Successful operations that return 204 No Content do not display output in PowerShell
+
+- This behavior is correct and indicates success
+
+- The system is fully Dockerized and behaves identically across platforms
 ---
 # Example Run (Docker):
 
@@ -502,114 +484,76 @@ The c++ and web services are successfully built and started, with the server lis
 
 ![Server Running](images/server-run.png)
 
-**User Registration**
+**User Registration via REST API**
 
-A new user is registered in the system via the /api/users endpoint, creating a unique user identity that will be used in all subsequent authenticated operations.
+A new user is created by sending a POST request to the /api/users endpoint, and the server returns a user object containing a unique identifier that will be used for all subsequent authenticated operations.
 ![](images/1.png)
 
-**User Authentication (Login)**
+**User Authentication and Session Setup**
 
-Using the credentials of the user created in the previous step, the user logs in via the /api/tokens endpoint and receives the userId that represents the authenticated context for all following requests.
+The user authenticates via the /api/tokens endpoint using valid credentials, receives the associated userId, and stores it in a request header to be used as the authenticated context for all subsequent API calls.
 ![](images/2.png)
 
 
-**Initial File Listing**
+**List Root Files**
 
-Using the authenticated user ID obtained in the previous step, the root file list is requested, showing an empty directory for a newly created user.
-
+A GET request is sent to the /api/files endpoint using the authenticated user header, returning an empty result set that confirms the user’s root directory initially contains no files or folders.
 ![](images/3.png)
 
 
-**Creating a New File**
+**Create Root Folder**
 
-Based on the authenticated user context established earlier, a new file named `"aaa"` is created at the root level using the `/api/files` endpoint.
-
+A new folder named docs is created at the root level by sending a POST request to the /api/files endpoint, and the server returns the folder metadata including its unique identifier and ownership information.
 ![](images/4.png)
 
 
-**Verifying File Creation**
+**Create Nested Folder**
 
-Following the file creation step, the file list is retrieved again to confirm that the newly created file appears in the user’s root directory.
-
+A subfolder named projects is created inside the existing docs folder by specifying the parent folder ID, demonstrating hierarchical folder organization within the file system.
 ![](images/5.png)
 
-**Retrieve File Metadata by ID**
+**Create Text File**
 
-Using the file ID obtained in the previous listing step, the metadata of the specific file is retrieved to demonstrate direct access to a single resource.
+A text file named notes.txt is created inside the docs folder by sending a POST request with file metadata and textual content, and the server returns the file object including its content and MIME type.
 ![](images/6.png)
 
-**Create an Additional File**
+**View Folder Contents**
 
-Still using the same authenticated user, a second file ("bbbb") is created to demonstrate handling multiple files under the same user context.
-
+The contents of the docs folder are retrieved using a GET request, returning the folder metadata along with its child entities, including the nested projects folder and the notes.txt file.
 ![](images/7.png)
 
-**List Files After Adding a Second File**
+**Update File Content**
 
-The file list is retrieved again to verify that both files created in the previous steps are present in the root directory.
+A PATCH request is sent to update the content of the existing text file, successfully modifying the file’s stored data and completing the operation with a 204 No Content response.
 ![](images/8.png)
 
-**Update File Name**
+**Search Files by Query**
 
-Using the file ID of the second file from the previous step, a PATCH request is sent to update the file name, demonstrating file metadata modification.
+A search request is performed using the /api/search/note endpoint, returning the notes.txt file whose name matches the query and reflecting the updated file content in the response.
 ![](images/9.png)
 
-**Verify Updated File State**
+**Grant File Permission to Another User**
 
-The file list is retrieved one final time to confirm that the file update operation was successful and the new file name is reflected in the system.
+A second user is created and granted read access to an existing file by sending a POST request to the /api/files/{fileId}/permissions endpoint, demonstrating user-to-user file sharing through explicit permissions.
 ![](images/10.png)
-
-**File Update on Non-Existing Resource**
-
-A PATCH /api/files/{id} request fails with an error indicating that the specified file or folder does not exist.
-![](images/11.png)
-
-**File Creation Validation Error**
-
-An attempt to create a file via POST /api/files fails because the required file name is missing from the request body.
-![](images/12.png)
-
-**File Deletion**
-
-A file is deleted using a DELETE /api/files/{id} request with the authenticated user context provided in the request headers.
-![](images/13.png)
-
-**Updated File Listing**
-
-The authenticated user retrieves the file list via GET /api/files, showing the newly created file in the root directory.
-![](images/14.png)
-
-**File Permissions Listing**
-
-The authenticated user retrieves the permissions for a specific file via GET /api/files/{id}/permissions, resulting in an empty permissions list.
-![](images/15.png)
-
-**Grant File Permission**
-
-A permission is added to a file via POST /api/files/{id}/permissions, granting read access to another user.
-![](images/16.png)
-
-**Updated File Permissions**
-
-The authenticated user retrieves the file permissions via GET /api/files/{id}/permissions, showing the newly granted access entry.
-![](images/17.png)
 
 **Update File Permission**
 
-An existing file permission is updated via PATCH /api/files/{id}/permissions/{permissionId}, changing the access level to write.
-![](images/18.png)
+An existing permission entry is updated by changing the access level from read to write using a PATCH request, allowing the target user to modify the shared file.
+![](images/11.png)
 
-**Verified Permission Update**
+**File Permission**
 
-The file permissions are retrieved via GET /api/files/{id}/permissions, confirming that the access level was successfully updated to write.
-![](images/19.png)
+The previously granted permission is revoked by sending a DELETE request to the permissions endpoint, immediately removing the target user’s access to the file.
+![](images/12.png)
 
-**Revoke File Permission**
+**Delete Folder Recursively**
 
-A file permission is removed via DELETE /api/files/{id}/permissions/{permissionId}, revoking the previously granted access.
-![](images/20.png)
+The root folder is deleted using a DELETE request, triggering a recursive removal that deletes the folder and all of its contained files and subfolders from the user’s file system.
+![](images/13.png)
 
-**Permissions Removed Confirmation**
+**Verify Empty Search and File System**
 
-The file permissions are retrieved via GET /api/files/{id}/permissions, confirming that all permissions have been successfully removed.
-![](images/21.png)
+Final verification requests confirm that no files remain searchable and that the user’s root directory is empty after the recursive deletion, demonstrating successful cleanup of the file system.
+![](images/14.png)
+
