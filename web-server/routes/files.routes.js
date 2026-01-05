@@ -4,88 +4,88 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 const {
     listRootFiles,
-    getFileById,                
-    getFileContent,
-    formatFileContent,
+    getFileById,
     createFile,
     formatCreateFileResponse,
     deleteFile,
-    formatDeleteFileResponse,
     updateFile,
-    formatUpdateFileResponse,
-    // permission-related handlers 
+    downloadFile,
+    // permissions
     getPermissions,
     addPermission,
     updatePermission,
     deletePermission
 } = require('../controllers/filesController');
 
-// List root files
+
+// Root files
 router.get('/', authMiddleware, listRootFiles);
 
-// SCRUM-233 – Get file or folder details by id (metadata)
+
+// Create file / folder
+router.post(
+    '/',
+    authMiddleware,
+    createFile,
+    formatCreateFileResponse
+);
+
+
+// File / Folder by ID
 router.get(
     '/:id',
     authMiddleware,
     getFileById
 );
 
-// SCRUM-312 – Get file content via C++ server
+
+// Download binary file (images, etc.)
 router.get(
-    '/content/:path',
+    '/:id/download',
     authMiddleware,
-    getFileContent,
-    formatFileContent
+    downloadFile
 );
 
-// SCRUM-239 – Update file or folder (rename)
+
+// Update file / folder
 router.patch(
     '/:id',
     authMiddleware,
-    updateFile,
-    formatUpdateFileResponse
+    updateFile
 );
 
-// Create file
-router.post('/', authMiddleware, createFile, formatCreateFileResponse);
 
-// Delete file
+// Delete file / folder
 router.delete(
     '/:id',
     authMiddleware,
-    deleteFile,
-    formatDeleteFileResponse
+    deleteFile
 );
 
 
-// File permissions
-// Get permissions of a file/folder
+// Permissions
 router.get(
     '/:id/permissions',
     authMiddleware,
     getPermissions
 );
 
-// Add permission
 router.post(
     '/:id/permissions',
     authMiddleware,
     addPermission
 );
 
-// Update permission
 router.patch(
     '/:id/permissions/:pid',
     authMiddleware,
     updatePermission
 );
 
-// Delete permission
 router.delete(
     '/:id/permissions/:pid',
     authMiddleware,
     deletePermission
 );
-
 
 module.exports = router;
