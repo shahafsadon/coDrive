@@ -7,7 +7,6 @@ export async function getFiles() {
 export async function createFile(name, type) {
     return apiPost("/files", {
         name,
-        type, // "file" | "folder"
     });
 }
 

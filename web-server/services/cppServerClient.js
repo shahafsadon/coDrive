@@ -1,7 +1,7 @@
 // TCP client implementation (wrapper over net.Socket)
 const TcpClient = require('./tcpClient');
-// Host of the C++ server
-const host = process.env.CPP_SERVER_HOST || '127.0.0.1';
+// Docker-aware defaults
+const host = process.env.CPP_SERVER_HOST || 'cpp-server';
 // Port of the C++ server (default 8080)
 const port = Number(process.env.CPP_SERVER_PORT || 8080);
 // Single shared TCP client instance

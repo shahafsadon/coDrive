@@ -25,6 +25,7 @@ export default function LoginPage() {
             setLoading(true);
             const { userId } = await login(username, password);
             localStorage.setItem("userId", userId);
+            localStorage.setItem("username", username);
             navigate("/drive");
 
         } catch (err) {

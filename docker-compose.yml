@@ -1,26 +1,32 @@
 services:
-  cpp-server: 
-    # C++ server service
+  cpp-server:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: codrive-cpp-server
-    expose:
-      # C++ server port (internal)
-      - "8080"   
+    container_name: cpp-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./articles:/articles
+    command: ["8080"]
 
-  web:
-    # Web server service
+  web-server:
     build:
       context: ./web-server
-      dockerfile: Dockerfile
-    container_name: codrive-web
-    environment:
-      # C++ service name
-      CPP_SERVER_HOST: cpp-server  
-      CPP_SERVER_PORT: "8080"
+    container_name: web-server
     ports:
-      # Web server port (external)
-      - "3000:3000"   
+      - "3000:3000"
+    environment:
+      CPP_SERVER_HOST: cpp-server
+      CPP_SERVER_PORT: 8080
     depends_on:
       - cpp-server
+
+  web-client:
+    build:
+      context: ./web-client
+    container_name: web-client
+    ports:
+      - "3008:3000"
+    depends_on:
+      - web-server

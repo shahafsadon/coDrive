@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./TopBar.css";
 
-export default function TopBar({ onLogout }) {
+export default function TopBar({ onNewFile, onLogout }) {
     const username = localStorage.getItem("username");
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -26,22 +26,14 @@ export default function TopBar({ onLogout }) {
                     </svg>
                     <span>coDrive</span>
                 </div>
+
                 <button
                     className="new-btn"
-                    onClick={() => {
-                        const type = window.confirm("Create folder? Click OK for folder, Cancel for file")
-                            ? "folder"
-                            : "file";
-
-                        window.dispatchEvent(
-                            new CustomEvent("create-item", {detail: type})
-                        );
-                    }}
+                    onClick={onNewFile}
                 >
                     ➕ New
                 </button>
             </div>
-
 
             <div className="topbar-search">
                 <span className="search-icon">🔍</span>
@@ -55,7 +47,6 @@ export default function TopBar({ onLogout }) {
                     }}
                 />
             </div>
-
 
             <div className="topbar-right">
                 <div className="user-info">

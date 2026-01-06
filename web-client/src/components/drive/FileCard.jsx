@@ -15,9 +15,12 @@ export default function FileCard({ file, onRename, onDelete }) {
         }
     };
 
+    // UI-only icon logic
+    const icon = file.uiType === "folder" ? "📁" : "📄";
+
     return (
         <div className="file-card">
-            <div className="file-icon">📄</div>
+            <div className="file-icon">{icon}</div>
 
             <div className="file-name" title={file.name}>
                 {file.name}
@@ -27,7 +30,10 @@ export default function FileCard({ file, onRename, onDelete }) {
                 <button className="file-action-btn" onClick={handleRename}>
                     Rename
                 </button>
-                <button className="file-action-btn delete" onClick={handleDelete}>
+                <button
+                    className="file-action-btn delete"
+                    onClick={handleDelete}
+                >
                     Delete
                 </button>
             </div>
