@@ -16,7 +16,7 @@ export default function DrivePage() {
     const [loading, setLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([
-        { id: null, name: "Welcome to - Drive" }
+        { id: null, name: "My Drive" }
     ]);
 
     const fileInputRef = useRef(null);
@@ -170,25 +170,27 @@ export default function DrivePage() {
     return (
         <>
             {/* Breadcrumbs */}
-            <div style={{ padding: "8px 16px", fontSize: "14px" }}>
+            <div className="breadcrumb">
                 {breadcrumbs.map((crumb, index) => (
-                    <span key={index}>
-                        <span
-                            style={{
-                                cursor: "pointer",
-                                color:
-                                    index === breadcrumbs.length - 1
-                                        ? "#000"
-                                        : "#1a73e8"
-                            }}
-                            onClick={() => handleBreadcrumbClick(index)}
-                        >
-                            {crumb.name}
-                        </span>
-                        {index < breadcrumbs.length - 1 && " / "}
-                    </span>
+                    <span key={index} className="breadcrumb-item">
+            <span
+                className={
+                    index === breadcrumbs.length - 1
+                        ? "breadcrumb-current"
+                        : "breadcrumb-link"
+                }
+                onClick={() => handleBreadcrumbClick(index)}
+            >
+                {crumb.name}
+            </span>
+
+                        {index < breadcrumbs.length - 1 && (
+                            <span className="separator"> / </span>
+                        )}
+        </span>
                 ))}
             </div>
+
 
             {loading && <div>Loading...</div>}
 

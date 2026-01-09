@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./TopBar.css";
 
-export default function TopBar({ onNewFile, onLogout }) {
+export default function TopBar({ onNewFile, onLogout, theme, onToggleTheme }) {
     const username = localStorage.getItem("username");
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -49,6 +49,15 @@ export default function TopBar({ onNewFile, onLogout }) {
             </div>
 
             <div className="topbar-right">
+                {/* Theme toggle */}
+                <button
+                    className="theme-toggle-btn"
+                    onClick={onToggleTheme}
+                    title="Toggle theme"
+                >
+                    {theme === "dark" ? "☀️ Light mode" : "🌙 Dark mode"}
+                </button>
+
                 <div className="user-info">
                     <span className="user-email">👤 {username}</span>
                     <button className="logout-btn" onClick={onLogout}>

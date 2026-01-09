@@ -1,3 +1,7 @@
+/* =========================
+   Top Bar
+   ========================= */
+
 .topbar {
     height: 56px;
     background-color: #ffffff;
@@ -9,9 +13,20 @@
 
     padding: 0 20px;
     font-family: Arial, sans-serif;
+    color: #202124;
 }
 
-/* צד שמאל */
+/* Dark mode */
+body.dark .topbar {
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #3c4043;
+    color: #e8eaed;
+}
+
+/* =========================
+   Left section
+   ========================= */
+
 .topbar-left {
     display: flex;
     align-items: center;
@@ -28,6 +43,9 @@
     gap: 6px;
 }
 
+/* =========================
+   New button
+   ========================= */
 
 .new-btn {
     background-color: #1a73e8;
@@ -53,48 +71,9 @@
     background-color: #1558c0;
 }
 
-
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.theme-toggle {
-    border: none;
-    background: transparent;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.user-email {
-    font-size: 14px;
-    color: #5f6368;
-
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-
-.logout-btn {
-    border: none;
-    background-color: transparent;
-    color: #1a73e8;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.logout-btn:hover {
-    text-decoration: underline;
-}
+/* =========================
+   Search bar
+   ========================= */
 
 .topbar-search {
     flex: 1;
@@ -115,10 +94,101 @@
 
     flex: 1;
     font-size: 14px;
+    color: #202124;
 }
 
 .search-icon {
     margin-right: 8px;
     font-size: 16px;
     color: #5f6368;
+}
+
+/* Dark mode – search */
+body.dark .topbar-search {
+    background-color: #303134;
+}
+
+body.dark .topbar-search input {
+    color: #e8eaed;
+}
+
+body.dark .topbar-search input::placeholder {
+    color: #bdc_alignment6;
+}
+
+body.dark .search-icon {
+    color: #bdc1c6;
+}
+
+/* =========================
+   Right section
+   ========================= */
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-email {
+    font-size: 14px;
+    color: #5f6368;
+}
+
+body.dark .user-email {
+    color: #bdc1c6;
+}
+
+/* Logout */
+.logout-btn {
+    border: none;
+    background-color: transparent;
+    color: #1a73e8;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.logout-btn:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   Theme Toggle Button
+   ========================= */
+
+.theme-toggle-btn {
+    border: 1px solid #dadce0;
+    background: transparent;
+    color: inherit;
+
+    font-size: 13px;
+    cursor: pointer;
+
+    padding: 6px 12px;
+    border-radius: 16px;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+    background-color: #f1f3f4;
+}
+
+/* Dark mode */
+body.dark .theme-toggle-btn {
+    border-color: #5f6368;
+}
+
+body.dark .theme-toggle-btn:hover {
+    background-color: #3a3a3a;
 }
