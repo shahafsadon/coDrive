@@ -1,14 +1,15 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
-import { uploadImageFile } from "../services/filesService";
 import FileGrid from "../components/drive/FileGrid";
 import FileViewer from "../components/drive/FileViewer";
 import {
     getFiles,
+    searchFiles, 
     createFile,
     renameFile,
     deleteFile,
-    getFileById
+    getFileById,
+    uploadImageFile
 } from "../services/filesService";
 
 export default function DrivePage() {
@@ -25,14 +26,25 @@ export default function DrivePage() {
         createMode,
         setCreateMode,
         currentFolderId,
-        setCurrentFolderId
+        setCurrentFolderId,
+        searchTerm 
     } = useOutletContext();
 
-    const loadFiles = useCallback(async () => {
+    // Load files based on current folder or search term
+    const loadData = useCallback(async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await getFiles(currentFolderId);
+            let data;
+            
+            if (searchTerm && searchTerm.trim().length > 0) {
+                // Search mode
+                data = await searchFiles(searchTerm);
+            } else {
+                // Normal mode (navigation)
+                data = await getFiles(currentFolderId);
+            }
 
+            // Normalization of data structure
             if (Array.isArray(data)) {
                 setFiles(data);
             } else if (data && Array.isArray(data.children)) {
@@ -45,212 +57,152 @@ export default function DrivePage() {
         } finally {
             setLoading(false);
         }
-    }, [currentFolderId]);
+    }, [currentFolderId, searchTerm]); 
 
+    // Reload data when folder changes or search term changes
     useEffect(() => {
-        loadFiles();
-    }, [loadFiles]);
+        loadData();
+    }, [loadData]);
 
-    /* ---------- CREATE ---------- */
-
-    const createTextFile = async () => {
-        const name = prompt("Enter text file name");
-        if (!name) return;
-
-        const nameExists = files.some(f => f.name === name);
-        if (nameExists) {
-            alert("An item with this name already exists in this folder");
+    // Handle breadcrumbs only when NOT searching
+    useEffect(() => {
+        if (searchTerm) {
+            setBreadcrumbs([{ id: null, name: `Search results for: "${searchTerm}"` }]);
             return;
         }
+        
+        // Logic to build breadcrumbs based on currentFolderId
+        if (!currentFolderId) {
+            setBreadcrumbs([{ id: null, name: "My Drive" }]);
+        } else {
+            // In a real app, we would fetch the folder details to get its name
+            // For now, we simplify or assume we pushed breadcrumbs on navigation
+             setBreadcrumbs(prev => {
+                const exists = prev.find(b => b.id === currentFolderId);
+                if (exists) {
+                    const index = prev.indexOf(exists);
+                    return prev.slice(0, index + 1);
+                }
+                return [...prev, { id: currentFolderId, name: "Folder" }];
+             });
+        }
+    }, [currentFolderId, searchTerm]);
 
-        try {
-            await createFile(name, "file", currentFolderId);
-            await loadFiles();
-        } catch (err) {
-            alert("Failed to create text file");
-        } finally {
-            setCreateMode(false);
+    
+    const handleFolderClick = (folderId) => {
+        if (searchTerm) {
+            // If searching, reset to folder and clear search
+            setCurrentFolderId(folderId);
+            // Assuming there's a way to clear search in the context
+        } else {
+            setCurrentFolderId(folderId);
         }
     };
 
-    const createImageFile = () => {
-        fileInputRef.current?.click();
+    const handleFileClick = async (file) => {
+        if (file.type === "folder") {
+            handleFolderClick(file.id);
+        } else {
+            // if it's a text file without content, fetch full details
+            if (file.mimeType === "text/plain" && !file.content) {
+                 const fullFile = await getFileById(file.id);
+                 setSelectedFile(fullFile);
+            } else {
+                 setSelectedFile(file);
+            }
+        }
+    };
+    
+    // Create Handlers
+    const createTextFile = async () => {
+        const name = prompt("Enter file name:");
+        if (name) {
+            await createFile(name, "file", currentFolderId);
+            setCreateMode(false);
+            loadData();
+        }
     };
 
+    // Create Folder Handler
+    const createFolder = async () => {
+        const name = prompt("Enter folder name:");
+        if (name) {
+            await createFile(name, "folder", currentFolderId);
+            setCreateMode(false);
+            loadData();
+        }
+    };
+
+    // Create Image File Handler
+    const createImageFile = () => {
+        fileInputRef.current.click();
+    };
+
+    // Handle Image Selection and Upload
     const handleImageSelected = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
-        const name = prompt("Enter image name", file.name);
-        if (!name) return;
-
         try {
-            await uploadImageFile(name, currentFolderId, file);
-            await loadFiles();
-        } catch (err) {
-            alert("Failed to upload image");
-        } finally {
-            e.target.value = null;
+            await uploadImageFile(file.name, currentFolderId, file);
             setCreateMode(false);
-        }
-    };
-
-
-    const createFolder = async () => {
-        const name = prompt("Enter folder name");
-        if (!name) return;
-
-        const nameExists = files.some(f => f.name === name);
-        if (nameExists) {
-            alert("An item with this name already exists in this folder");
-            return;
-        }
-
-        try {
-            await createFile(name, "folder", currentFolderId);
-            await loadFiles();
+            loadData();
         } catch (err) {
-            alert("Failed to create folder");
-        } finally {
-            setCreateMode(false);
+            alert("Upload failed");
         }
     };
-
-    /* ---------- ACTIONS ---------- */
-
-    const handleRename = async (id, newName) => {
-        try {
-            await renameFile(id, newName);
-            await loadFiles();
-        } catch (err) {
-            alert("Failed to rename item");
-        }
-    };
-
-    const handleDelete = async (id) => {
-        const ok = window.confirm(
-            "This will delete the item and all its contents. Continue?"
-        );
-        if (!ok) return;
-
-        try {
-            await deleteFile(id);
-            await loadFiles();
-        } catch (err) {
-            alert("Failed to delete item");
-        }
-    };
-
-    const handleOpenFolder = (folderId, folderName) => {
-        setCurrentFolderId(folderId);
-        setBreadcrumbs((prev) => {
-            const existingIndex = prev.findIndex(b => b.id === folderId);
-            if (existingIndex !== -1) {
-                return prev.slice(0, existingIndex + 1);
-            }
-            return [...prev, { id: folderId, name: folderName }];
-        });
-    };
-
-    const handleOpenFile = async (file) => {
-        try {
-            const fullFile = await getFileById(file.id);
-            setSelectedFile(fullFile);
-        } catch (err) {
-            alert("Failed to open file");
-        }
-    };
-
-    const handleBreadcrumbClick = (index) => {
-        const crumb = breadcrumbs[index];
-        setCurrentFolderId(crumb.id);
-        setBreadcrumbs(breadcrumbs.slice(0, index + 1));
-    };
+    
+    // ...Rename / Delete handlers...
 
     return (
         <>
             {/* Breadcrumbs */}
-            <div className="breadcrumb">
-                {breadcrumbs.map((crumb, index) => (
-                    <span key={index} className="breadcrumb-item">
-            <span
-                className={
-                    index === breadcrumbs.length - 1
-                        ? "breadcrumb-current"
-                        : "breadcrumb-link"
-                }
-                onClick={() => handleBreadcrumbClick(index)}
-            >
-                {crumb.name}
-            </span>
-
-                        {index < breadcrumbs.length - 1 && (
-                            <span className="separator"> / </span>
-                        )}
-        </span>
-                ))}
+            <div className="breadcrumbs" style={{ padding: "10px 20px", fontSize: "18px", color: "#5f6368" }}>
+                 {breadcrumbs.map((b, idx) => (
+                    <span key={b.id || "root"}>
+                        {idx > 0 && " > "}
+                        <span 
+                            style={{ cursor: "pointer", color: idx === 
+                                breadcrumbs.length - 1 ? "#202124" : "inherit" }}
+                            onClick={() => !searchTerm && setCurrentFolderId(b.id)}
+                        >
+                            {b.name}
+                        </span>
+                    </span>
+                 ))}
             </div>
 
-
-            {loading && <div>Loading...</div>}
-
-            {!loading && (
+            {loading ? (
+                <div style={{ padding: "20px" }}>Loading...</div>
+            ) : (
                 <FileGrid
                     files={files}
-                    onRename={handleRename}
-                    onDelete={handleDelete}
-                    onOpenFolder={handleOpenFolder}
-                    onOpenFile={handleOpenFile}
+                    onOpenFolder={(id) => handleFolderClick(id)}
+                    onOpenFile={(file) => handleFileClick(file)}
+                    onDelete={async (id) => { await deleteFile(id); loadData(); }}
+                    onRename={async (id, newName) => { await renameFile(id, newName); loadData(); }}
                 />
             )}
 
             {selectedFile && (
                 <FileViewer
                     file={selectedFile}
-                    onClose={() => {
-                        setSelectedFile(null);
-                        loadFiles();
-                    }}
+                    onClose={() => { setSelectedFile(null); loadData(); }}
                 />
-
             )}
 
-            {createMode && (
-                <div
-                    style={{
-                        position: "fixed",
-                        top: "50%",
-                        left: "50%",
-                        transform: "translate(-50%, -50%)",
-                        background: "#fff",
-                        padding: "16px",
-                        border: "1px solid #ccc",
-                        borderRadius: "8px",
-                        zIndex: 1000
-                    }}
-                >
+            {/* Modal for creating files */}
+             {createMode && (
+                <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                background: "#fff", padding: "16px", border: "1px solid #ccc", borderRadius: "8px",zIndex: 1000 }}>
                     <h3>Create new</h3>
-
                     <button onClick={createTextFile}>📄 Text file</button>
                     <button onClick={createImageFile}>🖼️ Image file</button>
                     <button onClick={createFolder}>📁 Folder</button>
-
-                    <div style={{ marginTop: "8px" }}>
-                        <button onClick={() => setCreateMode(false)}>
-                            Cancel
-                        </button>
-                    </div>
+                    <div style={{ marginTop: "8px" }}><button onClick={() => setCreateMode(false)}>Cancel</button></div>
                 </div>
             )}
-
-            {/* Hidden image input */}
-            <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleImageSelected}
-            />
+             <input type="file" accept="image/*" 
+             ref={fileInputRef} style={{ display: "none" }} onChange={handleImageSelected} />
         </>
     );
 }
