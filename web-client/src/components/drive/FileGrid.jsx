@@ -2,7 +2,13 @@ import React from "react";
 import FileCard from "./FileCard";
 import "./drive.css";
 
-export default function FileGrid({ files, onRename, onDelete }) {
+export default function FileGrid({
+                                     files,
+                                     onRename,
+                                     onDelete,
+                                     onOpenFolder,
+                                     onOpenFile
+                                 }) {
     if (!files || files.length === 0) {
         return <div className="empty-state">No files found</div>;
     }
@@ -22,6 +28,8 @@ export default function FileGrid({ files, onRename, onDelete }) {
                     file={file}
                     onRename={onRename}
                     onDelete={onDelete}
+                    onOpenFolder={onOpenFolder}
+                    onOpenFile={onOpenFile}
                 />
             ))}
         </div>

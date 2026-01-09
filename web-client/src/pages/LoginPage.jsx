@@ -23,8 +23,9 @@ export default function LoginPage() {
         // call the login service
         try {
             setLoading(true);
-            const { userId } = await login(username, password);
+            const { userId, token } = await login(username, password);
             localStorage.setItem("userId", userId);
+            localStorage.setItem("token", token);
             localStorage.setItem("username", username);
             navigate("/drive");
 

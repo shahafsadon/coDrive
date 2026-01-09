@@ -6,6 +6,7 @@ import SideMenu from "./SideMenu";
 export default function AppLayout() {
     const navigate = useNavigate();
     const [createMode, setCreateMode] = useState(false);
+    const [currentFolderId, setCurrentFolderId] = useState(null);
 
     const handleLogout = () => {
         localStorage.removeItem("userId");
@@ -28,7 +29,14 @@ export default function AppLayout() {
             <div className="app-body">
                 <SideMenu />
                 <main className="app-content">
-                    <Outlet context={{ createMode, setCreateMode }} />
+                    <Outlet
+                        context={{
+                            createMode,
+                            setCreateMode,
+                            currentFolderId,
+                            setCurrentFolderId
+                        }}
+                    />
                 </main>
             </div>
         </div>

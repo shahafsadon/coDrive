@@ -1,23 +1,26 @@
 const API_BASE_URL = "/api";
 
 async function request(method, path, body = null, headers = {}) {
-    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+
     const options = {
         method,
         headers: {
-            "Content-Type": "application/json",
-            ...(userId ? { "x-user-id": userId } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...headers,
         },
     };
 
-    if (body !== null) {
+    if (body instanceof FormData) {
+        options.body = body;
+    } else if (body !== null) {
+        options.headers["Content-Type"] = "application/json";
         options.body = JSON.stringify(body);
     }
 
     const response = await fetch(`${API_BASE_URL}${path}`, options);
 
-    // 204 No Content DELETE / PATCH
+    // 204 No Content
     if (response.status === 204) {
         return null;
     }
@@ -26,12 +29,13 @@ async function request(method, path, body = null, headers = {}) {
         const text = await response.text();
         throw new Error(text || `API error: ${response.status}`);
     }
+
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
         return await response.json();
     }
-    return null;
 
+    return null;
 }
 
 export function apiGet(path, headers = {}) {

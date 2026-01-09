@@ -57,6 +57,7 @@ install_manifest.txt
 
 # Ignore runtime folder created by the program
 articles/
+uploads/
 
 # NodeJS
 node_modules/

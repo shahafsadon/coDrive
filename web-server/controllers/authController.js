@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const { findUserByUsername } = require('../models/user.model');
 
 // POST /api/tokens
@@ -19,9 +20,17 @@ const authenticateUser = (req, res) => {
         });
     }
 
+    //  CREATE JWT
+    const token = jwt.sign(
+        { userId: user.id },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '1h' }
+    );
+
     // Successful authentication
     return res.status(200).json({
         userId: user.id,
+        token,
     });
 };
 
