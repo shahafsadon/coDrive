@@ -5,6 +5,7 @@ const {
     getChildren,
     deleteNodeRecursive
 } = require('../models/fileSystem.model');
+
 const { randomUUID } = require('crypto');
 const path = require('path');
 
@@ -16,8 +17,9 @@ async function createFile(req, res, next) {
     try {
         const userId = req.user.id;
 
-        let { type, name, parentId, content, mimeType, filePath } = req.body;
+        let { type, name, parentId, content, mimeType } = req.body;
 
+        // Default type
         if (!type) {
             type = 'folder';
         }
@@ -30,56 +32,42 @@ async function createFile(req, res, next) {
             return res.status(400).json({ error: 'Name is required' });
         }
 
-        if (type === 'file') {
-            if (!parentId) {
-                return res.status(400).json({
-                    error: 'File must belong to a folder'
-                });
-            }
-
+        // 🔹 If file has parent – validate parent folder
+        if (parentId) {
             const parent = getNodeById(userId, parentId);
             if (!parent || parent.type !== 'folder') {
                 return res.status(400).json({
                     error: 'Invalid parent folder'
                 });
             }
-
-            // Either text OR binary file
-            const hasText = content !== undefined;
-            const hasBinary = filePath !== undefined;
-
-            if (hasText && typeof content !== 'string') {
-                return res.status(400).json({
-                    error: 'Content must be a string'
-                });
-            }
-
-            if (hasBinary && typeof filePath !== 'string') {
-                return res.status(400).json({
-                    error: 'filePath must be a string'
-                });
-            }
-
-            if (!hasText && !hasBinary) {
-                return res.status(400).json({
-                    error: 'File must contain either content or filePath'
-                });
-            }
-
-            if (!mimeType || typeof mimeType !== 'string') {
-                return res.status(400).json({
-                    error: 'mimeType is required for file'
-                });
-            }
         }
 
+        const uploadedFile = req.file; // ← multer puts image here
+
+        // 🔹 Build node data
         res.locals.nodeData = {
             type,
             name,
             parentId: parentId ?? null,
-            content: type === 'file' ? content ?? null : null,
-            filePath: type === 'file' ? filePath ?? null : null,
-            mimeType: type === 'file' ? mimeType : null
+
+            // TEXT FILE
+            content:
+                type === 'file' && !uploadedFile
+                    ? content ?? ''
+                    : null,
+
+            // IMAGE FILE
+            filePath:
+                type === 'file' && uploadedFile
+                    ? uploadedFile.path
+                    : null,
+
+            mimeType:
+                type === 'file'
+                    ? uploadedFile
+                        ? uploadedFile.mimetype
+                        : mimeType ?? 'text/plain'
+                    : null
         };
 
         next();
@@ -88,6 +76,9 @@ async function createFile(req, res, next) {
     }
 }
 
+/**
+ * FINALIZE CREATE
+ */
 function formatCreateFileResponse(req, res) {
     const node = createNode({
         ...res.locals.nodeData,
@@ -133,10 +124,29 @@ function getFileById(req, res) {
 
 /**
  * DOWNLOAD FILE (binary)
- * GET /api/files/:id/download
  */
 function downloadFile(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+    let userId = req.user?.id;
+
+    // 🔹 allow token via query for <img>
+    if (!userId && req.query.token) {
+        try {
+            const jwt = require("jsonwebtoken");
+            const payload = jwt.verify(
+                req.query.token,
+                process.env.JWT_SECRET || "secret"
+            );
+            userId = payload.userId;
+        } catch {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+    }
+
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const node = getNodeById(userId, req.params.id);
 
     if (!node || node.type !== 'file') {
         return res.status(404).json({ error: 'File not found' });
@@ -150,8 +160,9 @@ function downloadFile(req, res) {
     return res.sendFile(path.resolve(node.filePath));
 }
 
+
 /**
- * DELETE FILE / FOLDER
+ * DELETE FILE / FOLDER (recursive)
  */
 function deleteFile(req, res) {
     const node = getNodeById(req.user.id, req.params.id);
@@ -189,8 +200,11 @@ function updateFile(req, res) {
             if (typeof content !== 'string') {
                 return res.status(400).json({ error: 'Content must be string' });
             }
+
+            // switching image → text
             node.content = content;
-            node.filePath = null; // switching to text
+            node.filePath = null;
+            node.mimeType = 'text/plain';
         }
 
         return res.status(204).end();
@@ -256,6 +270,30 @@ function deletePermission(req, res) {
     return res.status(204).end();
 }
 
+/**
+ * REPLACE IMAGE FILE
+ * PATCH /api/files/:id/image
+ */
+function replaceImage(req, res) {
+    const node = getNodeById(req.user.id, req.params.id);
+
+    if (!node || node.type !== "file") {
+        return res.status(404).json({ error: "File not found" });
+    }
+
+    if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+    }
+
+    node.filePath = req.file.path;
+    node.mimeType = req.file.mimetype;
+    node.name = req.file.originalname;
+    node.content = null;
+
+    return res.status(200).json(node);
+}
+
+
 module.exports = {
     listRootFiles,
     createFile,
@@ -264,6 +302,7 @@ module.exports = {
     downloadFile,
     deleteFile,
     updateFile,
+    replaceImage,
     getPermissions,
     addPermission,
     updatePermission,

@@ -4,7 +4,7 @@
     background-color: #ffffff;
     border-right: 1px solid #e0e0e0;
     padding-top: 16px;
-    height: calc(100vh - 56px);
+    height: 100%;
     font-family: Arial, sans-serif;
     box-sizing: border-box;
 }

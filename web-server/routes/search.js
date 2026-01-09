@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-const auth = require('../middleware/authMiddleware');
+const { authMiddleware: auth } =
+    require('../middleware/authMiddleware');
+
 const { search } = require('../controllers/searchController');
 
 // GET /api/search/:query

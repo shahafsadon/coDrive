@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
+
+const { authMiddleware } = require('../middleware/authMiddleware');
+const upload = require('../middleware/upload');
 
 const {
     listRootFiles,
@@ -10,6 +12,7 @@ const {
     deleteFile,
     updateFile,
     downloadFile,
+    replaceImage,
     // permissions
     getPermissions,
     addPermission,
@@ -17,53 +20,35 @@ const {
     deletePermission
 } = require('../controllers/filesController');
 
-
-// Root files
+/* ROOT */
 router.get('/', authMiddleware, listRootFiles);
 
-
-// Create file / folder
 router.post(
     '/',
     authMiddleware,
+    upload.single('file'),
     createFile,
     formatCreateFileResponse
 );
 
+/* FILE ACTIONS */
 
-// File / Folder by ID
-router.get(
-    '/:id',
-    authMiddleware,
-    getFileById
-);
-
-
-// Download binary file (images, etc.)
+// download image/file
 router.get(
     '/:id/download',
     authMiddleware,
     downloadFile
 );
 
-
-// Update file / folder
+// replace image
 router.patch(
-    '/:id',
+    '/:id/image',
     authMiddleware,
-    updateFile
+    upload.single('file'),
+    replaceImage
 );
 
-
-// Delete file / folder
-router.delete(
-    '/:id',
-    authMiddleware,
-    deleteFile
-);
-
-
-// Permissions
+/* PERMISSIONS */
 router.get(
     '/:id/permissions',
     authMiddleware,
@@ -87,5 +72,12 @@ router.delete(
     authMiddleware,
     deletePermission
 );
+
+/* GENERIC */
+router.get('/:id', authMiddleware, getFileById);
+
+router.patch('/:id', authMiddleware, updateFile);
+
+router.delete('/:id', authMiddleware, deleteFile);
 
 module.exports = router;

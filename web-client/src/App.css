@@ -91,3 +91,31 @@ body {
 .auth-card button:hover {
   background: #1558b0;
 }
+
+/* Layout for Drive */
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Layout root */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Body under TopBar */
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Main content (Drive area) */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  background: #f8f9fa;
+}

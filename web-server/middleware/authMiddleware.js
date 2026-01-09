@@ -1,10 +1,23 @@
-module.exports = (req, res, next) => {
-    const userId = req.header('x-user-id');
+const jwt = require("jsonwebtoken");
 
-    if (!userId) {
-        return res.status(401).json({ error: 'User is not authenticated' });
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.header("Authorization");
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "User is not authenticated" });
     }
 
-    req.user = { id: userId };
-    next();
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const payload = jwt.verify(token, process.env.JWT_SECRET || "secret");
+        req.user = { id: payload.userId };
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: "Invalid token" });
+    }
+};
+
+module.exports = {
+    authMiddleware,
 };

@@ -2,19 +2,18 @@ import { apiPost } from "./api";
 
 export function register(data) {
     return apiPost("/users", data, {
-        // override: no auth header
         "x-user-id": undefined
     });
 }
 
-
-export function login(username, password) {
-    return apiPost(
+export async function login(username, password) {
+    const res = await apiPost(
         "/tokens",
         { username, password },
         {
-            // override: no auth header
             "x-user-id": undefined
         }
     );
+    localStorage.setItem("token", res.token);
+    return res;
 }
