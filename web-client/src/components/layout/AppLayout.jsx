@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import TopBar from "./TopBar";
 import SideMenu from "./SideMenu";
 
-export default function AppLayout() {
+export default function AppLayout({ theme, onToggleTheme }) {
     const navigate = useNavigate();
     const [createMode, setCreateMode] = useState(false);
     const [currentFolderId, setCurrentFolderId] = useState(null);
@@ -24,11 +24,18 @@ export default function AppLayout() {
             <TopBar
                 onNewFile={handleNewClick}
                 onLogout={handleLogout}
+                theme={theme}
+                onToggleTheme={onToggleTheme}
             />
 
             <div className="app-body">
                 <SideMenu />
-                <main className="app-content">
+
+                <main
+                    className="app-content"
+                    role="main"
+                    aria-label="Drive content"
+                >
                     <Outlet
                         context={{
                             createMode,

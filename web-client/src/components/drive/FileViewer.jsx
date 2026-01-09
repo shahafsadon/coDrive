@@ -75,7 +75,7 @@ function FileViewer({ file, onClose }) {
         }
     };
 
-    /* ---------- REPLACE IMAGE (CORRECT WAY) ---------- */
+    /* ---------- REPLACE IMAGE ---------- */
     const handleReplaceImage = async (e) => {
         const newFile = e.target.files[0];
         if (!newFile) return;
@@ -83,7 +83,7 @@ function FileViewer({ file, onClose }) {
         try {
             await replaceImage(file.id, newFile);
             onClose();
-        } catch (err) {
+        } catch {
             alert("Failed to replace image");
         } finally {
             e.target.value = null;
@@ -91,11 +91,20 @@ function FileViewer({ file, onClose }) {
     };
 
     return (
-        <div className="file-viewer-overlay">
+        <div
+            className="file-viewer-overlay"
+            role="dialog"
+            aria-modal="true"
+        >
             <div className="file-viewer">
                 <div className="file-viewer-header">
-                    <h3>{file.name}</h3>
-                    <button onClick={onClose}>✖</button>
+                    <h3 title={file.name}>{file.name}</h3>
+                    <button
+                        onClick={onClose}
+                        aria-label="Close preview"
+                    >
+                        ✖
+                    </button>
                 </div>
 
                 {/* ---------- TEXT FILE ---------- */}
@@ -107,6 +116,7 @@ function FileViewer({ file, onClose }) {
                                 setContent(e.target.value)
                             }
                             className="file-viewer-textarea"
+                            aria-label="File content"
                         />
 
                         <div className="file-viewer-actions">
@@ -124,7 +134,10 @@ function FileViewer({ file, onClose }) {
                 {isImage && (
                     <>
                         {loadingImage && (
-                            <div className="file-viewer-loading">
+                            <div
+                                className="file-viewer-loading"
+                                role="status"
+                            >
                                 Loading image…
                             </div>
                         )}
@@ -158,7 +171,9 @@ function FileViewer({ file, onClose }) {
                 )}
 
                 {!isText && !isImage && (
-                    <div>No preview available</div>
+                    <div className="file-viewer-loading">
+                        No preview available
+                    </div>
                 )}
             </div>
         </div>

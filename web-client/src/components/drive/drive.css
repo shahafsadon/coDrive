@@ -1,3 +1,7 @@
+/* =========================
+   File grid & cards
+   ========================= */
+
 .file-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -7,13 +11,13 @@
 }
 
 .file-card {
-    background: #fff;
+    background: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     padding: 16px 8px;
     text-align: center;
     cursor: pointer;
-    transition: box-shadow 0.15s ease;
+    transition: box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .file-card:hover {
@@ -33,32 +37,11 @@
     text-overflow: ellipsis;
 }
 
+/* Empty / state messages */
 .empty-state {
     color: #5f6368;
     font-size: 14px;
     padding: 32px;
-}
-
-
-.drive-container {
-    display: flex;
-    height: calc(100vh - 56px);
-}
-
-
-.drive-main {
-    flex: 1;
-    padding: 16px 24px;
-    overflow-y: auto;
-    background-color: #f8f9fa;
-}
-
-
-.drive-title {
-    margin-bottom: 16px;
-    font-size: 22px;
-    font-weight: 500;
-    color: #202124;
 }
 
 .state-message {
@@ -69,6 +52,29 @@
 
 .state-message.error {
     color: #d93025;
+}
+
+/* =========================
+   Drive layout
+   ========================= */
+
+.drive-container {
+    display: flex;
+    height: calc(100vh - 56px);
+}
+
+.drive-main {
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.drive-title {
+    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 500;
+    color: #202124;
 }
 
 .drive-actions {
@@ -90,6 +96,28 @@
 }
 
 /* =========================
+   Breadcrumb
+   ========================= */
+
+.breadcrumb {
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #1a73e8;
+}
+
+.breadcrumb span.separator {
+    color: #9aa0a6;
+}
+
+.breadcrumb span.current {
+    font-weight: 600;
+}
+
+/* =========================
    File Viewer (Preview)
    ========================= */
 
@@ -104,7 +132,7 @@
 }
 
 .file-viewer {
-    background: #fff;
+    background: #ffffff;
     width: 80%;
     max-width: 900px;
     max-height: 80%;
@@ -208,4 +236,137 @@
     color: #5f6368;
     font-size: 14px;
     margin-top: 40px;
+}
+
+/* =========================
+   Dark mode – Drive
+   ========================= */
+
+body.dark .drive-main {
+    background-color: #1f1f1f;
+}
+
+body.dark .drive-title,
+body.dark .state-message,
+body.dark .empty-state,
+body.dark .file-viewer-loading {
+    color: #e8eaed;
+}
+
+body.dark .state-message.error {
+    color: #f28b82;
+}
+
+/* Cards */
+body.dark .file-card {
+    background: #2a2a2a;
+    border: 1px solid #3c4043;
+    color: #e8eaed;
+}
+
+body.dark .file-card:hover {
+    box-shadow: 0 1px 6px rgba(255,255,255,0.08);
+}
+
+body.dark .file-name {
+    color: #e8eaed;
+}
+
+/* Breadcrumb */
+body.dark .breadcrumb {
+    color: #8ab4f8;
+}
+
+body.dark .breadcrumb span.current {
+    color: #e8eaed;
+}
+
+/* Viewer */
+body.dark .file-viewer {
+    background: #2a2a2a;
+}
+
+body.dark .file-viewer-header {
+    border-bottom: 1px solid #3c4043;
+}
+
+body.dark .file-viewer-header h3 {
+    color: #e8eaed;
+}
+
+body.dark .file-viewer-header button {
+    color: #bdc1c6;
+}
+
+body.dark .file-viewer-header button:hover {
+    color: #e8eaed;
+}
+
+body.dark .file-viewer-actions {
+    border-top: 1px solid #3c4043;
+}
+
+body.dark .file-viewer-textarea {
+    background: #303134;
+    color: #e8eaed;
+    border: 1px solid #5f6368;
+}
+
+/* =========================
+   Create New Modal
+   ========================= */
+
+.create-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background: #ffffff;
+    color: #202124;
+
+    padding: 20px;
+    border-radius: 12px;
+    min-width: 260px;
+
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    z-index: 3000;
+}
+
+.create-modal h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.create-modal button {
+    margin: 6px 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #dadce0;
+    background: #f1f3f4;
+    cursor: pointer;
+}
+
+.create-modal button:hover {
+    background: #e8eaed;
+}
+
+/* =========================
+   Dark Mode – Create Modal
+   ========================= */
+
+body.dark .create-modal {
+    background: #2a2a2a;
+    color: #e8eaed;
+    border: 1px solid #3c4043;
+}
+
+body.dark .create-modal button {
+    background: #303134;
+    color: #e8eaed;
+    border: 1px solid #5f6368;
+}
+
+body.dark .create-modal button:hover {
+    background: #3c4043;
 }

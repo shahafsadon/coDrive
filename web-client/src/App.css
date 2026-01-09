@@ -1,3 +1,7 @@
+/* =========================
+   App base (CRA leftovers – harmless)
+   ========================= */
+
 .App {
   text-align: center;
 }
@@ -13,21 +17,6 @@
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -37,9 +26,11 @@
   }
 }
 
+/* =========================
+   Auth pages
+   ========================= */
 
 body {
-  margin: 0;
   min-height: 100vh;
   background-image: url("./assets/background.jpg");
   background-size: cover;
@@ -56,12 +47,13 @@ body {
 }
 
 .auth-card {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   padding: 30px;
   border-radius: 10px;
   width: 100%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  color: #202124;
 }
 
 .auth-card h2 {
@@ -92,30 +84,52 @@ body {
   background: #1558b0;
 }
 
-/* Layout for Drive */
+/* Dark mode – auth card only */
+body.dark .auth-card {
+  background: #2a2a2a;
+  color: #e8eaed;
+}
 
-html, body, #root {
+body.dark .auth-card input {
+  background: #303134;
+  color: #e8eaed;
+  border: 1px solid #5f6368;
+}
+
+body.dark .auth-card input::placeholder {
+  color: #bdc1c6;
+}
+
+/* =========================
+   Layout (Drive shell)
+   ========================= */
+
+html,
+body,
+#root {
   height: 100%;
 }
 
-/* Layout root */
 .app-layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
-/* Body under TopBar */
 .app-body {
   display: flex;
   flex: 1;
   min-height: 0;
 }
 
-/* Main content (Drive area) */
 .app-content {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
   background: #f8f9fa;
+}
+
+/* Dark mode – drive background */
+body.dark .app-content {
+  background: #1f1f1f;
 }

@@ -46,8 +46,11 @@ export default function FileCard({
 
     return (
         <div
-            className="file-card"
+            className={`file-card ${isFolder ? "folder" : "file"}`}
             onDoubleClick={handleOpen}
+            role="button"
+            tabIndex={0}
+            aria-label={isFolder ? "Open folder" : "Open file"}
         >
             <div className="file-icon">{icon}</div>
 
@@ -59,12 +62,15 @@ export default function FileCard({
                 <button
                     className="file-action-btn"
                     onClick={handleRename}
+                    aria-label="Rename file"
                 >
                     Rename
                 </button>
+
                 <button
                     className="file-action-btn delete"
                     onClick={handleDelete}
+                    aria-label="Delete file"
                 >
                     Delete
                 </button>

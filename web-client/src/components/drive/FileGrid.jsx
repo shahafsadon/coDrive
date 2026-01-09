@@ -10,18 +10,15 @@ export default function FileGrid({
                                      onOpenFile
                                  }) {
     if (!files || files.length === 0) {
-        return <div className="empty-state">No files found</div>;
+        return (
+            <div className="empty-state" role="status">
+                No files found
+            </div>
+        );
     }
 
     return (
-        <div
-            className="file-grid"
-            style={{
-                alignItems: "flex-start",
-                justifyContent: "flex-start",
-                paddingTop: "24px"
-            }}
-        >
+        <div className="file-grid">
             {files.map((file) => (
                 <FileCard
                     key={file.id}

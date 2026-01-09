@@ -1,13 +1,23 @@
+/* =========================
+   Side Menu
+   ========================= */
+
 .side-menu {
     width: 240px;
     min-width: 240px;
+    height: 100%;
+
     background-color: #ffffff;
     border-right: 1px solid #e0e0e0;
+
     padding-top: 16px;
-    height: 100%;
-    font-family: Arial, sans-serif;
     box-sizing: border-box;
+    font-family: Arial, sans-serif;
 }
+
+/* =========================
+   Menu items
+   ========================= */
 
 .menu-item {
     display: flex;
@@ -15,11 +25,15 @@
     gap: 12px;
 
     padding: 10px 16px;
+    margin-right: 8px;
+
     font-size: 14px;
     color: #3c4043;
+
     cursor: pointer;
     border-radius: 0 20px 20px 0;
-    margin-right: 8px;
+
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .menu-item:hover {
@@ -32,10 +46,41 @@
     font-weight: 500;
 }
 
+/* =========================
+   Icons
+   ========================= */
+
 .menu-icon {
     font-size: 18px;
     width: 20px;
     text-align: center;
+}
+
+/* =========================
+   Dark mode – Side menu
+   ========================= */
+
+body.dark .side-menu {
+    background-color: #2a2a2a;
+    border-right: 1px solid #3c4043;
+}
+
+body.dark .menu-item {
+    color: #e8eaed;
+}
+
+body.dark .menu-item:hover {
+    background-color: #303134;
+}
+
+body.dark .menu-item.active {
+    background-color: rgba(138, 180, 248, 0.18);
+    color: #8ab4f8;
+    font-weight: 600;
+}
+
+body.dark .menu-item.active .menu-icon {
+    color: #8ab4f8;
 }
 
 /*
