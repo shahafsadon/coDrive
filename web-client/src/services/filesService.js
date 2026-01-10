@@ -6,12 +6,12 @@ export async function getFiles(parentId = null) {
     return apiGet(path);
 }
 
-// Search files by name
+// Search files by query
 export async function searchFiles(query) {
     return apiGet(`/search/${encodeURIComponent(query)}`);
 }
 
-// Create a new file or folder
+// Create file or folder
 export async function createFile(name, type, parentId = null) {
     if (type === "file") {
         return apiPost("/files", {
@@ -25,12 +25,17 @@ export async function createFile(name, type, parentId = null) {
     return apiPost("/files", { name, type, parentId });
 }
 
-// Rename a file or folder
+// Rename file or folder
 export async function renameFile(id, newName) {
     return apiPatch(`/files/${id}`, { name: newName });
 }
 
-// Delete a file or folder
+// Move file or folder
+export async function moveFile(id, parentName) {
+    return apiPatch(`/files/${id}`, { parentName });
+}
+
+// Delete file or folder
 export async function deleteFile(id) {
     return apiDelete(`/files/${id}`);
 }
@@ -56,16 +61,29 @@ export async function uploadImageFile(name, parentId, file) {
     return apiPost("/files", formData);
 }
 
-// USER INFO
+// USERS SERVICE
 export async function getUserDetails(userId) {
     return apiGet(`/users/${userId}`);
 }
 
-
-// Replace image of existing file
+// IMAGE REPLACEMENT SERVICE
 export async function replaceImage(id, file) {
     const formData = new FormData();
     formData.append("file", file);
-    // Use PATCH to update existing file
     return apiPatch(`/files/${id}/image`, formData);
+}
+
+// PERMISSIONS SERVICE
+export async function getPermissions(fileId) {
+    return apiGet(`/files/${fileId}/permissions`);
+}
+
+// Add permission
+export async function addPermission(fileId, username, access) {
+    return apiPost(`/files/${fileId}/permissions`, { username, access });
+}
+
+// Delete permission
+export async function deletePermission(fileId, permId) {
+    return apiDelete(`/files/${fileId}/permissions/${permId}`);
 }

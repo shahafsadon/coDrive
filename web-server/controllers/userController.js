@@ -1,55 +1,85 @@
-const {
-    createUser,
-    findUserByUsername,
-    findUserById,
-} = require('../models/user.model');
+// web-server/controllers/userController.js
+const { createUser, findUserByUsername, findUserById } = require('../models/user.model');
 
-// POST /api/users
-// NOTE: Password is stored as plain text for now.
-// In a real system, it should be hashed.
+// New user registration
 const registerUser = (req, res) => {
-    const { username, password, name, image } = req.body;
+    const { 
+        username, 
+        password, 
+        fullName, 
+        email, 
+        phoneNumber, 
+        birthDate, 
+        image 
+    } = req.body;
 
-    // Validate required fields
-    if (!username || !password || !name) {
-        return res.status(400).json({
-            error: 'username, password and name are required',
+    // Server Side Validation 
+    
+    // Check mandatory fields
+    if (!username || !password || !fullName) {
+        return res.status(400).json({ 
+            error: "Missing mandatory fields: username, password, and fullName are required." 
         });
     }
 
-    // Check for existing user
+    // Check password length
+    if (password.length < 8) {
+        return res.status(400).json({ 
+            error: "Password must be at least 8 characters long." 
+        });
+    }
+
+    // Check password complexity (English letters)
+    // Regex: checks for at least one English letter (lowercase or uppercase)
+    if (!/[a-zA-Z]/.test(password)) {
+        return res.status(400).json({ 
+            error: "Password must contain at least one English letter." 
+        });
+    }
+
+    // Check if user already exists
     const existingUser = findUserByUsername(username);
     if (existingUser) {
-        return res.status(409).json({
-            error: 'Username already exists',
+        return res.status(409).json({ 
+            error: "Username already exists." 
         });
     }
 
-    // Create user
-    const user = createUser({ username, password, name, image });
+    
+    // Create new user
+    const newUser = createUser({
+        username,
+        password,
+        fullName,
+        email,
+        phoneNumber,
+        birthDate,
+        image
+    });
 
-    // Exclude password from response
-    const { password: _, ...safeUser } = user;
-    return res.status(201).json(safeUser);
+    // Respond with created user details (excluding password)
+    res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        fullName: newUser.fullName
+    });
 };
 
-// GET /api/users/:id
+// Fetch user details by ID
 const getUserById = (req, res) => {
-    const { id } = req.params;
-
-    const user = findUserById(id);
+    const user = findUserById(req.params.id);
+    
+    // Check if user exists
     if (!user) {
-        return res.status(404).json({
-            error: 'User not found',
-        });
+        return res.status(404).json({ error: "User not found" });
     }
 
-    // Exclude password
-    const { password, ...safeUser } = user;
-    return res.status(200).json(safeUser);
+    // Construct user object without password
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
 };
 
 module.exports = {
     registerUser,
-    getUserById,
+    getUserById
 };

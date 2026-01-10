@@ -4,7 +4,7 @@ const PORT = 3000;
 
 app.use(express.json({
     type: ['application/json', 'application/*+json'],
-    limit: '1mb'
+    limit: '10mb'
 }));
 
 

@@ -3,6 +3,7 @@ const { randomUUID } = require('crypto');
 // In-memory storage: { [userId]: Map<nodeId, node> }
 const fileSystem = {};
 
+// Helper: Get or create user store
 function getUserStore(userId) {
     if (!fileSystem[userId]) {
         fileSystem[userId] = new Map();
@@ -10,9 +11,37 @@ function getUserStore(userId) {
     return fileSystem[userId];
 }
 
-/**
- * Find node by name under the same parent (per user)
- */
+// Find node globally across all stores
+function findNodeGlobal(nodeId) {
+    for (const store of Object.values(fileSystem)) {
+        if (store.has(nodeId)) return store.get(nodeId);
+    }
+    return null;
+}
+
+// Helper: Calculate access recursively
+function getEffectiveAccess(userId, nodeId) {
+    let currentId = nodeId;
+    
+    while (currentId) {
+        const node = findNodeGlobal(currentId);
+        if (!node) break;
+
+        // Owner always has write access
+        if (node.ownerId === userId) return 'write';
+
+        // Explicit permission
+        const perm = node.permissions?.find(p => p.userId === userId);
+        if (perm) return perm.access;
+
+        // Go up to parent
+        currentId = node.parentId;
+    }
+    
+    return null; 
+}
+
+// Find node by name and parent
 function findByNameAndParent(userId, name, parentId) {
     const store = getUserStore(userId);
     return Array.from(store.values()).find(
@@ -20,40 +49,32 @@ function findByNameAndParent(userId, name, parentId) {
     );
 }
 
-/**
- * Create a file or folder node
- * - Text files store content in `content`
- * - Binary files store path in `filePath`
- * - mimeType is stored for future use
- * - Returns null if duplicate name exists in same folder
- */
-function createNode({
-                        name,
-                        type,
-                        ownerId,
-                        parentId = null,
-                        content = null,
-                        filePath = null,
-                        mimeType = 'text/plain'
-                    }) {
-    const store = getUserStore(ownerId);
-
-    // Prevent duplicate names in the same folder
-    const existing = findByNameAndParent(ownerId, name, parentId);
-    if (existing) {
-        return null;
+// Find folder by name
+function findFolderByName(userId, folderName) {
+    const store = getUserStore(userId);
+    for (const node of store.values()) {
+        if (node.type === 'folder' && node.name === folderName) {
+            return node.id;
+        }
     }
+    return null; 
+}
 
+// Create new file/folder node
+function createNode({ name, type, ownerId, parentId = null, content = null, filePath = null, mimeType = 'text/plain'}) {
+    const store = getUserStore(ownerId);
+    
+    // Removed duplicate check to allow multiple files with same name (Google Drive style)
+    
     const id = randomUUID();
-
     const node = {
         id,
         name,
-        type,               // 'file' | 'folder'
+        type,
         ownerId,
-        parentId,           // null = root
-        content: type === 'file' ? content : null,     // TEXT ONLY
-        filePath: type === 'file' ? filePath : null,   // BINARY FILE PATH
+        parentId,
+        content: type === 'file' ? content : null,
+        filePath: type === 'file' ? filePath : null,
         mimeType: type === 'file' ? mimeType : null,
         permissions: []
     };
@@ -62,54 +83,98 @@ function createNode({
     return node;
 }
 
-/**
- * Get node by id
- */
 function getNodeById(userId, nodeId) {
-    const store = getUserStore(userId);
-    return store.get(nodeId);
+    const node = findNodeGlobal(nodeId);
+    if (!node) return null;
+
+    const access = getEffectiveAccess(userId, nodeId);
+    if (access) return node;
+
+    return null;
 }
 
-/**
- * Get all root-level nodes (parentId === null)
- */
+// Get root nodes for user
 function getRootNodes(userId) {
-    const store = getUserStore(userId);
-    return Array.from(store.values())
-        .filter(node => node.parentId === null);
-}
+    const result = [];
+    const seenIds = new Set();
 
-/**
- * Get children of a folder
- */
-function getChildren(userId, parentId) {
-    const store = getUserStore(userId);
-    return Array.from(store.values())
-        .filter(node => node.parentId === parentId);
-}
-
-/**
- * Recursively delete a node and all its descendants
- */
-function deleteNodeRecursive(userId, nodeId) {
-    const store = getUserStore(userId);
-    const node = store.get(nodeId);
-
-    if (!node) return;
-
-    const children = getChildren(userId, nodeId);
-    for (const child of children) {
-        deleteNodeRecursive(userId, child.id);
+    // My root files
+    const myStore = getUserStore(userId);
+    for (const node of myStore.values()) {
+        if (node.parentId === null) {
+            result.push({ ...node, accessLevel: 'write' });
+            seenIds.add(node.id);
+        }
     }
 
-    store.delete(nodeId);
+    // Shared directly with me
+    for (const store of Object.values(fileSystem)) {
+        for (const node of store.values()) {
+            if (node.ownerId !== userId) {
+                const access = getEffectiveAccess(userId, node.id);
+                
+                if (access && !seenIds.has(node.id)) {
+                    if (node.permissions?.some(p => p.userId === userId)) {
+                        result.push({ ...node, accessLevel: access });
+                        seenIds.add(node.id);
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
+// Get children of a folder
+function getChildren(userId, parentId) {
+    const parentAccess = getEffectiveAccess(userId, parentId);
+    if (!parentAccess) return [];
+
+    const children = [];
+    // My children
+    for (const store of Object.values(fileSystem)) {
+        for (const node of store.values()) {
+            if (node.parentId === parentId) {
+                const access = getEffectiveAccess(userId, node.id);
+                if (access) {
+                    children.push({ ...node, accessLevel: access });
+                }
+            }
+        }
+    }
+    return children;
+}
+
+// Delete node recursively
+function deleteNodeRecursive(userId, nodeId) {
+    const store = getUserStore(userId);
+    const node = findNodeGlobal(nodeId); 
+    if (!node) return;
+
+    if (node.ownerId === userId) {
+        const myChildren = Array.from(store.values()).filter(n => n.parentId === nodeId);
+        myChildren.forEach(child => deleteNodeRecursive(userId, child.id));
+        store.delete(nodeId);
+    }
+}
+
+// Search nodes by query
+function searchNodes(userId, query) {
+    const store = getUserStore(userId);
+    const lowerQuery = query.toLowerCase();
+    // Search in own files only for simplicity
+    return Array.from(store.values())
+        .filter(node => node.name.toLowerCase().includes(lowerQuery))
+        .map(node => ({ ...node, accessLevel: 'write' }));
 }
 
 module.exports = {
-    getUserStore,
     createNode,
     getNodeById,
     getRootNodes,
     getChildren,
-    deleteNodeRecursive
+    deleteNodeRecursive,
+    searchNodes,
+    findFolderByName,
+    getEffectiveAccess 
 };
