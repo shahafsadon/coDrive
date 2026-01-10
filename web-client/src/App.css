@@ -1,43 +1,38 @@
-/* =========================
-   App base (CRA leftovers – harmless)
-   ========================= */
-
+/* App base */
 .App {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* =========================
-   Auth pages
-   ========================= */
+/* Global Background & Dark Mode */
 
 body {
+  margin: 0;
   min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Background image */
   background-image: url("./assets/background.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
+
+  transition: background-image 0.3s ease, color 0.3s ease;
 }
+
+/* Dark Mode */
+body.dark {
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)),
+    url("./assets/background.jpg");
+  color: #e8eaed;
+}
+
+/* Auth pages (Login/Register) */
 
 .auth-container {
   min-height: 100vh;
@@ -48,48 +43,21 @@ body {
 
 .auth-card {
   background: rgba(255, 255, 255, 0.95);
-  padding: 30px;
-  border-radius: 10px;
+  padding: 40px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-  color: #202124;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  text-align: left; 
 }
 
-.auth-card h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.auth-card input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.auth-card button {
-  width: 100%;
-  padding: 10px;
-  background: #1a73e8;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.auth-card button:hover {
-  background: #1558b0;
-}
-
-/* Dark mode – auth card only */
 body.dark .auth-card {
-  background: #2a2a2a;
+  background: rgba(40, 44, 52, 0.95);
   color: #e8eaed;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+body.dark .auth-card h2 { color: #ffffff; }
 body.dark .auth-card input {
   background: #303134;
   color: #e8eaed;
@@ -97,16 +65,12 @@ body.dark .auth-card input {
 }
 
 body.dark .auth-card input::placeholder {
-  color: #bdc1c6;
+    color: #bdc1c6;
 }
 
-/* =========================
-   Layout (Drive shell)
-   ========================= */
+/* Layout (Drive shell) */
 
-html,
-body,
-#root {
+html, body, #root {
   height: 100%;
 }
 
@@ -114,22 +78,44 @@ body,
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: transparent;
 }
 
+/* App Body */
 .app-body {
   display: flex;
   flex: 1;
-  min-height: 0;
+  overflow: hidden;
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
 }
 
+/* Main Content */
 .app-content {
   flex: 1;
   overflow-y: auto;
-  min-height: 0;
-  background: #f8f9fa;
+  background: transparent;
+  padding: 20px; 
 }
 
-/* Dark mode – drive background */
-body.dark .app-content {
-  background: #1f1f1f;
+/* Sidebar */
+.side-menu {
+    width: 240px;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+
+    /* Background */
+    background: rgba(255, 255, 255, 0.4); 
+    backdrop-filter: blur(10px); 
+    border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Side Menu in Dark Mode */
+body.dark .side-menu {
+    background: rgba(0, 0, 0, 0.4);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
