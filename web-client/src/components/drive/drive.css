@@ -1,6 +1,4 @@
-/* =========================
-   File grid & cards
-   ========================= */
+/* File grid & cards */
 
 .file-grid {
     display: grid;
@@ -54,9 +52,7 @@
     color: #d93025;
 }
 
-/* =========================
-   Drive layout
-   ========================= */
+/* Drive layout */
 
 .drive-container {
     display: flex;
@@ -95,9 +91,7 @@
     background-color: #1669c1;
 }
 
-/* =========================
-   Breadcrumb
-   ========================= */
+/* Breadcrumb */
 
 .breadcrumb {
     margin-bottom: 16px;
@@ -117,9 +111,7 @@
     font-weight: 600;
 }
 
-/* =========================
-   File Viewer (Preview)
-   ========================= */
+/* File Viewer (Preview) */
 
 .file-viewer-overlay {
     position: fixed;
@@ -238,9 +230,7 @@
     margin-top: 40px;
 }
 
-/* =========================
-   Dark mode – Drive
-   ========================= */
+/* Dark mode – Drive */
 
 body.dark .drive-main {
     background-color: #1f1f1f;
@@ -312,9 +302,7 @@ body.dark .file-viewer-textarea {
     border: 1px solid #5f6368;
 }
 
-/* =========================
-   Create New Modal
-   ========================= */
+/* Create New Modal */
 
 .create-modal {
     position: fixed;
@@ -351,9 +339,7 @@ body.dark .file-viewer-textarea {
     background: #e8eaed;
 }
 
-/* =========================
-   Dark Mode – Create Modal
-   ========================= */
+/* Dark Mode – Create Modal */
 
 body.dark .create-modal {
     background: #2a2a2a;

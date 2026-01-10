@@ -1,19 +1,23 @@
-// In-memory users store
+// web-server/models/user.model.js
+
+// In-memory DB
 const users = [];
 
-// Simple unique ID generator
 const generateUserId = () => {
     return Date.now().toString() + Math.floor(Math.random() * 1000);
 };
 
-// Create a new user object
-const createUser = ({ username, password, name, image = null }) => {
+// Create new user
+const createUser = ({ username, password, fullName, email, phoneNumber, birthDate, image }) => {
     const user = {
         id: generateUserId(),
         username,
-        password,
-        name,
-        image,
+        password,    
+        fullName,
+        email: email || "",
+        phoneNumber: phoneNumber || "",
+        birthDate: birthDate || "",
+        image: image || null 
     };
 
     users.push(user);
@@ -25,19 +29,13 @@ const findUserByUsername = (username) => {
     return users.find((u) => u.username === username);
 };
 
-// Find user by id
+// Find user by ID
 const findUserById = (id) => {
     return users.find((u) => u.id === id);
-};
-
-// Expose users only if needed later (read-only usage)
-const getAllUsers = () => {
-    return [...users];
 };
 
 module.exports = {
     createUser,
     findUserByUsername,
-    findUserById,
-    getAllUsers,
+    findUserById
 };

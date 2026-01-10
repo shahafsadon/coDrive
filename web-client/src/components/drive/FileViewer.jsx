@@ -1,183 +1,121 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-    updateFileContent,
-    replaceImage
-} from "../../services/filesService";
+import React, { useState, useEffect, useRef } from "react";
+import { updateFileContent, replaceImage } from "../../services/filesService";
+import "./drive.css";
 
-function FileViewer({ file, onClose }) {
-    const isText =
-        file.mimeType?.startsWith("text") ||
-        typeof file.content === "string";
-
-    const isImage = file.mimeType?.startsWith("image");
-
+export default function FileViewer({ file, onClose }) {
     const [content, setContent] = useState(file.content || "");
-    const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(false);
+    
+    // Determine permissions
+    const canEdit = file.accessLevel === 'write';
 
-    const [imageUrl, setImageUrl] = useState(null);
-    const [loadingImage, setLoadingImage] = useState(false);
+    const imageInputRef = useRef(null);
 
-    const fileInputRef = useRef(null);
-
-    /* ---------- LOAD IMAGE (AUTH SAFE) ---------- */
     useEffect(() => {
-        if (!isImage) return;
+        setContent(file.content || "");
+    }, [file]);
 
-        let objectUrl;
-
-        const loadImage = async () => {
-            try {
-                setLoadingImage(true);
-                const token = localStorage.getItem("token");
-
-                const res = await fetch(
-                    `/api/files/${file.id}/download`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                if (!res.ok) {
-                    throw new Error("Failed to load image");
-                }
-
-                const blob = await res.blob();
-                objectUrl = URL.createObjectURL(blob);
-                setImageUrl(objectUrl);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoadingImage(false);
-            }
-        };
-
-        loadImage();
-
-        return () => {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
-        };
-    }, [file.id, isImage]);
-
-    /* ---------- SAVE TEXT FILE ---------- */
     const handleSave = async () => {
+        if (!canEdit) return;
         try {
-            setSaving(true);
+            setLoading(true);
             await updateFileContent(file.id, content);
-            alert("Saved successfully");
-        } catch {
-            alert("Failed to save file");
+            onClose(); 
+        } catch (err) {
+            alert("Failed to save");
         } finally {
-            setSaving(false);
+            setLoading(false);
         }
     };
 
-    /* ---------- REPLACE IMAGE ---------- */
-    const handleReplaceImage = async (e) => {
+    const handleReplaceClick = () => {
+        if (imageInputRef.current) {
+            imageInputRef.current.click();
+        }
+    };
+
+    const handleImageChange = async (e) => {
         const newFile = e.target.files[0];
         if (!newFile) return;
-
         try {
+            setLoading(true);
             await replaceImage(file.id, newFile);
             onClose();
-        } catch {
+        } catch (err) {
             alert("Failed to replace image");
         } finally {
-            e.target.value = null;
+            setLoading(false);
         }
     };
 
+    const isImage = file.mimeType?.startsWith("image/") || file.filePath;
+
     return (
-        <div
-            className="file-viewer-overlay"
-            role="dialog"
-            aria-modal="true"
-        >
-            <div className="file-viewer">
+        <div className="file-viewer-overlay" onClick={onClose}>
+            <div className="file-viewer" onClick={(e) => e.stopPropagation()}>
+                
+                {/* Header */}
                 <div className="file-viewer-header">
-                    <h3 title={file.name}>{file.name}</h3>
-                    <button
-                        onClick={onClose}
-                        aria-label="Close preview"
-                    >
-                        ✖
-                    </button>
+                    <h3 style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                        {file.name} 
+                        {!canEdit && <span style={{fontSize:'11px', background:'#eee', padding:'2px 6px', borderRadius:'4px', color:'#666'}}>Read Only</span>}
+                    </h3>
+                    <button onClick={onClose}>✕</button>
                 </div>
 
-                {/* ---------- TEXT FILE ---------- */}
-                {isText && (
-                    <>
+                {/* Body */}
+                <div className="file-viewer-body">
+                    {isImage ? (
+                        <div style={{textAlign:'center'}}>
+                            {/* Updated source to use API download logic with auth token */}
+                            {file.filePath ? (
+                                <img 
+                                    src={`/api/files/${file.id}/download?token=${localStorage.getItem("token")}`} 
+                                    alt={file.name} 
+                                    className="file-viewer-image"
+                                />
+                            ) : (
+                                <div style={{padding:'40px', color:'#ccc'}}>No image source</div>
+                            )}
+                        </div>
+                    ) : (
                         <textarea
-                            value={content}
-                            onChange={(e) =>
-                                setContent(e.target.value)
-                            }
                             className="file-viewer-textarea"
-                            aria-label="File content"
+                            value={content}
+                            onChange={(e) => setContent(e.target.value)}
+                            readOnly={!canEdit}
+                            style={!canEdit ? {background:'#f9f9f9', color:'#555'} : {}}
                         />
+                    )}
+                </div>
 
-                        <div className="file-viewer-actions">
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                            >
-                                {saving ? "Saving..." : "Save"}
-                            </button>
-                        </div>
-                    </>
-                )}
-
-                {/* ---------- IMAGE FILE ---------- */}
-                {isImage && (
-                    <>
-                        {loadingImage && (
-                            <div
-                                className="file-viewer-loading"
-                                role="status"
-                            >
-                                Loading image…
-                            </div>
-                        )}
-
-                        {imageUrl && (
-                            <img
-                                src={imageUrl}
-                                alt={file.name}
-                                className="file-viewer-image"
-                            />
-                        )}
-
-                        <div className="file-viewer-actions">
-                            <button
-                                onClick={() =>
-                                    fileInputRef.current.click()
-                                }
-                            >
-                                🔁 Replace image
-                            </button>
-
-                            <input
-                                type="file"
-                                accept="image/*"
-                                ref={fileInputRef}
-                                style={{ display: "none" }}
-                                onChange={handleReplaceImage}
-                            />
-                        </div>
-                    </>
-                )}
-
-                {!isText && !isImage && (
-                    <div className="file-viewer-loading">
-                        No preview available
-                    </div>
-                )}
+                {/* Footer Actions */}
+                <div className="file-viewer-actions">
+                    {canEdit && (
+                        <>
+                            {isImage ? (
+                                <>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        style={{display:'none'}} 
+                                        ref={imageInputRef}
+                                        onChange={handleImageChange}
+                                    />
+                                    <button onClick={handleReplaceClick} disabled={loading}>
+                                        Replace Image
+                                    </button>
+                                </>
+                            ) : (
+                                <button onClick={handleSave} disabled={loading}>
+                                    Save
+                                </button>
+                            )}
+                        </>
+                    )}
+                    <button className="secondary" onClick={onClose}>Close</button>
+                </div>
             </div>
         </div>
     );
 }
-
-export default FileViewer;

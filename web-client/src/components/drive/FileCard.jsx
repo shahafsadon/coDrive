@@ -1,78 +1,75 @@
 import React from "react";
 import "./drive.css";
 
-export default function FileCard({
-                                     file,
-                                     onRename,
-                                     onDelete,
-                                     onOpenFolder,
-                                     onOpenFile
-                                 }) {
+export default function FileCard({ file, onRename, onDelete, onOpenFolder, onOpenFile, onShare, onMove }) {
     const isFolder = file.type === "folder";
-    const isImage =
-        file.mimeType?.startsWith("image/") || Boolean(file.filePath);
+    const isImage = file.mimeType?.startsWith("image/");
 
-    let icon = "📄";
+    // Bigger icons logic
+    let icon = <span style={{ fontSize: '48px' }}>📄</span>;
     if (isFolder) {
-        icon = "📁";
+        icon = <span style={{ fontSize: '48px' }}>📂</span>;
+    } else if (isImage && file.filePath) {
+        // Preview image if available
+        icon = (
+            <img 
+                src={`http://localhost:3000/${file.filePath.replace(/\\/g, '/')}`} 
+                alt={file.name}
+                style={{ width: '64px', height: '64px', objectFit: 'cover', borderRadius: '6px' }} 
+            />
+        );
     } else if (isImage) {
-        icon = "🖼️";
+        icon = <span style={{ fontSize: '48px' }}>🖼️</span>;
     }
 
-    const handleRename = (e) => {
+    const handleAction = (e, action) => {
         e.stopPropagation();
-        const newName = prompt("Enter new file name:", file.name);
-        if (newName && newName !== file.name) {
-            onRename(file.id, newName);
-        }
+        action();
     };
 
-    const handleDelete = (e) => {
-        e.stopPropagation();
-        if (window.confirm(`Delete "${file.name}"?`)) {
-            onDelete(file.id);
-        }
-    };
-
-    const handleOpen = () => {
-        if (isFolder && onOpenFolder) {
-            onOpenFolder(file.id, file.name);
-        }
-
-        if (!isFolder && onOpenFile) {
-            onOpenFile(file);
-        }
-    };
-
+    // Render
     return (
         <div
-            className={`file-card ${isFolder ? "folder" : "file"}`}
-            onDoubleClick={handleOpen}
-            role="button"
-            tabIndex={0}
-            aria-label={isFolder ? "Open folder" : "Open file"}
+            className="file-card"
+            onDoubleClick={() => isFolder ? onOpenFolder(file.id) : onOpenFile(file)}
+            title={file.name}
         >
-            <div className="file-icon">{icon}</div>
-
-            <div className="file-name" title={file.name}>
-                {file.name}
+            <div className="file-icon" style={{ height: '70px', display: 'flex', 
+                alignItems: 'center', justifyContent: 'center' }}>
+                {icon}
             </div>
 
-            <div className="file-actions">
-                <button
-                    className="file-action-btn"
-                    onClick={handleRename}
-                    aria-label="Rename file"
-                >
-                    Rename
-                </button>
+            <div className="file-name">{file.name}</div>
 
-                <button
-                    className="file-action-btn delete"
-                    onClick={handleDelete}
-                    aria-label="Delete file"
+            <div className="file-actions" style={{ marginTop: '8px', 
+                display: 'flex', justifyContent: 'center', gap: '4px' }}>
+                <button 
+                    title="Share"
+                    onClick={(e) => handleAction(e, () => onShare(file))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
                 >
-                    Delete
+                    🔗
+                </button>
+                <button 
+                    title="Move"
+                    onClick={(e) => handleAction(e, () => onMove(file))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
+                >
+                    ➡️
+                </button>
+                <button 
+                    title="Rename"
+                    onClick={(e) => handleAction(e, () => onRename(file.id))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
+                >
+                    ✏️
+                </button>
+                <button 
+                    title="Delete"
+                    onClick={(e) => handleAction(e, () => onDelete(file.id))}
+                    style={{ background: 'none',border: 'none',cursor: 'pointer',fontSize: '16px', color: '#d93025' }}
+                >
+                    🗑️
                 </button>
             </div>
         </div>
