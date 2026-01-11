@@ -9,8 +9,7 @@ export default function FileCard({
     onOpenFile,
     onShare,
     onMove,
-    onToggleStar,
-    isStarred
+    onToggleStar
 }) {
     const isFolder = file.type === "folder";
     const isImage = file.mimeType?.startsWith("image/");
@@ -54,15 +53,14 @@ export default function FileCard({
                     userSelect: "none"
                 }}
                 onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleStar?.(file);
+                    e.stopPropagation();                    
+                    onToggleStar(file);
+                    
                 }}
                 title="Star"
             >
-                {isStarred ? "⭐" : "☆"}
+                {file.isStarred ? "⭐" : "☆"}
             </div>
-
-
 
             <div
                 className="file-icon"

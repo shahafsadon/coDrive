@@ -8,6 +8,8 @@ import {
     getFileById, uploadImageFile, moveFile
 } from "../services/filesService";
 import "../components/drive/drive.css";
+import { updateFile } from "../services/filesService";
+
 
 
 export default function DrivePage() {
@@ -31,21 +33,18 @@ export default function DrivePage() {
     const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } =
         useOutletContext();
 
-    // Load files
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const path = window.location.pathname;
 
             let data;
+
+            // Fetch base data
             if (searchTerm) {
                 data = await searchFiles(searchTerm);
-            } else if (path === "/recent") {
-                // Recent = all files from root
-                data = await getFiles(null);
-            //} else if (path === "/starred") {          
-            //    filesList = filesList.filter(f => f.isStarred);
             } else {
+                // Always load from root / current folder
                 data = await getFiles(currentFolderId);
             }
 
@@ -56,22 +55,45 @@ export default function DrivePage() {
                 filesList = data.children;
             }
 
-            // My Drive → sort A-Z
+            /* =========================
+            FILTER BY PAGE
+            ========================= */
+
+            // Trash
+            if (path === "/trash") {
+                filesList = filesList.filter(f => f.isTrashed);
+            } else {
+                // All other pages exclude trash
+                filesList = filesList.filter(f => !f.isTrashed);
+            }
+
+            // Starred
+            if (path === "/starred") {
+                filesList = filesList.filter(f => f.isStarred);
+            }
+
+            // Shared
+            if (path === "/shared") {
+                filesList = filesList.filter(
+                    f => Array.isArray(f.permissions) && f.permissions.length > 0
+                );
+            }
+
+            /* =========================
+            SORTING
+            ========================= */
+
+            // My Drive – A → Z
             if (path === "/drive") {
                 filesList = [...filesList].sort((a, b) =>
                     a.name.localeCompare(b.name)
                 );
             }
 
-            // Recent → newest first (newest = left top)
+            // Recent – newest first (left top)
             if (path === "/recent") {
-                filesList = [...filesList].sort(
-                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-                );
                 filesList = [...filesList].reverse();
             }
-
-
 
             setFiles(filesList);
         } catch (err) {
@@ -82,9 +104,10 @@ export default function DrivePage() {
         }
     }, [currentFolderId, searchTerm]);
 
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
+useEffect(() => {
+    loadData();
+}, [loadData]);
+
 
     // Breadcrumbs
     useEffect(() => {
@@ -169,6 +192,12 @@ export default function DrivePage() {
         );
     };
 
+    const handleToggleStar = async (file) => {
+        await updateFile(file.id, { isStarred: !file.isStarred });
+        loadData();
+    };
+
+
     const confirmDelete = async () => {
         try {
             if (deleteId) {
@@ -244,6 +273,7 @@ export default function DrivePage() {
                     }}
                     onShare={setShareFile}
                     onMove={handleMove}
+                    onToggleStar={handleToggleStar}
                 />
             )}
 
@@ -290,8 +320,12 @@ export default function DrivePage() {
             {deleteId && (
                 <div className="file-viewer-overlay">
                     <div className="create-modal">
-                        <h3>Delete Item?</h3>
-                        <p>This action cannot be undone.</p>
+                        <h3>Move item to Trash?</h3>
+                        <p>
+                        Are you sure you want to delete this item?
+                        <br />
+                        The file will be moved to Trash.
+                        </p>
                         <button onClick={() => setDeleteId(null)}>Cancel</button>
                         <button onClick={confirmDelete}>Delete</button>
                     </div>

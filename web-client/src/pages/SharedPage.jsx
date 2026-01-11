@@ -1,5 +1,5 @@
-import React from "react";
+import DrivePage from "./DrivePage";
 
 export default function SharedPage() {
-    return <h2>Shared with me</h2>;
+    return <DrivePage filter="shared" />;
 }
