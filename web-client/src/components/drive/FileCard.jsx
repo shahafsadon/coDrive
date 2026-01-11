@@ -69,8 +69,9 @@ export default function FileCard({
                     userSelect: "none"
                 }}
                 onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleStar?.(file.id);
+                    e.stopPropagation();                    
+                    onToggleStar(file.id);
+                    
                 }}
                 title="Star"
             >

@@ -87,3 +87,10 @@ export async function addPermission(fileId, username, access) {
 export async function deletePermission(fileId, permId) {
     return apiDelete(`/files/${fileId}/permissions/${permId}`);
 }
+
+// Update permission
+export const updateFile = (id, data) =>
+    apiPatch(`/files/${id}`, data);
+
+export const toggleStar = (id, isStarred) =>
+    apiPatch(`/files/${id}`, { isStarred });

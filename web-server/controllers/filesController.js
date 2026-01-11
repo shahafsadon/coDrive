@@ -19,13 +19,19 @@ function updateFile(req, res) {
         return res.status(404).json({ error: 'Not found' });
     }
 
+    // before checking write access
+    if (typeof isStarred === "boolean") {
+        node.isStarred = isStarred;
+        return res.status(204).end();
+    }
+
     // Security: Check effective access
     const access = getEffectiveAccess(req.user.id, node.id);
     if (access !== 'write') {
         return res.status(403).json({ error: 'Read-only access' });
     }
 
-    let { name, content, parentId, parentName, isStarred, isTrashed } = req.body;
+    let { name, content, parentId, parentName, isStarred } = req.body;
 
     // Handle parentName to parentId resolution
     if (parentName !== undefined) {
@@ -187,7 +193,7 @@ function deleteFile(req, res) {
         return res.status(403).json({ error: 'Only owner can delete files' });
     }
     
-    deleteNodeRecursive(req.user.id, node.id); 
+    node.isTrashed = true;
     return res.status(204).end();
 }
 
@@ -269,7 +275,19 @@ function replaceImage(req, res) {
     return res.status(200).json(node);
 }
 
+// Delete file/folder permanently from trash
+function deleteFilePermanent(req, res) {
+    const node = getNodeById(req.user.id, req.params.id);
+    if (!node || !node.isTrashed) {
+        return res.status(404).json({ error: "Not found" });
+    }
+
+    deleteNodeRecursive(req.user.id, node.id);
+    return res.status(204).end();
+}
+
+
 module.exports = {
     listRootFiles, createFile, formatCreateFileResponse, getFileById, downloadFile, deleteFile,
-    updateFile, replaceImage, getPermissions, addPermission, updatePermission, deletePermission
+    updateFile, replaceImage, getPermissions, addPermission, updatePermission, deletePermission, deleteFilePermanent
 };
