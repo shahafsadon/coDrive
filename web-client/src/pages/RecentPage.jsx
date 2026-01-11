@@ -1,5 +1,5 @@
-import React from "react";
+import DrivePage from "./DrivePage";
 
 export default function RecentPage() {
-    return <h2>Recent</h2>;
+    return <DrivePage />;
 }

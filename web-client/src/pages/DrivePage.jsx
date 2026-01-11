@@ -9,6 +9,7 @@ import {
 } from "../services/filesService";
 import "../components/drive/drive.css";
 
+
 export default function DrivePage() {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,29 +19,72 @@ export default function DrivePage() {
 
     const [deleteId, setDeleteId] = useState(null);
 
-    // Input Modal State
-    const [inputModal, setInputModal] = useState({ open: false, title: "", value: "", action: null, 
-        showRootOption: false });
+    const [inputModal, setInputModal] = useState({
+        open: false,
+        title: "",
+        value: "",
+        action: null,
+        showRootOption: false
+    });
     
     const fileInputRef = useRef(null);
-    const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } = useOutletContext();
-    
+    const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } =
+        useOutletContext();
+
     // Load files
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            let data = searchTerm ? await searchFiles(searchTerm) : await getFiles(currentFolderId);
-            if (Array.isArray(data)) setFiles(data);
-            else if (data && Array.isArray(data.children)) setFiles(data.children);
-            else setFiles([]);
+            const path = window.location.pathname;
+
+            let data;
+            if (searchTerm) {
+                data = await searchFiles(searchTerm);
+            } else if (path === "/recent") {
+                // Recent = all files from root
+                data = await getFiles(null);
+            //} else if (path === "/starred") {          
+            //    filesList = filesList.filter(f => f.isStarred);
+            } else {
+                data = await getFiles(currentFolderId);
+            }
+
+            let filesList = [];
+            if (Array.isArray(data)) {
+                filesList = data;
+            } else if (data && Array.isArray(data.children)) {
+                filesList = data.children;
+            }
+
+            // My Drive → sort A-Z
+            if (path === "/drive") {
+                filesList = [...filesList].sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                );
+            }
+
+            // Recent → newest first (newest = left top)
+            if (path === "/recent") {
+                filesList = [...filesList].sort(
+                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                );
+                filesList = [...filesList].reverse();
+            }
+
+
+
+            setFiles(filesList);
         } catch (err) {
             console.error(err);
+            setFiles([]);
         } finally {
             setLoading(false);
         }
     }, [currentFolderId, searchTerm]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     // Breadcrumbs
     useEffect(() => {
@@ -48,7 +92,6 @@ export default function DrivePage() {
             setBreadcrumbs([{ id: null, name: `Results: "${searchTerm}"` }]);
         }
     }, [searchTerm]);
-
 
     // Handle file/folder click
     const handleFileClick = async (file) => {
@@ -70,14 +113,11 @@ export default function DrivePage() {
     };
 
 
-    // Modal Actions 
-
     // Helper to open input modal
     const openInputModal = (title, defaultValue, action, showRootOption = false) => {
         setInputModal({ open: true, title, value: defaultValue || "", action, showRootOption });
     };
 
-    // Handle input modal submission
     const handleInputSubmit = async () => {
         try {
             if (inputModal.action) await inputModal.action(inputModal.value);
@@ -87,11 +127,10 @@ export default function DrivePage() {
             alert(err.message); 
         }
     };
-    
-    // Handle move to root
+
     const handleMoveToRoot = async () => {
         try {
-            if (inputModal.action) await inputModal.action(""); // Empty string triggers root move
+            if (inputModal.action) await inputModal.action("");
             setInputModal({ ...inputModal, open: false });
             loadData();
         } catch (err) {
@@ -99,9 +138,6 @@ export default function DrivePage() {
         }
     };
 
-    // Handlers
-
-    // Create new text file
     const createTextFile = () => {
         setCreateMode(false);
         openInputModal("New File Name", "", async (name) => {
@@ -109,7 +145,6 @@ export default function DrivePage() {
         });
     };
 
-    // Create new folder
     const createFolder = () => {
         setCreateMode(false);
         openInputModal("New Folder Name", "", async (name) => {
@@ -117,26 +152,23 @@ export default function DrivePage() {
         });
     };
 
-    // Handle rename
     const handleRename = (id, currentName) => {
         openInputModal("Rename File", currentName, async (newName) => {
             if (newName && newName !== currentName) await renameFile(id, newName);
         });
     };
 
-    // Handle move
     const handleMove = (file) => {
         openInputModal(
-            "Move to Folder Name", 
-            "", 
+            "Move to Folder Name",
+            "",
             async (targetName) => {
                 await moveFile(file.id, targetName);
             },
-            true 
+            true
         );
     };
 
-    // Confirm Delete with Error Handling
     const confirmDelete = async () => {
         try {
             if (deleteId) {
@@ -150,10 +182,8 @@ export default function DrivePage() {
         }
     };
 
-    // Create image file
     const createImageFile = () => fileInputRef.current.click();
-    
-    // Handle image file selection
+
     const handleImageSelected = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -161,12 +191,13 @@ export default function DrivePage() {
             await uploadImageFile(file.name, currentFolderId, file);
             setCreateMode(false);
             loadData();
-        } catch (err) { alert("Upload failed"); }
+        } catch {
+            alert("Upload failed");
+        }
     };
 
     const enterFolder = (folder) => {
         setCurrentFolderId(folder.id);
-
         setBreadcrumbs(prev => {
             const exists = prev.find(b => b.id === folder.id);
             if (exists) {
@@ -179,16 +210,13 @@ export default function DrivePage() {
     // Render
     return (
         <>
-            <div
-                className="breadcrumbs"
-                style={{padding: "10px 20px", fontSize: "18px"}}
-            >
+            <div className="breadcrumbs" style={{ padding: "10px 20px", fontSize: "18px" }}>
                 {breadcrumbs.map((b, idx) => (
                     <span key={b.id || "root"}>
-            {idx > 0 && " > "}
+                        {idx > 0 && " > "}
                         <span
                             className={idx === breadcrumbs.length - 1 ? "breadcrumb-active" : ""}
-                            style={{cursor: "pointer"}}
+                            style={{ cursor: "pointer" }}
                             onClick={() => {
                                 if (!searchTerm) {
                                     setCurrentFolderId(b.id);
@@ -196,15 +224,15 @@ export default function DrivePage() {
                                 }
                             }}
                         >
-                {b.name}
-            </span>
-        </span>
+                            {b.name}
+                        </span>
+                    </span>
                 ))}
             </div>
 
-
-            {loading ? <div style={{padding: "20px"}}>Loading...</div> : (
-
+            {loading ? (
+                <div style={{ padding: "20px" }}>Loading...</div>
+            ) : (
                 <FileGrid
                     files={files}
                     onOpenFolder={enterFolder}
@@ -219,11 +247,13 @@ export default function DrivePage() {
                 />
             )}
 
-            {/* Modals */}
             {selectedFile && (
-                <FileViewer 
-                    file={selectedFile} 
-                    onClose={() => { setSelectedFile(null); loadData(); }} 
+                <FileViewer
+                    file={selectedFile}
+                    onClose={() => {
+                        setSelectedFile(null);
+                        loadData();
+                    }}
                 />
             )}
 
@@ -231,71 +261,62 @@ export default function DrivePage() {
                 <ShareModal file={shareFile} onClose={() => setShareFile(null)} />
             )}
 
-            {/* Input Modal */}
             {inputModal.open && (
                 <div className="file-viewer-overlay">
-                    <div className="create-modal" style={{ minWidth: '350px' }}>
+                    <div className="create-modal" style={{ minWidth: "350px" }}>
                         <h3>{inputModal.title}</h3>
-                        <input 
+                        <input
                             autoFocus
-                            type="text" 
-                            placeholder={inputModal.showRootOption ? "Enter folder name..." : ""}
+                            type="text"
                             value={inputModal.value}
-                            onChange={(e) => setInputModal({...inputModal, value: e.target.value})}
-                            style={{ width: '100%', padding: '8px', marginBottom: '16px', borderRadius: '4px', 
-                                border: '1px solid #ccc' }}
-                            onKeyDown={(e) => e.key === 'Enter' && handleInputSubmit()}
+                            onChange={(e) =>
+                                setInputModal({ ...inputModal, value: e.target.value })
+                            }
+                            onKeyDown={(e) => e.key === "Enter" && handleInputSubmit()}
                         />
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
                             {inputModal.showRootOption && (
-                                <button 
-                                    onClick={handleMoveToRoot} 
-                                    style={{ marginRight: 'auto', background: '#e8f0fe', 
-                                        color: '#1a73e8', border: 'none' }}
-                                    title="Move to My Drive"
-                                >
-                                    🏠 Move to Main
-                                </button>
+                                <button onClick={handleMoveToRoot}>🏠 Move to Main</button>
                             )}
-                            
-                            <button onClick={() => setInputModal({ ...inputModal, open: false })}>Cancel</button>
-                            <button onClick={handleInputSubmit} 
-                            style={{ background: '#1a73e8', color: 'white' }}>OK</button>
+                            <button onClick={() => setInputModal({ ...inputModal, open: false })}>
+                                Cancel
+                            </button>
+                            <button onClick={handleInputSubmit}>OK</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
             {deleteId && (
                 <div className="file-viewer-overlay">
-                    <div className="create-modal" style={{ minWidth: '300px' }}>
-                        <h3 style={{color: '#d93025'}}>Delete Item?</h3>
-                        <p>Are you sure you want to delete this item? This action cannot be undone.</p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px' }}>
-                            <button onClick={() => setDeleteId(null)}>Cancel</button>
-                            <button onClick={confirmDelete} 
-                            style={{ background: '#d93025', color: 'white', border: 'none' }}>Delete</button>
-                        </div>
+                    <div className="create-modal">
+                        <h3>Delete Item?</h3>
+                        <p>This action cannot be undone.</p>
+                        <button onClick={() => setDeleteId(null)}>Cancel</button>
+                        <button onClick={confirmDelete}>Delete</button>
                     </div>
                 </div>
             )}
-            
-            {/* Create Menu Modal */}
-             {createMode && (
+
+            {createMode && (
                 <div className="file-viewer-overlay" onClick={() => setCreateMode(false)}>
-                    <div className="create-modal" onClick={e => e.stopPropagation()}>
+                    <div className="create-modal" onClick={(e) => e.stopPropagation()}>
                         <h3>Create new</h3>
                         <button onClick={createTextFile}>📄 Text file</button>
                         <button onClick={createImageFile}>🖼️ Image file</button>
                         <button onClick={createFolder}>📁 Folder</button>
-                        <div style={{ marginTop: "8px" }}><button onClick={() => 
-                            setCreateMode(false)}>Cancel</button></div>
+                        <button onClick={() => setCreateMode(false)}>Cancel</button>
                     </div>
                 </div>
             )}
-             <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} 
-             onChange={handleImageSelected} />
+
+            <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleImageSelected}
+            />
         </>
     );
 }

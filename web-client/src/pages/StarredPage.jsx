@@ -1,5 +1,5 @@
-import React from "react";
+import DrivePage from "./DrivePage";
 
 export default function StarredPage() {
-    return <h2>Starred</h2>;
+    return <DrivePage />;
 }

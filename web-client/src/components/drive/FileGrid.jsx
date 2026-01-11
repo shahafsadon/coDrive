@@ -9,7 +9,7 @@ export default function FileGrid({
                                      onOpenFolder,
                                      onOpenFile,
                                      onShare, 
-                                     onMove  
+                                     onMove, 
                                  }) {
     if (!files || files.length === 0) {
         return (
@@ -30,7 +30,7 @@ export default function FileGrid({
                     onOpenFolder={onOpenFolder}
                     onOpenFile={onOpenFile}
                     onShare={onShare} 
-                    onMove={onMove}   
+                    onMove={onMove}  
                 />
             ))}
         </div>

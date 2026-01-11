@@ -206,8 +206,8 @@ export default function RegisterPage() {
                         src={logo}
                         alt="CoDrive"
                         style={{
-                            width: "70px",
-                            marginBottom: "12px",
+                            width: "200px",
+                            marginBottom: "4px",
                         }}
                     />
 

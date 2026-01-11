@@ -26,7 +26,7 @@ export default function TopBar({
                     <img
                         src={logo}
                         alt="CoDrive"
-                        style={{ height: "28px", marginRight: "8px" }}
+                        style={{ height: "80px", marginRight: "8px" }}
                     />
 
                     <svg width="24" height="24" viewBox="0 0 24 24" style={{ marginRight: "8px" }}>
