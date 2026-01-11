@@ -8,6 +8,8 @@ import {
     getFileById, uploadImageFile, moveFile
 } from "../services/filesService";
 import "../components/drive/drive.css";
+import { updateFile } from "../services/filesService";
+
 
 
 export default function DrivePage({ mode }) {
@@ -38,21 +40,18 @@ export default function DrivePage({ mode }) {
     const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } =
         useOutletContext();
 
-    // Load files
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
             const path = window.location.pathname;
 
             let data;
+
+            // Fetch base data
             if (searchTerm) {
                 data = await searchFiles(searchTerm);
-            } else if (path === "/recent") {
-                // Recent = all files from root
-                data = await getFiles(null);
-            //} else if (path === "/starred") {          
-            //    filesList = filesList.filter(f => f.isStarred);
             } else {
+                // Always load from root / current folder
                 data = await getFiles(currentFolderId);
             }
 
@@ -63,18 +62,43 @@ export default function DrivePage({ mode }) {
                 filesList = data.children;
             }
 
-            // My Drive → sort A-Z
+            /* =========================
+            FILTER BY PAGE
+            ========================= */
+
+            // Trash
+            if (path === "/trash") {
+                filesList = filesList.filter(f => f.isTrashed);
+            } else {
+                // All other pages exclude trash
+                filesList = filesList.filter(f => !f.isTrashed);
+            }
+
+            // Starred
+            if (path === "/starred") {
+                filesList = filesList.filter(f => f.isStarred);
+            }
+
+            // Shared
+            if (path === "/shared") {
+                filesList = filesList.filter(
+                    f => Array.isArray(f.permissions) && f.permissions.length > 0
+                );
+            }
+
+            /* =========================
+            SORTING
+            ========================= */
+
+            // My Drive – A → Z
             if (path === "/drive") {
                 filesList = [...filesList].sort((a, b) =>
                     a.name.localeCompare(b.name)
                 );
             }
 
-            // Recent → newest first (newest = left top)
+            // Recent – newest first (left top)
             if (path === "/recent") {
-                filesList = [...filesList].sort(
-                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-                );
                 filesList = [...filesList].reverse();
             }
 
@@ -107,9 +131,10 @@ export default function DrivePage({ mode }) {
         }
     }, [currentFolderId, searchTerm, starred, trashed]);
 
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
+useEffect(() => {
+    loadData();
+}, [loadData]);
+
 
     // Breadcrumbs
     useEffect(() => {
@@ -230,6 +255,12 @@ export default function DrivePage({ mode }) {
             true
         );
     };
+
+    const handleToggleStar = async (file) => {
+        await updateFile(file.id, { isStarred: !file.isStarred });
+        loadData();
+    };
+
 
     const confirmDelete = async () => {
         try {
