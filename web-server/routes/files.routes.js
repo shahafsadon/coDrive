@@ -13,6 +13,7 @@ const {
     updateFile,
     downloadFile,
     replaceImage,
+    deleteFilePermanent,
     // permissions
     getPermissions,
     addPermission,
@@ -65,6 +66,12 @@ router.patch(
     '/:id/permissions/:pid',
     authMiddleware,
     updatePermission
+);
+
+router.delete(
+    '/:id/permanent',
+    authMiddleware,
+    deleteFilePermanent
 );
 
 router.delete(
