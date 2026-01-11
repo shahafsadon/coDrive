@@ -61,21 +61,33 @@ function findFolderByName(userId, folderName) {
 }
 
 // Create new file/folder node
-const node = {
-    id,
-    name,
-    type,
-    ownerId,
-    parentId,
-    content: type === 'file' ? content : null,
-    filePath: type === 'file' ? filePath : null,
-    mimeType: type === 'file' ? mimeType : null,
+function createNode({ name, type, ownerId, parentId = null, content = null, filePath = null, mimeType = 'text/plain'}) {
+    const store = getUserStore(ownerId);
+    
+    // Removed duplicate check to allow multiple files with same name (Google Drive style)
+    
+    const id = randomUUID();
+    const node = {
+        id,
+        name,
+        type,
+        ownerId,
+        parentId,
 
-    isTrashed: false,
-    isStarred: false,
-    permissions: [],
-    createdAt: new Date().toISOString()
-};
+        content: type === 'file' ? content : null,
+        filePath: type === 'file' ? filePath : null,
+        mimeType: type === 'file' ? mimeType : null,
+
+        isStarred: false,
+        isTrashed: false,
+        permissions: [],
+        createdAt: new Date().toISOString()
+    };
+
+
+    store.set(id, node);
+    return node;
+}
 
 function getNodeById(userId, nodeId) {
     const node = findNodeGlobal(nodeId);

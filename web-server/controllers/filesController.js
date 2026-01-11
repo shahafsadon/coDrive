@@ -54,6 +54,10 @@ function updateFile(req, res) {
         node.isStarred = isStarred;
     }
 
+    if (typeof isTrashed === "boolean") {
+        node.isTrashed = isTrashed;
+    }
+
 
     // Move Logic with Anti-Steal Protection
     if (parentId !== undefined) {

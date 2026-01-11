@@ -116,6 +116,13 @@ export default function DrivePage({ mode }) {
                 filesList = filesList.filter(f => trashed[f.id]);
             }
 
+            // Shared – files that have permissions (shared with me)
+            if (mode === "shared") {
+                filesList = filesList.filter(
+                    f => Array.isArray(f.permissions) && f.permissions.length > 0
+                );
+            }
+
 
             setFiles(
                 filesList.map(f => ({
@@ -129,7 +136,7 @@ export default function DrivePage({ mode }) {
         } finally {
             setLoading(false);
         }
-    }, [currentFolderId, searchTerm, starred, trashed]);
+    }, [currentFolderId, searchTerm, starred, trashed, mode]);
 
 useEffect(() => {
     loadData();
