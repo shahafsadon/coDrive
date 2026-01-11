@@ -73,11 +73,17 @@ function createNode({ name, type, ownerId, parentId = null, content = null, file
         type,
         ownerId,
         parentId,
+
         content: type === 'file' ? content : null,
         filePath: type === 'file' ? filePath : null,
         mimeType: type === 'file' ? mimeType : null,
-        permissions: []
+
+        isStarred: false,
+        isTrashed: false,
+        permissions: [],
+        createdAt: new Date().toISOString()
     };
+
 
     store.set(id, node);
     return node;

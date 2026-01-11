@@ -43,64 +43,109 @@ The system is fully containerized and can be executed locally using a single
 ---
 ### Project Structure
 
-The project is organized into two main parts:  
-the original C++ backend server (Assignment 2) and the new NodeJS web server layer
-introduced in Assignment 3.
+This project is composed of three main layers that build incrementally on each other.
+At its core, it reuses the C++ TCP server developed in Assignment 2, which implements the core file-system logic and command handling.
+On top of this backend, a Node.js RESTful web server (introduced in Assignment 3) acts as a middleware layer, exposing the C++ functionality through HTTP APIs and managing authentication, users, and permissions.
+Finally, Assignment 4 adds a full React-based frontend, providing a modern web user interface that consumes the REST API and enables end-to-end interaction with the system.
 ```
 coDrive/
 ├─ src/
-│  ├─ server/                 # C++ TCP server (from Assignment 2)
-│  │  ├─ server.cpp            # TCP server entry point
-│  │  ├─ ClientHandler.cpp    # Handles a single TCP client
+│  ├─ server/                     # C++ TCP server (Assignment 2 – unchanged)
+│  │  ├─ server.cpp               # TCP server entry point
+│  │  ├─ ClientHandler.cpp        # Handles a single TCP client
 │  │  └─ ClientHandler.h
 │  │
-│  ├─ commands/               # Command implementations (Assignment 2)
-│  │                           # (Kept for backward compatibility)
+│  ├─ commands/                   # Command implementations (Assignment 2)
+│  │                               # Kept for backward compatibility
 │  │
-│  └─ client/                 # C++ / Python clients (Assignment 2)
+│  └─ client/                     # C++ / Python clients (Assignment 2)
 │
-├─ web-server/                # Assignment 3 Core 
-│  ├─ controllers/            # HTTP request handling logic
-│  │  ├─ authController.js    # Authentication & tokens
-│  │  ├─ filesController.js   # Files & folders CRUD
-│  │  ├─ searchController.js  # Search endpoint
-│  │  ├─ userController.js    # Users management
-│  │  └─ healthController.js  # Health check endpoint
+├─ web-server/                    # Node.js REST API (Assignments 3–4)
+│  ├─ controllers/                # HTTP request handlers
+│  │  ├─ authController.js        # Authentication & token handling
+│  │  ├─ filesController.js       # Files & folders CRUD logic
+│  │  ├─ searchController.js      # Search endpoints
+│  │  ├─ userController.js        # User management
+│  │  └─ healthController.js      # Health check endpoint
 │  │
-│  ├─ middleware/             # Express middlewares
-│  │  ├─ authMiddleware.js    # User authentication via headers
-│  │  └─ errorMiddleware.js   # Centralized error handling
+│  ├─ middleware/                 # Express middlewares
+│  │  ├─ authMiddleware.js        # Authentication & authorization
+│  │  └─ errorMiddleware.js       # Centralized error handling
 │  │
-│  ├─ models/                 # In-memory data models
-│  │  ├─ user.model.js        # Users data structure
-│  │  └─ fileSystem.model.js  # Files, folders & permissions
+│  ├─ models/                     # In-memory data models
+│  │  ├─ user.model.js            # Users data structure
+│  │  └─ fileSystem.model.js      # Files, folders & permissions model
 │  │
-│  ├─ routes/                 # REST API routing
+│  ├─ routes/                     # REST API routing
 │  │  ├─ files.routes.js
 │  │  ├─ user.routes.js
 │  │  ├─ token.routes.js
-│  │  ├─ search.js
+│  │  ├─ search.routes.js
 │  │  ├─ health.routes.js
-│  │  └─ index.js             # Routes aggregation
+│  │  └─ index.js                 # Routes aggregation
 │  │
-│  ├─ services/               # Integration services
-│  │  ├─ tcpClient.js         # Communication with C++ TCP server
-│  │  └─ cppServerClient.js   # Abstraction over TCP protocol
+│  ├─ services/                   # Backend services
+│  │  ├─ tcpClient.js             # Low-level TCP communication
+│  │  └─ cppServerClient.js       # Abstraction over C++ server protocol
 │  │
-│  ├─ server.js               # Express server entry point
+│  ├─ server.js                   # Express server entry point
+│  ├─ Dockerfile                  # Web server Docker image
 │  ├─ package.json
-│  ├─ Dockerfile              # Web server Docker image
 │  └─ package-lock.json
 │
-├─ docker-compose.yml         # Runs both Node.js web server & C++ server
-├─ Dockerfile                 # C++ server Docker image
-├─ CMakeLists.txt             # C++ build configuration
-└─ README.md                  # Project documentation
-> Note:  
- The C++ TCP server and command infrastructure from Assignment 2
- are kept unchanged and reused as a backend service.
- Assignment 3 focuses on exposing this functionality through
- a RESTful web API with authentication, permissions, and Docker support.
+├─ web-client/                    # React frontend (Assignment 4)
+│  ├─ public/
+│  │
+│  ├─ src/
+│  │  ├─ assets/                  # Static assets (icons, images)
+│  │
+│  │  ├─ components/
+│  │  │  ├─ auth/
+│  │  │  │  └─ ProtectedRoute.jsx # Route protection (auth guard)
+│  │  │
+│  │  │  ├─ drive/                # Drive UI components
+│  │  │  │  ├─ FileCard.jsx       # Single file / folder card
+│  │  │  │  ├─ FileGrid.jsx       # Grid layout for files
+│  │  │  │  ├─ FileViewer.jsx     # File preview modal
+│  │  │  │  ├─ ShareModal.jsx     # File sharing dialog
+│  │  │  │  └─ drive.css          # Drive-specific styles
+│  │  │
+│  │  │  └─ layout/               # Application layout
+│  │  │     ├─ AppLayout.jsx      # Main app shell
+│  │  │     ├─ SideMenu.jsx       # Left navigation menu
+│  │  │     ├─ SideMenu.css
+│  │  │     ├─ TopBar.jsx         # Top navigation bar
+│  │  │     └─ TopBar.css
+│  │
+│  │  ├─ pages/                   # Application pages
+│  │  │  ├─ DrivePage.jsx         # Main drive view
+│  │  │  ├─ RecentPage.jsx        # Recent files
+│  │  │  ├─ StarredPage.jsx       # Starred files
+│  │  │  ├─ SharedPage.jsx        # Shared files
+│  │  │  ├─ TrashPage.jsx         # Trash (soft delete)
+│  │  │  ├─ LoginPage.jsx         # Login page
+│  │  │  └─ RegisterPage.jsx      # Registration page
+│  │
+│  │  ├─ services/                # Frontend API services
+│  │  │  ├─ api.js                # Axios / fetch wrapper
+│  │  │  ├─ authService.js        # Authentication API
+│  │  │  └─ filesService.js       # Files API
+│  │
+│  │  ├─ App.js                   # React root component
+│  │  ├─ App.css
+│  │  ├─ index.js                 # React entry point
+│  │  ├─ index.css
+│  │  └─ reportWebVitals.js
+│  │
+│  ├─ Dockerfile                  # Frontend Docker image
+│  ├─ package.json
+│  └─ package-lock.json
+│
+├─ docker-compose.yml             # Runs C++ server, web-server & web-client
+├─ Dockerfile                     # C++ server Docker image
+├─ CMakeLists.txt                 # C++ build configuration
+├─ .gitignore
+└─ README.md
 ```
 ---
 # How to Build & Run (Docker):
@@ -118,461 +163,218 @@ What This Command Does:
 
 - Builds the C++ server container
 
-- Builds the Node.js web server container
+- Builds the Node.js web server container 
 
-- Starts both containers on the same Docker network
+- Starts the containers on the same Docker network
 
 - Ensures the web server can communicate with the C++ server internally
 
 After a successful startup, you should see:
-![Server Running](images/server-run.png)
+![Server Running](images/ass4/1.png)
 
-### Step 2: User Registration & Authentication Flow
+### Step 2: Starting the Web Client
 
-All interactions with the system are performed on behalf of a specific user.
-Therefore, the first step after starting the servers is to create a user and authenticate
+The web client is started using `npm start` from the `web-client` directory.
+At this stage, the development server initialization begins.
 
-**To register a new user, send a POST request to the users endpoint.**
+![Server Running](images/ass4/2.png)
 
-Example:
-```
-$user = Invoke-RestMethod `
-  -Method POST `
-  -Uri http://localhost:3000/api/users `
-  -ContentType "application/json" `
-  -Body (@{
-      username = "demo"
-      password = "123"
-      name     = "Demo User"
-  } | ConvertTo-Json)
-  ```
-What happens in this step:
+If port 3000 is already occupied, the development server detects the conflict
+and prompts the user to run the application on a different available port.
 
-- A new user is created in the system
+![Server Running](images/ass4/3.png)
 
-- The server returns a user object
+After approving the port change, the application is compiled successfully
+and becomes accessible via a new local and network URL.
 
-- The response includes a unique user ID
+![Server Running](images/ass4/4.png)
 
-- The returned id uniquely identifies this user and is required in later steps.
+### Step 3: Registration and log in
 
-- Store the user id for later use:
- ```
-$USER_ID = $user.id
- ```
-**After the user is created, authenticate using the same credentials.**
+When launching the application, users are initially presented with the Sign In screen.
+Existing users can log in by entering their username and password.
 
-Example:
-```
-$login = Invoke-RestMethod `
-  -Method POST `
-  -Uri http://localhost:3000/api/tokens `
-  -ContentType "application/json" `
-  -Body (@{
-      username = "demo"
-      password = "123"
-  } | ConvertTo-Json)
-```
-What happens in this step:
+![Server Running](images/ass4/5.png)
 
-- The credentials are validated
+New users who do not yet have an account can proceed to the registration page by clicking the “Create account” button.
+On the registration screen, users are required to fill in the necessary details, including username, full name, email, phone number, birth date, and password.
 
-- The server returns the userId associated with this user
+Additionally, the registration process allows users to upload a profile image, providing a more personalized experience.
 
-- This userId represents the authenticated user context
+Once the registration is completed successfully, users can log in and access the main application features.
 
-All protected API endpoints require a user context.
+The system provides real-time validation feedback on both the sign-in and registration screens, clearly indicating invalid or missing input fields to guide the user in correcting errors.
 
-The user ID returned from authentication must be passed in the request headers:
+![Server Running](images/ass4/6.png)
 
-```
-x-user-id: <USER_ID>
-```
+### Step 4: Drive Page Overview
 
-Example:
-```
-$H = @{ "x-user-id" = $USER_ID }
-```
-From this point on:
+After successful registration and login with valid credentials, users are redirected to the Drive page, which serves as the main workspace of the application.
 
-- Every request (files, permissions, search, etc.)
+At the top of the page, a search bar allows users to search for files ,folders and images by content and by name.
+Next to it, the “New” button enables the creation of new items such as files ,folders and images.
 
-- Is executed as this user
+The top-right section includes a Dark Mode toggle, allowing users to switch between light and dark themes, a user profile indicator, and a Logout button to safely exit the application.
 
-- And is authorized according to ownership and permissions
- 
-### Important Notes
+On the left side, a side navigation menu provides quick access to different views:
 
-- User IDs are generated dynamically and will differ between runs
+My Drive - displays all files and folders owned by the user.
 
-- The README intentionally does not rely on fixed IDs
+Recent - shows recently accessed or modified items.
 
-- Each step produces identifiers that must be reused in subsequent steps
+Starred - contains files marked as favorites for quick access.
 
-- This authentication flow is mandatory before performing any file or permission operations
+Shared - lists files and folders shared with the user by others.
 
-## File Management Flow:
+Trash - stores deleted items that can be restored or permanently removed.
 
-After a user is authenticated, all file and folder operations are executed in the context of that user.
+The main content area displays the files and folders according to the selected section.
+If no files are available, an informative message is shown to indicate an empty state.
 
-Each request must include the x-user-id header, which identifies the acting user.
+This layout provides an intuitive and user-friendly file management experience similar to modern cloud storage systems.
 
-**Option 1 - List Root Files**
+![Server Running](images/ass4/7.png)
 
-To retrieve all files and folders located at the root level of the user’s file system:
-```
-Invoke-RestMethod `
-  -Method GET `
-  -Uri http://localhost:3000/api/files `
-  -Headers $H
-```
-What happens in this step:
+![Server Running](images/ass4/26.png)
 
-- Returns all root-level files and folders owned by the user
+### Step 4: Drive Page Overview
 
-- Initially empty for a new user
+The system supports three main types of items that users can create and manage within the Drive: text files, image files, and folders.
+Each type provides dedicated functionality tailored to its content, enabling a flexible and intuitive file management experience.
 
-**Option 2 - Create a New File or Folder**
+![Server Running](images/ass4/8.png)
 
-To create a new file (or folder) under the root directory:
-```
-Invoke-RestMethod `
-  -Method POST `
-  -Uri http://localhost:3000/api/files `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{
-      name = "docs"
-  } | ConvertTo-Json)
-```
+![Server Running](images/ass4/9.png)
 
-What happens in this step:
+**Text Files**
 
-- If type is omitted, the server creates a folder by default
+Text files can be created directly from the New menu.
+When opening a text file, an editor modal is displayed, allowing users to write, edit, and update the file’s content.
+Changes can be saved in real time, and the updated content is persisted on the server.
+Text files are also fully searchable, both by their file name and by their internal content.
 
-- The response includes a generated file/folder ID
+![Server Running](images/ass4/10.png)
 
-**Option 3 - Retrieve a Specific File by ID**
+**Image Files**
 
-To fetch metadata of a specific file or folder:
-```
-Invoke-RestMethod `
-  -Method GET `
-  -Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers $H
-```
-What happens in this step:
+Image files can be uploaded and managed through the Drive interface.
+When an image file is opened, a preview modal displays the image in full resolution.
+The system allows users to replace the image with a new one while keeping the same file entry, enabling easy updates without deleting and recreating files.
 
-- Returns file or folder metadata
+![Server Running](images/ass4/12.png)
 
-- If the entity is a folder, its children are included
+**Folders**
 
-- Accessible only if the user owns the file or has permissions
+Folders can be created to organize files hierarchically.
+Users can navigate into folders, create subfolders, and manage files within them.
+The breadcrumb navigation at the top of the page reflects the current path, allowing quick navigation back to parent directories.
+Folders can be renamed, moved, shared, starred, or deleted just like files.
 
-**Option 4 – Update File or Folder**
+![Server Running](images/ass4/11.png)
 
-To rename an existing file or folder:
-```
-Invoke-RestMethod `
-  -Method PATCH `
-  -Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{
-      name = "new-name"
-  } | ConvertTo-Json)
-```
+**Search Functionality**
 
-What happens in this step:
+The search bar at the top of the Drive enables powerful searching across the user’s files and folders.
+Users can search:
 
-- File or folder name is updated
+- By file or folder name
 
-- Server responds with 204 No Content
+- By text content inside text files
 
-- No response body is returned on success
+Search results are displayed dynamically and may include files and folders from different locations, providing fast access to relevant data without manual navigation.
 
-Note:
-When using Invoke-RestMethod, a 204 No Content response produces no output.
-This behavior is expected and indicates a successful operation.
+![Server Running](images/ass4/13.png)
 
-**Option 5 - Error Handling (Invalid File ID)**
+### Step 5: File Management Operations
 
-Attempting to update or access a non-existing file ID:
-```
-Invoke-RestMethod `
-  -Method PATCH `
-  -Uri http://localhost:3000/api/files/invalid-id `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{
-      name = "new-name"
-  } | ConvertTo-Json)
-```
+#### User Interactions
 
-Expected behavior:
+The system provides a complete set of file management operations, fully implemented on top of the RESTful API developed in Assignment 3.
+All user actions in the frontend are translated into API calls handled by the Node.js web server, which in turn communicates with the C++ backend server to perform the actual file system operations.
 
-- The server responds with a 404 Not Found
+Each file ,folder or image in the Drive is represented by a card, with a dedicated action toolbar displayed beneath it.
+This toolbar allows users to manage items efficiently and consistently across all views.
 
-- An explanatory error message is returned
+![Server Running](images/ass4/19.png)
 
-**Option 6 - Validation Errors**
 
-Creating a file without mandatory fields:
-```
-Invoke-RestMethod `
-  -Method POST `
-  -Uri http://localhost:3000/api/files `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{} | ConvertTo-Json)
-```
-Expected behavior:
+- **Share**
+Opens a sharing dialog that allows the user to grant access to other users by username.
+Permissions can be assigned as read or write, according to the sharing model implemented in Assignment 3.
+Shared users are displayed in the dialog and can be removed at any time.
 
-- The server responds with 400 Bad Request
+![Server Running](images/ass4/23.png)
 
-- Indicates that required fields are missing
+- **Move**
+Opens a move dialog that allows the user to relocate the file or folder to another directory.
+Users may specify a target folder name or quickly move the item back to the root directory (“My Drive”).
+This operation updates the item’s parent reference via the API.
 
-**Option 7 - Delete a File**
+![Server Running](images/ass4/16.png)
 
-To delete a file or folder:
-```
-Invoke-RestMethod `
-  -Method DELETE `
-  -Uri http://localhost:3000/api/files/<FILE_ID> `
-  -Headers $H
-```
+- **Rename**
+Opens a rename dialog that allows changing the file or folder name.
+Validation is applied to prevent empty or invalid names, and the change is persisted through the backend API.
 
-What happens in this step:
+![Server Running](images/ass4/15.png)
 
-- File or folder is permanently deleted
+- **Delete (Move to Trash)**
+Moves the selected item to the Trash instead of deleting it permanently.
+This implements a soft delete mechanism, allowing recovery at a later stage.
 
-- Deletion is recursive for folders
+#### Trash Management
 
-- Server responds with 204 No Content
+The Trash section provides additional item management options:
 
-## Permissions Management Flow:
+- **Restore**
+Restores the item to its original location before deletion.
 
-The system supports fine-grained access control for files and folders.
+![Server Running](images/ass4/17.png)
 
-A permission object contains:
+- **Delete Forever**
+Permanently removes the item from the system.
+This action is irreversible and requires explicit user confirmation.
 
-- id - unique permission identifier
+![Server Running](images/ass4/22.png)
 
-- userId - user receiving access
+This design ensures data safety while still allowing permanent cleanup when needed.
 
-- access - read or write
+#### Starred Items
 
-Only the file owner may manage permissions.
+Each file or folder card includes a star icon that allows users to mark items as favorites.
+Starred items appear in the Starred section of the side menu, enabling quick access to frequently used content.
 
-**Option 8 - List Permissions of a File**
+The star state is stored in the backend and reflected consistently across all views.
 
-To retrieve all permissions assigned to a specific file:
-```
-Invoke-RestMethod `
-  -Method GET `
-  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
-  -Headers $H
-```
+![Server Running](images/ass4/18.png)
 
-What happens in this step:
+#### Side Navigation Menu
 
-- The server returns all permissions associated 
+The side menu enables seamless navigation between different logical views of the user’s data:
 
-- Initially, this list is empty
+- **My Drive**
+Displays all files and folders owned by the user, organized hierarchically.
 
-- The response includes a count of permission entries
 
-**Option 9 - Grant Permission to Another User**
+- **Recent**
+Shows files and folders that were recently accessed or modified.
 
-To grant access to another user:
-```
-Invoke-RestMethod `
-  -Method POST `
-  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{
-      userId = "<TARGET_USER_ID>"
-      access = "read"
-  } | ConvertTo-Json)
-```
+![Server Running](images/ass4/21.png)
 
-What happens in this step:
+- **Starred**
+Displays all items marked with a star by the user.
 
-- A new permission entry is created
+![Server Running](images/ass4/20.png)
 
-- The target user gains access 
 
-Supported access levels:
+- **Shared**
+Lists files and folders that were shared with the user by others, based on the permission model.
 
-- read - read-only access
+![Server Running](images/ass4/24.png)
 
-- write - read and modify access
+- **Trash**
+Displays deleted items that can be restored or permanently removed.
 
-**Option 10 - Update an Existing Permission**
+![Server Running](images/ass4/25.png)
 
-To modify the access level of an existing permission:
-```
-Invoke-RestMethod `
-  -Method PATCH `
-  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
-  -Headers $H `
-  -ContentType "application/json" `
-  -Body (@{
-      access = "write"
-  } | ConvertTo-Json)
-```
-What happens in this step:
-
-- The permission access level is updated
-
-- Only the file owner can perform this operation
-
-**Option 11 - Remove a Permission**
-
-To revoke access from a user:
-```
-Invoke-RestMethod `
-  -Method DELETE `
-  -Uri http://localhost:3000/api/files/<FILE_ID>/permissions/<PERMISSION_ID> `
-  -Headers $H
-```
-
-What happens in this step:
-
-- The permission entry is deleted
-
-### Authorization Rules:
-
-Only the file owner can:
-
-- Add permissions
-
-- Modify permissions
-
-- Delete permissions
-
-Users with read access:
-
-- Can view file metadata
-
-Users with write access:
-
-- Can update file metadata
-
-## Search API Flow:
-
-The system supports searching files and folders by name.
-Search results are always scoped to the authenticated user and respect permission rules.
-
-**Option 12 - Search Files by Query**
-
-To search for files or folders whose name contains a given query string:
-```
-Invoke-RestMethod `
-  -Method GET `
-  -Uri http://localhost:3000/api/search/<QUERY> `
-  -Headers $H
-```
-
-**Search Notes:**
-
-- Search is case-insensitive
-
-- Results are scoped to the authenticated user
-
-- Files shared via permissions are included
-
-- Binary files (e.g. images) are matched by name only
-
-- An empty result set is returned if no matches are found
-
-### Final Notes
-
-- Successful operations that return 204 No Content do not display output in PowerShell
-
-- This behavior is correct and indicates success
-
-- The system is fully Dockerized and behaves identically across platforms
----
-# Example Run (Docker):
-
-**Services Startup and Server Initialization**
-
-The c++ and web services are successfully built and started, with the server listening for connections and accepting a client.
-
-![Server Running](images/server-run.png)
-
-**User Registration via REST API**
-
-A new user is created by sending a POST request to the /api/users endpoint, and the server returns a user object containing a unique identifier that will be used for all subsequent authenticated operations.
-![](images/1.png)
-
-**User Authentication and Session Setup**
-
-The user authenticates via the /api/tokens endpoint using valid credentials, receives the associated userId, and stores it in a request header to be used as the authenticated context for all subsequent API calls.
-![](images/2.png)
-
-
-**List Root Files**
-
-A GET request is sent to the /api/files endpoint using the authenticated user header, returning an empty result set that confirms the user’s root directory initially contains no files or folders.
-![](images/3.png)
-
-
-**Create Root Folder**
-
-A new folder named docs is created at the root level by sending a POST request to the /api/files endpoint, and the server returns the folder metadata including its unique identifier and ownership information.
-![](images/4.png)
-
-
-**Create Nested Folder**
-
-A subfolder named projects is created inside the existing docs folder by specifying the parent folder ID, demonstrating hierarchical folder organization within the file system.
-![](images/5.png)
-
-**Create Text File**
-
-A text file named notes.txt is created inside the docs folder by sending a POST request with file metadata and textual content, and the server returns the file object including its content and MIME type.
-![](images/6.png)
-
-**View Folder Contents**
-
-The contents of the docs folder are retrieved using a GET request, returning the folder metadata along with its child entities, including the nested projects folder and the notes.txt file.
-![](images/7.png)
-
-**Update File Content**
-
-A PATCH request is sent to update the content of the existing text file, successfully modifying the file’s stored data and completing the operation with a 204 No Content response.
-![](images/8.png)
-
-**Search Files by Query**
-
-A search request is performed using the /api/search/note endpoint, returning the notes.txt file whose name matches the query and reflecting the updated file content in the response.
-![](images/9.png)
-
-**Grant File Permission to Another User**
-
-A second user is created and granted read access to an existing file by sending a POST request to the /api/files/{fileId}/permissions endpoint, demonstrating user-to-user file sharing through explicit permissions.
-![](images/10.png)
-
-**Update File Permission**
-
-An existing permission entry is updated by changing the access level from read to write using a PATCH request, allowing the target user to modify the shared file.
-![](images/11.png)
-
-**File Permission**
-
-The previously granted permission is revoked by sending a DELETE request to the permissions endpoint, immediately removing the target user’s access to the file.
-![](images/12.png)
-
-**Delete Folder Recursively**
-
-The root folder is deleted using a DELETE request, triggering a recursive removal that deletes the folder and all of its contained files and subfolders from the user’s file system.
-![](images/13.png)
-
-**Verify Empty Search and File System**
-
-Final verification requests confirm that no files remain searchable and that the user’s root directory is empty after the recursive deletion, demonstrating successful cleanup of the file system.
-![](images/14.png)
-
+Switching between these sections does not duplicate data, but rather filters and presents the same underlying file system state according to the selected view.

@@ -25,7 +25,7 @@ function updateFile(req, res) {
         return res.status(403).json({ error: 'Read-only access' });
     }
 
-    let { name, content, parentId, parentName } = req.body;
+    let { name, content, parentId, parentName, isStarred, isTrashed } = req.body;
 
     // Handle parentName to parentId resolution
     if (parentName !== undefined) {
@@ -43,6 +43,15 @@ function updateFile(req, res) {
     if (name && typeof name === 'string') {
         node.name = name;
     }
+
+    if (typeof isStarred === "boolean") {
+        node.isStarred = isStarred;
+    }
+
+    if (typeof isTrashed === "boolean") {
+        node.isTrashed = isTrashed;
+    }
+
 
     // Move Logic with Anti-Steal Protection
     if (parentId !== undefined) {
