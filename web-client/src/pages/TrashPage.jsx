@@ -1,5 +1,5 @@
-import React from "react";
+import DrivePage from "./DrivePage";
 
 export default function TrashPage() {
-    return <h2>Trash</h2>;
+    return <DrivePage filter="trash" />;
 }
