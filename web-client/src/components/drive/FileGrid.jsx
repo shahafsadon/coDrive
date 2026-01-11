@@ -8,8 +8,11 @@ export default function FileGrid({
                                      onDelete,
                                      onOpenFolder,
                                      onOpenFile,
-                                     onShare, 
-                                     onMove, 
+                                     onShare,
+                                     onMove,
+                                     onToggleStar,
+                                     onRestore,
+                                     mode
                                  }) {
     if (!files || files.length === 0) {
         return (
@@ -29,8 +32,11 @@ export default function FileGrid({
                     onDelete={onDelete}
                     onOpenFolder={onOpenFolder}
                     onOpenFile={onOpenFile}
-                    onShare={onShare} 
-                    onMove={onMove}  
+                    onShare={onShare}
+                    onMove={onMove}
+                    onToggleStar={onToggleStar}
+                    onRestore={onRestore}
+                    mode={mode}
                 />
             ))}
         </div>

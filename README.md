@@ -1,26 +1,45 @@
 # coDrive Project
 
-### **RESTful Web API, File Management & Distributed System Architecture**
+### **RESTful Web API, File Management & Full-Stack Distributed System**
+
+This project implements a cloud-like file management system that exposes a RESTful Web API
+and a modern web-based client interface.
+
+The system is built as a continuation of Assignments 2 and 3, and in Assignment 4 it is
+extended into a full-stack distributed system, combining:
+
+- C++ multi-threaded backend server
+
+- NodeJS-based RESTful web server
+
+- React-based client application
+
+-Full Docker and docker-compose deployment
+
+The NodeJS server exposes HTTP endpoints under ```/api/*``` and acts as a client to the C++ server
+(from Assignments 2–3), which performs the actual file operations via TCP sockets.
+This layered architecture enables reuse of the core business logic while adding
+authentication, authorization, and a user-friendly web UI.
 
 
-This project implements a cloud-like file management system that exposes a RESTful Web API.
-The system is built as an extension of Assignment 2 and adds a NodeJS-based web server on top
-of the existing C++ server.
+### Assignment 4 extends the system with:
+- A React web client that consumes the RESTful API
 
-The NodeJS server exposes HTTP endpoints under `/api/*` and acts as a client to the C++ server
-(from Assignment 2), which handles the actual file operations via TCP sockets.
-This design allows reuse of the core business logic while adding a modern web interface.
+- Full JWT-based authentication and session handling
 
-### Assignment 3 introduces:
-- A RESTful API implemented in NodeJS (Express, MVC architecture)
-- User management and authentication using user IDs
-- File and folder management endpoints
-- A permission model for sharing files with other users
-- Proper HTTP status codes and JSON responses
-- Thread pool–based concurrency in the C++ server
+- A complete file manager UI (folders, files, previews, sharing)
 
-All API endpoints return JSON responses and are designed according to the specification provided
-in the assignment instructions.
+- Support for Starred, Trash, Recent and Shared views
+
+- Integration of client, web server and C++ server using Docker
+
+- A unified docker-compose configuration for running the entire system
+
+- End-to-end testing and validation of the distributed architecture
+
+All API endpoints return JSON responses and follow RESTful design principles.
+The system is fully containerized and can be executed locally using a single
+```docker-compose``` up command, as required by the assignment specification.
 ---
 ### Project Structure
 

@@ -1,5 +1,5 @@
 import DrivePage from "./DrivePage";
 
 export default function StarredPage() {
-    return <DrivePage />;
+    return <DrivePage mode="starred" />;
 }

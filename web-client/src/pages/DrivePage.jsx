@@ -10,14 +10,21 @@ import {
 import "../components/drive/drive.css";
 
 
-export default function DrivePage() {
+export default function DrivePage({ mode }) {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState(null);
     const [shareFile, setShareFile] = useState(null);
     const [breadcrumbs, setBreadcrumbs] = useState([{ id: null, name: "My Drive" }]);
-
     const [deleteId, setDeleteId] = useState(null);
+    const [restoreId, setRestoreId] = useState(null);
+    const [starred, setStarred] = useState(() => {
+        return new Set(JSON.parse(localStorage.getItem("starredFiles") || "[]"));
+    });
+    const [trashed, setTrashed] = useState(() => {
+        return JSON.parse(localStorage.getItem("trashedFiles") || "{}");
+    });
+
 
     const [inputModal, setInputModal] = useState({
         open: false,
@@ -71,16 +78,34 @@ export default function DrivePage() {
                 filesList = [...filesList].reverse();
             }
 
+            if (mode === "starred") {
+                filesList = filesList.filter(f => starred.has(f.id));
+            }
+
+            // Hide trashed files from normal views
+            if (mode !== "trash") {
+                filesList = filesList.filter(f => !trashed[f.id]);
+            }
+
+            // Show only trashed files in Trash
+            if (mode === "trash") {
+                filesList = filesList.filter(f => trashed[f.id]);
+            }
 
 
-            setFiles(filesList);
+            setFiles(
+                filesList.map(f => ({
+                    ...f,
+                    isStarred: starred.has(f.id)
+                }))
+            );
         } catch (err) {
             console.error(err);
             setFiles([]);
         } finally {
             setLoading(false);
         }
-    }, [currentFolderId, searchTerm]);
+    }, [currentFolderId, searchTerm, starred, trashed]);
 
     useEffect(() => {
         loadData();
@@ -92,6 +117,43 @@ export default function DrivePage() {
             setBreadcrumbs([{ id: null, name: `Results: "${searchTerm}"` }]);
         }
     }, [searchTerm]);
+
+    const toggleStar = (fileId) => {
+        setStarred(prev => {
+            const next = new Set(prev);
+            if (next.has(fileId)) {
+                next.delete(fileId);
+            } else {
+                next.add(fileId);
+            }
+            localStorage.setItem("starredFiles", JSON.stringify([...next]));
+            return next;
+        });
+    };
+
+    const moveToTrash = (file) => {
+        setTrashed(prev => {
+            const next = {
+                ...prev,
+                [file.id]: {
+                    originalParentId: currentFolderId,
+                    trashedAt: Date.now()
+                }
+            };
+            localStorage.setItem("trashedFiles", JSON.stringify(next));
+            return next;
+        });
+    };
+
+    const restoreFromTrash = (fileId) => {
+        setTrashed(prev => {
+            const next = { ...prev };
+            delete next[fileId];
+            localStorage.setItem("trashedFiles", JSON.stringify(next));
+            return next;
+        });
+    };
+
 
     // Handle file/folder click
     const handleFileClick = async (file) => {
@@ -171,16 +233,25 @@ export default function DrivePage() {
 
     const confirmDelete = async () => {
         try {
-            if (deleteId) {
+            if (!deleteId) return;
+
+            if (mode === "trash") {
                 await deleteFile(deleteId);
-                setDeleteId(null);
-                loadData();
+                restoreFromTrash(deleteId);
+            } else {
+                // soft delete
+                const file = files.find(f => f.id === deleteId);
+                if (file) moveToTrash(file);
             }
+
+            setDeleteId(null);
+            loadData();
         } catch (err) {
             alert(err.message);
             setDeleteId(null);
         }
     };
+
 
     const createImageFile = () => fileInputRef.current.click();
 
@@ -244,6 +315,9 @@ export default function DrivePage() {
                     }}
                     onShare={setShareFile}
                     onMove={handleMove}
+                    onToggleStar={toggleStar}
+                    onRestore={(id) => setRestoreId(id)}
+                    mode={mode}
                 />
             )}
 
@@ -290,10 +364,41 @@ export default function DrivePage() {
             {deleteId && (
                 <div className="file-viewer-overlay">
                     <div className="create-modal">
-                        <h3>Delete Item?</h3>
-                        <p>This action cannot be undone.</p>
-                        <button onClick={() => setDeleteId(null)}>Cancel</button>
-                        <button onClick={confirmDelete}>Delete</button>
+
+                        {mode === "trash" ? (
+                            <>
+                                <h3>Delete forever?</h3>
+                                <p>This action cannot be undone.</p>
+                                <button onClick={() => setDeleteId(null)}>Cancel</button>
+                                <button onClick={confirmDelete}>Delete forever</button>
+                            </>
+                        ) : (
+                            <>
+                                <h3>Move item to Trash?</h3>
+                                <p>You can restore this item later from Trash.</p>
+                                <button onClick={() => setDeleteId(null)}>Cancel</button>
+                                <button onClick={confirmDelete}>Move to Trash</button>
+                            </>
+                        )}
+
+                    </div>
+                </div>
+            )}
+            {restoreId && (
+                <div className="file-viewer-overlay">
+                    <div className="create-modal">
+                        <h3>Restore this item?</h3>
+                        <p>The item will be returned to its original location.</p>
+                        <button onClick={() => setRestoreId(null)}>Cancel</button>
+                        <button
+                            onClick={() => {
+                                restoreFromTrash(restoreId);
+                                setRestoreId(null);
+                                loadData();
+                            }}
+                        >
+                            Restore
+                        </button>
                     </div>
                 </div>
             )}

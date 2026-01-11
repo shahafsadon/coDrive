@@ -140,29 +140,31 @@ body.dark .search-icon {
 /* Theme Toggle Button */
 .theme-toggle-btn {
     border: none;
-    background: transparent;
+    background: none;
     color: #5f6368;
     font-size: 20px;
     cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
+    padding: 0;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.15s;
 }
 
+
 .theme-toggle-btn:hover {
-    background-color: rgba(60,64,67,0.08);
+    background: none;
 }
+
 
 body.dark .theme-toggle-btn {
     color: #e8eaed;
 }
 
 body.dark .theme-toggle-btn:hover {
-    background-color: rgba(232,234,237,0.08);
+    background: none;
 }
+
 
 /* User Info Container */
 .user-info {
