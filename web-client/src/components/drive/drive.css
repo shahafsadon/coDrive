@@ -14,17 +14,22 @@
 }
 
 .file-card {
-    background: #ffffff;
-    border: 1px solid #e0e0e0;
+    background: transparent;
+    border: 3.5px solid rgba(0, 0, 0, 0.12);
     border-radius: 8px;
     padding: 16px 8px;
     text-align: center;
     cursor: pointer;
-    transition: box-shadow 0.15s ease, background-color 0.15s ease;
+    transition:
+            box-shadow 0.15s ease,
+            background-color 0.15s ease,
+            border-color 0.15s ease;
 }
 
 .file-card:hover {
-    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(0, 0, 0, 0.28);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.16);
 }
 
 .file-icon {
@@ -260,14 +265,15 @@ body.dark .state-message.error {
 
 /* Cards */
 body.dark .file-card {
-    background: #2a2a2a;
-    border: 1px solid #3c4043;
-    color: #e8eaed;
+    border: 3.5px solid rgba(255, 255, 255, 0.22);
 }
 
 body.dark .file-card:hover {
-    box-shadow: 0 1px 6px rgba(255,255,255,0.08);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.35);
 }
+
+
 
 body.dark .file-name {
     color: #e8eaed;
@@ -375,3 +381,31 @@ body.dark .create-modal button:hover {
     color: #1a73e8;
     font-weight: bold;
 }
+
+.image-file-name {
+    font-size: 11px;
+    color: #5f6368;
+    font-weight: 400;
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.file-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.file-actions button svg {
+    color: #5f6368;
+}
+
+.file-actions button:hover svg {
+    color: #1a73e8;
+}
+
+body.dark .file-actions button svg {
+    color: #e8eaed;
+}
+

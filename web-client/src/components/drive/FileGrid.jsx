@@ -3,16 +3,17 @@ import FileCard from "./FileCard";
 import "./drive.css";
 
 export default function FileGrid({
-    files,
-    onRename,
-    onDelete,
-    onOpenFolder,
-    onOpenFile,
-    onShare,
-    onMove,
-    onToggleStar
-}) {
-
+                                     files,
+                                     onRename,
+                                     onDelete,
+                                     onOpenFolder,
+                                     onOpenFile,
+                                     onShare,
+                                     onMove,
+                                     onToggleStar,
+                                     onRestore,
+                                     mode
+                                 }) {
     if (!files || files.length === 0) {
         return (
             <div className="empty-state" role="status">
@@ -25,18 +26,18 @@ export default function FileGrid({
         <div className="file-grid">
             {files.map((file) => (
                 <FileCard
-                key={file.id}
-                file={file}
-                isStarred={file.isStarred}
-                onToggleStar={onToggleStar}
-                onRename={onRename}
-                onDelete={onDelete}
-                onOpenFolder={onOpenFolder}
-                onOpenFile={onOpenFile}
-                onShare={onShare}
-                onMove={onMove}
-            />
-
+                    key={file.id}
+                    file={file}
+                    onRename={onRename}
+                    onDelete={onDelete}
+                    onOpenFolder={onOpenFolder}
+                    onOpenFile={onOpenFile}
+                    onShare={onShare}
+                    onMove={onMove}
+                    onToggleStar={onToggleStar}
+                    onRestore={onRestore}
+                    mode={mode}
+                />
             ))}
         </div>
     );
