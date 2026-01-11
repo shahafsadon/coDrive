@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
 
@@ -185,119 +186,199 @@ export default function RegisterPage() {
         }
     };
 
-    return (
-        <div className="auth-container">
-            <div className="auth-card" style={{ maxWidth: "400px", padding: "0", borderRadius: "16px", 
-                overflow: "hidden", border: "1px solid #eee" }}>
-                
-                <div style={styles.container}>
-                    <div style={styles.header}>
-                        <h2 style={{ margin: "0", fontSize: "1.6rem", color: "#1a73e8", fontWeight: "700" }}
-                        >Create Account</h2>
+   return (
+    <div className="auth-container">
+        <div
+            className="auth-card"
+            style={{
+                maxWidth: "400px",
+                padding: "0",
+                borderRadius: "16px",
+                overflow: "hidden",
+                border: "1px solid #eee",
+            }}
+        >
+            <div style={styles.container}>
+                <div style={styles.header}>
+
+                    {/* LOGO – added, nothing else changed */}
+                    <img
+                        src={logo}
+                        alt="CoDrive"
+                        style={{
+                            width: "200px",
+                            marginBottom: "4px",
+                        }}
+                    />
+
+                    <h2
+                        style={{
+                            margin: "0",
+                            fontSize: "1.6rem",
+                            color: "#1a73e8",
+                            fontWeight: "700",
+                        }}
+                    >
+                        Create Account
+                    </h2>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    {/* Avatar */}
+                    <div
+                        style={styles.avatarContainer}
+                        onClick={() => fileInputRef.current.click()}
+                        title="Upload Profile Picture"
+                    >
+                        {imagePreview ? (
+                            <img
+                                src={imagePreview}
+                                alt="Profile"
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                }}
+                            />
+                        ) : (
+                            <span style={{ fontSize: "1.8rem", color: "#ccc" }}>📷</span>
+                        )}
+                    </div>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        style={{ display: "none" }}
+                    />
+
+                    {/* Username */}
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>
+                            Username <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            style={styles.input}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Username"
+                        />
                     </div>
 
-                    <form onSubmit={handleSubmit}>
-                        
-                        {/* Avatar */}
-                        <div 
-                            style={styles.avatarContainer} 
-                            onClick={() => fileInputRef.current.click()}
-                            title="Upload Profile Picture"
-                        >
-                            {imagePreview ? (
-                                <img src={imagePreview} alt="Profile" style={{ width: "100%", height: "100%",
-                                     objectFit: "cover" }} />
-                            ) : (
-                                <span style={{ fontSize: "1.8rem", color: "#ccc" }}>📷</span>
-                            )}
-                        </div>
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            ref={fileInputRef} 
-                            onChange={handleImageChange} 
-                            style={{ display: "none" }} 
+                    {/* Full Name */}
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>
+                            Full Name <span style={{ color: "red" }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            style={styles.input}
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="Full Name"
                         />
+                    </div>
 
-                        {/* Username */}
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Username <span style={{color:"red"}}>*</span></label>
-                            <input type="text" style={styles.input} value={username} onChange={(e) => 
-                                setUsername(e.target.value)} placeholder="Username" />
-                        </div>
+                    {/* Email */}
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Email</label>
+                        <input
+                            type="email"
+                            style={styles.input}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="email@address.com"
+                        />
+                    </div>
 
-                        {/* Full Name */}
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Full Name <span style={{color:"red"}}>*</span></label>
-                            <input type="text" style={styles.input} value={fullName} onChange={(e) =>
-                                 setFullName(e.target.value)} placeholder="Full Name" />
-                        </div>
-
-                        {/* Email */}
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Email</label>
-                            <input type="email" style={styles.input} value={email} onChange={(e) =>
-                                 setEmail(e.target.value)} placeholder="email@address.com" />
-                        </div>
-
-                        {/* Split: Phone & Date */}
-                        <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
-                            <div style={{ flex: 1.4 }}>
-                                <label style={styles.label}>Phone</label>
-                                <div style={{ display: "flex" }}>
-                                    <select 
-                                        style={styles.select} 
-                                        value={countryCode} 
-                                        onChange={(e) => setCountryCode(e.target.value)}
-                                    >
-                                        <option value="+972">🇮🇱 +972</option>
-                                        <option value="+1">🇺🇸 +1</option>
-                                        <option value="+44">🇬🇧 +44</option>
-                                        <option value="+33">🇫🇷 +33</option>
-                                        <option value="+49">🇩🇪 +49</option>
-                                    </select>
-                                    <input 
-                                        type="tel" 
-                                        style={styles.input} 
-                                        value={phoneNumber} 
-                                        onChange={(e) => setPhoneNumber(e.target.value)} 
-                                        placeholder="Number" 
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Birth Date</label>
-                                <input type="date" style={styles.input} value={birthDate} onChange={(e) =>
-                                     setBirthDate(e.target.value)} />
+                    {/* Split: Phone & Date */}
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
+                        <div style={{ flex: 1.4 }}>
+                            <label style={styles.label}>Phone</label>
+                            <div style={{ display: "flex" }}>
+                                <select
+                                    style={styles.select}
+                                    value={countryCode}
+                                    onChange={(e) => setCountryCode(e.target.value)}
+                                >
+                                    <option value="+972">🇮🇱 +972</option>
+                                    <option value="+1">🇺🇸 +1</option>
+                                    <option value="+44">🇬🇧 +44</option>
+                                    <option value="+33">🇫🇷 +33</option>
+                                    <option value="+49">🇩🇪 +49</option>
+                                </select>
+                                <input
+                                    type="tel"
+                                    style={styles.input}
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="Number"
+                                />
                             </div>
                         </div>
 
-                        {/* Split: Passwords */}
-                        <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Password <span style={{color:"red"}}>*</span></label>
-                                <input type="password" style={styles.input} value={password} onChange={(e) =>
-                                     setPassword(e.target.value)} placeholder="******" />
-                            </div>
-                            <div style={{ flex: 1 }}>
-                                <label style={styles.label}>Confirm <span style={{color:"red"}}>*</span></label>
-                                <input type="password" style={styles.input} value={confirmPassword} onChange={(e) =>
-                                     setConfirmPassword(e.target.value)} placeholder="******" />
-                            </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={styles.label}>Birth Date</label>
+                            <input
+                                type="date"
+                                style={styles.input}
+                                value={birthDate}
+                                onChange={(e) => setBirthDate(e.target.value)}
+                            />
                         </div>
+                    </div>
 
-                        {error && <div style={styles.errorMsg}>{error}</div>}
+                    {/* Split: Passwords */}
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={styles.label}>
+                                Password <span style={{ color: "red" }}>*</span>
+                            </label>
+                            <input
+                                type="password"
+                                style={styles.input}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="******"
+                            />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={styles.label}>
+                                Confirm <span style={{ color: "red" }}>*</span>
+                            </label>
+                            <input
+                                type="password"
+                                style={styles.input}
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="******"
+                            />
+                        </div>
+                    </div>
 
-                        <button type="submit" style={styles.button}>Register</button>
+                    {error && <div style={styles.errorMsg}>{error}</div>}
 
-                        <p style={styles.link}>
-                            Already have an account? <span onClick={() => navigate("/login")} 
-                            style={{ color: "#1a73e8", fontWeight: "bold", cursor: "pointer" }}>Log in</span>
-                        </p>
-                    </form>
-                </div>
+                    <button type="submit" style={styles.button}>
+                        Register
+                    </button>
+
+                    <p style={styles.link}>
+                        Already have an account?{" "}
+                        <span
+                            onClick={() => navigate("/login")}
+                            style={{
+                                color: "#1a73e8",
+                                fontWeight: "bold",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Log in
+                        </span>
+                    </p>
+                </form>
             </div>
         </div>
-    );
+    </div>
+);
 }

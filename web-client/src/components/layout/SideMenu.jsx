@@ -2,37 +2,35 @@ import { NavLink } from "react-router-dom";
 import "./SideMenu.css";
 
 function SideMenu() {
+    const linkClass = ({ isActive }) =>
+        `menu-item ${isActive ? "active" : ""}`;
+
     return (
         <aside className="side-menu">
-            <NavLink
-                to="/drive"
-                className={({ isActive }) =>
-                    `menu-item ${isActive ? "active" : ""}`
-                }
-            >
+            <NavLink to="/drive" className={linkClass}>
                 <span className="menu-icon">📁</span>
                 <span>My Drive</span>
             </NavLink>
 
-            <div className="menu-item">
+            <NavLink to="/recent" className={linkClass}>
                 <span className="menu-icon">🕒</span>
                 <span>Recent</span>
-            </div>
+            </NavLink>
 
-            <div className="menu-item">
+            <NavLink to="/starred" className={linkClass}>
                 <span className="menu-icon">⭐</span>
                 <span>Starred</span>
-            </div>
+            </NavLink>
 
-            <div className="menu-item">
+            <NavLink to="/shared" className={linkClass}>
                 <span className="menu-icon">👥</span>
                 <span>Shared</span>
-            </div>
+            </NavLink>
 
-            <div className="menu-item">
+            <NavLink to="/trash" className={linkClass}>
                 <span className="menu-icon">🗑️</span>
                 <span>Trash</span>
-            </div>
+            </NavLink>
         </aside>
     );
 }
