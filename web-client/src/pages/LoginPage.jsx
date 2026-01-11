@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import logo from "../assets/logo.png";
 import { login } from '../services/authService';
 import { useNavigate } from "react-router-dom";
 
@@ -120,56 +121,97 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-card" style={{ maxWidth: "400px", padding: "0", borderRadius: "16px", 
-                overflow: "hidden", border: "1px solid #eee" }}>
-                
-                <div style={styles.container}>
-                    <div style={styles.header}>
-                        {}
-                        <h2 style={{ margin: "0",fontSize: "2rem",color: "#1a73e8",fontWeight: "700" }}>Sign In</h2>
-                        <p style={{margin: "8px 0 0 0",fontSize: "1rem",color: "#5f6368" }}>to continue to CoDrive</p>
+    <div className="auth-container">
+        <div
+            className="auth-card"
+            style={{
+                maxWidth: "400px",
+                padding: "0",
+                borderRadius: "16px",
+                overflow: "hidden",
+                border: "1px solid #eee",
+            }}
+        >
+            <div style={styles.container}>
+                <div style={styles.header}>
+
+                    {/* LOGO – added only */}
+                    <img
+                        src={logo}
+                        alt="CoDrive"
+                        style={{
+                            width: "70px",
+                            marginBottom: "12px",
+                        }}
+                    />
+
+                    <h2
+                        style={{
+                            margin: "0",
+                            fontSize: "2rem",
+                            color: "#1a73e8",
+                            fontWeight: "700",
+                        }}
+                    >
+                        Sign In
+                    </h2>
+
+                    <p
+                        style={{
+                            margin: "8px 0 0 0",
+                            fontSize: "1rem",
+                            color: "#5f6368",
+                        }}
+                    >
+                        to continue to CoDrive
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit}>
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Username</label>
+                        <input
+                            type="text"
+                            style={styles.input}
+                            placeholder="Enter username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
                     </div>
 
-                    <form onSubmit={handleSubmit}>
-                        
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Username</label>
-                            <input
-                                type="text"
-                                style={styles.input}
-                                placeholder="Enter username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                            />
-                        </div>
+                    <div style={styles.inputGroup}>
+                        <label style={styles.label}>Password</label>
+                        <input
+                            type="password"
+                            style={styles.input}
+                            placeholder="Enter password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </div>
 
-                        <div style={styles.inputGroup}>
-                            <label style={styles.label}>Password</label>
-                            <input
-                                type="password"
-                                style={styles.input}
-                                placeholder="Enter password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
+                    {error && <div style={styles.errorMsg}>{error}</div>}
 
-                        {error && <div style={styles.errorMsg}>{error}</div>}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        style={styles.button}
+                    >
+                        {loading ? "Logging in..." : "Sign In"}
+                    </button>
 
-                        <button type="submit" disabled={loading} style={styles.button}>
-                            {loading ? 'Logging in...' : 'Sign In'}
-                        </button>
-                        
-                        <div style={styles.footer}>
-                            <span style={styles.linkText}>New to CoDrive?</span>
-                            <span onClick={() => navigate("/register")} style={styles.linkAction}>
-                                Create account
-                            </span>
-                        </div>
-                    </form>
-                </div>
+                    <div style={styles.footer}>
+                        <span style={styles.linkText}>New to CoDrive?</span>
+                        <span
+                            onClick={() => navigate("/register")}
+                            style={styles.linkAction}
+                        >
+                            Create account
+                        </span>
+                    </div>
+                </form>
             </div>
         </div>
-    );
+    </div>
+);
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import "./TopBar.css";
+import logo from "../../assets/logo.png";
 
 // TopBar Component
 export default function TopBar({ 
@@ -20,10 +21,19 @@ export default function TopBar({
         <header className="topbar">
             <div className="topbar-left">
                 <div className="logo">
+
+                    {/* LOGO – added only */}
+                    <img
+                        src={logo}
+                        alt="CoDrive"
+                        style={{ height: "28px", marginRight: "8px" }}
+                    />
+
                     <svg width="24" height="24" viewBox="0 0 24 24" style={{ marginRight: "8px" }}>
                         <polygon points="12,2 22,12 12,22 2,12" fill="#1a73e8" />
                         <polygon points="12,6 18,12 12,18 6,12" fill="#34a853" />
                     </svg>
+
                     <span>coDrive</span>
                 </div>
 
@@ -43,7 +53,6 @@ export default function TopBar({
             </div>
 
             <div className="topbar-right">
-                {}
                 <button
                     className="theme-toggle-btn"
                     onClick={onToggleTheme}

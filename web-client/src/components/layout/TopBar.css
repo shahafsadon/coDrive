@@ -68,6 +68,10 @@ body.dark .logo {
     color: #e8eaed;
 }
 
+body.dark .logo img {
+    filter: brightness(0.9);
+}
+
 body.dark .new-btn {
     background-color: #303134;
     border-color: transparent;

@@ -1,49 +1,36 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DrivePage from "./pages/DrivePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import AppLayout from "./components/layout/AppLayout";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
+import RecentPage from "./pages/RecentPage";
+import StarredPage from "./pages/StarredPage";
+import SharedPage from "./pages/SharedPage";
+import TrashPage from "./pages/TrashPage";
 
-const THEME_KEY = "theme";
-
-// Main application component with routing setup
-export default function App() {
+function App() {
     const [theme, setTheme] = useState("light");
 
-    // Load theme on first render
-    useEffect(() => {
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        const initialTheme = savedTheme === "dark" ? "dark" : "light";
-        setTheme(initialTheme);
-        document.body.className = initialTheme;
-    }, []);
-
-    // Toggle between light and dark
     const toggleTheme = () => {
-        const nextTheme = theme === "light" ? "dark" : "light";
-        setTheme(nextTheme);
-        document.body.className = nextTheme;
-        localStorage.setItem(THEME_KEY, nextTheme);
+        setTheme((prev) => (prev === "light" ? "dark" : "light"));
     };
 
-    return (
-        <BrowserRouter>
-            <Routes>
-                {/* redirect root to login */}
-                <Route path="/" element={<Navigate to="/login" replace />} />
+    useEffect(() => {
+        document.body.className = theme;
+    }, [theme]);
 
+    return (
+        <Router>
+            <Routes>
+                {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
+                {/* App layout */}
                 <Route
-                    element={
-                        <AppLayout
-                            theme={theme}
-                            onToggleTheme={toggleTheme}
-                        />
-                    }
+                    element={<AppLayout theme={theme} onToggleTheme={toggleTheme} />}
                 >
                     <Route
                         path="/drive"
@@ -53,8 +40,50 @@ export default function App() {
                             </ProtectedRoute>
                         }
                     />
+
+                    {/* Side menu pages */}
+                    <Route
+                        path="/recent"
+                        element={
+                            <ProtectedRoute>
+                                <RecentPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/starred"
+                        element={
+                            <ProtectedRoute>
+                                <StarredPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/shared"
+                        element={
+                            <ProtectedRoute>
+                                <SharedPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/trash"
+                        element={
+                            <ProtectedRoute>
+                                <TrashPage />
+                            </ProtectedRoute>
+                        }
+                    />
                 </Route>
+
+                {/* Default */}
+                <Route path="*" element={<Navigate to="/drive" />} />
             </Routes>
-        </BrowserRouter>
+        </Router>
     );
 }
+
+export default App;
