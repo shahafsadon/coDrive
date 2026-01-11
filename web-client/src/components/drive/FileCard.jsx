@@ -31,7 +31,7 @@ export default function FileCard({ file, onRename, onDelete, onOpenFolder, onOpe
     return (
         <div
             className="file-card"
-            onDoubleClick={() => isFolder ? onOpenFolder(file.id) : onOpenFile(file)}
+            onDoubleClick={() => isFolder ? onOpenFolder(file) : onOpenFile(file)}
             title={file.name}
         >
             <div className="file-icon" style={{ height: '70px', display: 'flex', 
