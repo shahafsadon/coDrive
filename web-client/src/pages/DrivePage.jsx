@@ -46,36 +46,29 @@ export default function DrivePage() {
     useEffect(() => {
         if (searchTerm) {
             setBreadcrumbs([{ id: null, name: `Results: "${searchTerm}"` }]);
-            return;
         }
-        if (!currentFolderId) {
-            setBreadcrumbs([{ id: null, name: "My Drive" }]);
-        } else {
-             setBreadcrumbs(prev => {
-                const exists = prev.find(b => b.id === currentFolderId);
-                return exists ? prev.slice(0, prev.indexOf(exists) + 1) : 
-                [...prev, { id: currentFolderId, name: "Folder" }];
-             });
-        }
-    }, [currentFolderId, searchTerm]);
+    }, [searchTerm]);
+
 
     // Handle file/folder click
     const handleFileClick = async (file) => {
         try {
             if (file.type === "folder") {
-                setCurrentFolderId(file.id);
+                enterFolder(file);
+                return;
+            }
+
+            if (file.mimeType === "text/plain" && !file.content) {
+                const fullFile = await getFileById(file.id);
+                setSelectedFile(fullFile);
             } else {
-                if (file.mimeType === "text/plain" && !file.content) {
-                     const fullFile = await getFileById(file.id);
-                     setSelectedFile(fullFile);
-                } else {
-                     setSelectedFile(file);
-                }
+                setSelectedFile(file);
             }
         } catch (err) {
             alert(err.message || "Cannot open file");
         }
     };
+
 
     // Modal Actions 
 
@@ -171,30 +164,56 @@ export default function DrivePage() {
         } catch (err) { alert("Upload failed"); }
     };
 
+    const enterFolder = (folder) => {
+        setCurrentFolderId(folder.id);
+
+        setBreadcrumbs(prev => {
+            const exists = prev.find(b => b.id === folder.id);
+            if (exists) {
+                return prev.slice(0, prev.indexOf(exists) + 1);
+            }
+            return [...prev, { id: folder.id, name: folder.name }];
+        });
+    };
+
     // Render
     return (
         <>
-            <div className="breadcrumbs" style={{ padding: "10px 20px", fontSize: "18px", color: "#5f6368" }}>
-                 {breadcrumbs.map((b, idx) => (
+            <div
+                className="breadcrumbs"
+                style={{padding: "10px 20px", fontSize: "18px"}}
+            >
+                {breadcrumbs.map((b, idx) => (
                     <span key={b.id || "root"}>
-                        {idx > 0 && " > "}
-                        <span 
-                            style={{ cursor: "pointer", fontWeight: idx === breadcrumbs.length - 1 ? "bold" : "normal"}}
-                            onClick={() => !searchTerm && setCurrentFolderId(b.id)}
+            {idx > 0 && " > "}
+                        <span
+                            className={idx === breadcrumbs.length - 1 ? "breadcrumb-active" : ""}
+                            style={{cursor: "pointer"}}
+                            onClick={() => {
+                                if (!searchTerm) {
+                                    setCurrentFolderId(b.id);
+                                    setBreadcrumbs(prev => prev.slice(0, idx + 1));
+                                }
+                            }}
                         >
-                            {b.name}
-                        </span>
-                    </span>
-                 ))}
+                {b.name}
+            </span>
+        </span>
+                ))}
             </div>
 
-            {loading ? <div style={{ padding: "20px" }}>Loading...</div> : (
+
+            {loading ? <div style={{padding: "20px"}}>Loading...</div> : (
+
                 <FileGrid
                     files={files}
-                    onOpenFolder={setCurrentFolderId}
+                    onOpenFolder={enterFolder}
                     onOpenFile={handleFileClick}
                     onDelete={(id) => setDeleteId(id)}
-                    onRename={(id) => { const f = files.find(x => x.id === id); handleRename(id, f?.name); }}
+                    onRename={(id) => {
+                        const f = files.find(x => x.id === id);
+                        handleRename(id, f?.name);
+                    }}
                     onShare={setShareFile}
                     onMove={handleMove}
                 />

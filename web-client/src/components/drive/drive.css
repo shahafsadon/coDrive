@@ -1,3 +1,8 @@
+:root {
+    --accent-blue: #1a73e8;
+}
+
+
 /* File grid & cards */
 
 .file-grid {
@@ -100,8 +105,14 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #1a73e8;
+    color: inherit;
 }
+
+.breadcrumb span.current {
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
 
 .breadcrumb span.separator {
     color: #9aa0a6;
@@ -261,7 +272,6 @@ body.dark .file-card:hover {
 body.dark .file-name {
     color: #e8eaed;
 }
-
 /* Breadcrumb */
 body.dark .breadcrumb {
     color: #8ab4f8;
@@ -355,4 +365,13 @@ body.dark .create-modal button {
 
 body.dark .create-modal button:hover {
     background: #3c4043;
+}
+
+.breadcrumbs {
+    color: #5f6368;
+}
+
+.breadcrumb-active {
+    color: #1a73e8;
+    font-weight: bold;
 }
