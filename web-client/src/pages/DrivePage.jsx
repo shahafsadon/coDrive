@@ -64,9 +64,7 @@ export default function DrivePage({ mode }) {
             }
 
             if (mode === "shared") {
-                filesList = filesList.filter(
-                    f => Array.isArray(f.permissions) && f.permissions.length > 0
-                );
+                filesList = filesList.filter(f => f.isSharedWithMe);
             }
             
             if (mode === "recent") {

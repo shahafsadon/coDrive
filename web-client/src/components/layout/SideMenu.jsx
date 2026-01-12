@@ -24,7 +24,7 @@ function SideMenu() {
 
             <NavLink to="/shared" className={linkClass}>
                 <span className="menu-icon">👥</span>
-                <span>Shared</span>
+                <span>Shared with me</span>
             </NavLink>
 
             <NavLink to="/trash" className={linkClass}>
