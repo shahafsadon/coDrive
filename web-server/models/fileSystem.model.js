@@ -109,8 +109,8 @@ function getRootNodes(userId) {
     // My root files
     const myStore = getUserStore(userId);
     for (const node of myStore.values()) {
-        if (node.parentId === null) {
-            result.push({ ...node, accessLevel: 'write' });
+        if (node.parentId === null) { 
+            result.push({ ...node, accessLevel: 'write', isSharedWithMe: false });
             seenIds.add(node.id);
         }
     }
@@ -120,10 +120,9 @@ function getRootNodes(userId) {
         for (const node of store.values()) {
             if (node.ownerId !== userId) {
                 const access = getEffectiveAccess(userId, node.id);
-                
-                if (access && !seenIds.has(node.id)) {
+                if (access && !seenIds.has(node.id) && !node.isTrashed) {
                     if (node.permissions?.some(p => p.userId === userId)) {
-                        result.push({ ...node, accessLevel: access });
+                        result.push({ ...node, accessLevel: access, isSharedWithMe: true });
                         seenIds.add(node.id);
                     }
                 }
@@ -139,13 +138,16 @@ function getChildren(userId, parentId) {
     if (!parentAccess) return [];
 
     const children = [];
-    // My children
     for (const store of Object.values(fileSystem)) {
         for (const node of store.values()) {
-            if (node.parentId === parentId) {
+            if (node.parentId === parentId) { 
                 const access = getEffectiveAccess(userId, node.id);
                 if (access) {
-                    children.push({ ...node, accessLevel: access });
+                    children.push({ 
+                        ...node, 
+                        accessLevel: access,
+                        isSharedWithMe: node.ownerId !== userId 
+                    });
                 }
             }
         }

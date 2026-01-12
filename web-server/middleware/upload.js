@@ -31,6 +31,15 @@ const upload = multer({
         }
         cb(null, true);
     }
+}); 
+
+// Generic file upload (no file type restriction)
+const uploadGeneric = multer({
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 } 
 });
 
-module.exports = upload;
+module.exports = {
+    upload,        
+    uploadGeneric  
+};

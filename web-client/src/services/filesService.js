@@ -61,6 +61,26 @@ export async function uploadImageFile(name, parentId, file) {
     return apiPost("/files", formData);
 }
 
+
+// Upload generic file (image or other)
+export async function uploadGenericFile(name, parentId, file) {
+    // Reuse existing working logic for image files
+    if (file.type.startsWith("image/")) {
+        return uploadImageFile(name, parentId, file);
+    }
+
+    // Any other file type → regular upload
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("type", "file");
+    if (parentId !== null) formData.append("parentId", parentId);
+    formData.append("file", file);
+
+    return apiPost("/files", formData);
+}
+
+
+
 // USERS SERVICE
 export async function getUserDetails(userId) {
     return apiGet(`/users/${userId}`);

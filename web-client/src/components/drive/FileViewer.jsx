@@ -106,7 +106,7 @@ export default function FileViewer({ file, onClose }) {
                 {/* Body */}
                 <div className="file-viewer-body">
                     {isImage ? (
-                        <div style={{ textAlign: "center" }}>
+    <div style={{ textAlign: "center" }}>
                             {imageUrl ? (
                                 <img
                                     src={imageUrl}
@@ -120,13 +120,32 @@ export default function FileViewer({ file, onClose }) {
                             )}
                         </div>
                     ) : (
-                        <textarea
-                            className="file-viewer-textarea"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            readOnly={!canEdit}
-                            style={!canEdit ? { background: "#f9f9f9", color: "#555" } : {}}
-                        />
+                        <>
+                            {/* Text file */}
+                            {file.mimeType === "text/plain" && (
+                                <textarea
+                                    className="file-viewer-textarea"
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    readOnly={!canEdit}
+                                    style={!canEdit ? { background: "#f9f9f9", color: "#555" } : {}}
+                                />
+                            )}
+
+                            {/* Download for non-text files */}
+                            {file.mimeType !== "text/plain" && file.filePath && (
+                                <div style={{ marginTop: "16px" }}>
+                                    <a
+                                        href={`/api/files/${file.id}/download`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Download file
+                                    </a>
+                                </div>
+                            )}
+                            {}
+                        </>
                     )}
                 </div>
 
