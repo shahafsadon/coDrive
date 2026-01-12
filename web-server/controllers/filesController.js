@@ -30,6 +30,7 @@ function updateFile(req, res) {
 
     const access = getEffectiveAccess(req.user.id, node.id);
     if (!access) return res.status(403).json({ error: 'Access denied' });
+
     const isWriteOperation = (
         name !== undefined || 
         content !== undefined || 
