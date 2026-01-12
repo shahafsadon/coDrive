@@ -68,7 +68,15 @@ export default function DrivePage({ mode }) {
                     f => Array.isArray(f.permissions) && f.permissions.length > 0
                 );
             }
-
+            
+            if (mode === "recent") {
+                filesList.sort((a, b) => {
+                    const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+                    const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+                    return dateB - dateA;
+                });
+            }
+            
             setFiles(filesList);
         } catch (err) {
             console.error(err);
@@ -89,11 +97,13 @@ export default function DrivePage({ mode }) {
     useEffect(() => {
         if (searchTerm) {
             setBreadcrumbs([{ id: null, name: `Results for "${searchTerm}"` }]);
+        } else if (mode) {
+            const title = mode.charAt(0).toUpperCase() + mode.slice(1);
+            setBreadcrumbs([{ id: null, name: title }]);
         } else {
             setBreadcrumbs([{ id: null, name: "My Drive" }]);
         }
-    }, [searchTerm]);
-
+    }, [searchTerm, mode]);
 
 
     // Handle file/folder click

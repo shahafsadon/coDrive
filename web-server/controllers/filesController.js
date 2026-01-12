@@ -29,7 +29,17 @@ function updateFile(req, res) {
     } = req.body;
 
     const access = getEffectiveAccess(req.user.id, node.id);
-    if (access !== 'write') {
+    if (!access) return res.status(403).json({ error: 'Access denied' });
+
+    const isWriteOperation = (
+        name !== undefined || 
+        content !== undefined || 
+        parentId !== undefined || 
+        parentName !== undefined || 
+        isTrashed !== undefined
+    );
+
+    if (isWriteOperation && access !== 'write') {
         return res.status(403).json({ error: 'Read-only access' });
     }
 
