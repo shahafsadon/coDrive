@@ -19,83 +19,69 @@ function updateFile(req, res) {
         return res.status(404).json({ error: 'Not found' });
     }
 
-    // before checking write access
-    if (typeof isStarred === "boolean") {
-        node.isStarred = isStarred;
-        return res.status(204).end();
-    }
+    const {
+        name,
+        content,
+        parentId,
+        parentName,
+        isStarred,
+        isTrashed
+    } = req.body;
 
-    // Security: Check effective access
     const access = getEffectiveAccess(req.user.id, node.id);
     if (access !== 'write') {
         return res.status(403).json({ error: 'Read-only access' });
     }
 
-    let { name, content, parentId, parentName, isStarred } = req.body;
+    if (typeof isStarred === 'boolean') {
+        node.isStarred = isStarred;
+    }
 
-    // Handle parentName to parentId resolution
+    if (typeof isTrashed === 'boolean') {
+        node.isTrashed = isTrashed;
+    }
+
+    if (typeof name === 'string') {
+        node.name = name;
+    }
+
+    //  parentName → parentId
+    let resolvedParentId = parentId;
     if (parentName !== undefined) {
-        if (parentName.trim() === "") {
-            parentId = null; 
+        if (parentName.trim() === '') {
+            resolvedParentId = null;
         } else {
             const foundId = findFolderByName(req.user.id, parentName);
             if (!foundId) {
                 return res.status(404).json({ error: `Folder "${parentName}" not found` });
             }
-            parentId = foundId;
+            resolvedParentId = foundId;
         }
     }
-    
-    if (name && typeof name === 'string') {
-        node.name = name;
-    }
 
-    if (typeof isStarred === "boolean") {
-        node.isStarred = isStarred;
-        return res.status(204).end();
-    }
-
-    if (typeof isTrashed === "boolean") {
-        node.isTrashed = isTrashed;
-        return res.status(204).end();
-    }
-
-
-
-    // Move Logic with Anti-Steal Protection
-    if (parentId !== undefined) {
-        if (node.id === parentId) {
+    if (resolvedParentId !== undefined) {
+        if (node.id === resolvedParentId) {
             return res.status(400).json({ error: 'Cannot move folder into itself' });
         }
-        if (parentId !== null) {
-            // Check if the MOVER (User B) has write access to destination
-            const destAccess = getEffectiveAccess(req.user.id, parentId);
+
+        if (resolvedParentId !== null) {
+            const destAccess = getEffectiveAccess(req.user.id, resolvedParentId);
             if (destAccess !== 'write') {
                 return res.status(403).json({ error: 'No write access to destination' });
             }
 
-            // SAFETY CHECK: Check if the OWNER (User A) has access to destination
-            // This prevents User B from moving User A's file into a private folder User A can't see.
-            if (node.ownerId !== req.user.id) {
-                 const ownerDestAccess = getEffectiveAccess(node.ownerId, parentId);
-                 if (!ownerDestAccess) {
-                     return res.status(403).json({ error: 'Cannot move file to a folder the owner cannot see' });
-                 }
-            }
-
-            // Verify destination is a folder
-            const dest = getNodeById(req.user.id, parentId); 
+            const dest = getNodeById(req.user.id, resolvedParentId);
             if (!dest || dest.type !== 'folder') {
                 return res.status(400).json({ error: 'Destination invalid' });
             }
         }
-        node.parentId = parentId;
+
+        node.parentId = resolvedParentId;
     }
 
-    // Update content for files
     if (node.type === 'file' && content !== undefined) {
-        if (typeof content !== 'string'){
-             return res.status(400).json({ error: 'Content must be string' });
+        if (typeof content !== 'string') {
+            return res.status(400).json({ error: 'Content must be string' });
         }
         node.content = content;
         node.filePath = null;
@@ -104,6 +90,7 @@ function updateFile(req, res) {
 
     return res.status(204).end();
 }
+
 
 // Middleware to prepare file/folder creation
 async function createFile(req, res, next) {
