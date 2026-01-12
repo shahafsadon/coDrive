@@ -36,17 +36,7 @@ function App() {
                         path="/drive"
                         element={
                             <ProtectedRoute>
-                                <DrivePage />
-                            </ProtectedRoute>
-                        }
-                    />
-
-                    {/* Side menu pages */}
-                    <Route
-                        path="/recent"
-                        element={
-                            <ProtectedRoute>
-                                <RecentPage />
+                                <DrivePage mode="drive" />
                             </ProtectedRoute>
                         }
                     />
@@ -55,7 +45,7 @@ function App() {
                         path="/starred"
                         element={
                             <ProtectedRoute>
-                                <StarredPage />
+                                <DrivePage mode="starred" />
                             </ProtectedRoute>
                         }
                     />
@@ -64,7 +54,7 @@ function App() {
                         path="/shared"
                         element={
                             <ProtectedRoute>
-                                <SharedPage />
+                                <DrivePage mode="shared" />
                             </ProtectedRoute>
                         }
                     />
@@ -73,10 +63,11 @@ function App() {
                         path="/trash"
                         element={
                             <ProtectedRoute>
-                                <TrashPage />
+                                <DrivePage mode="trash" />
                             </ProtectedRoute>
                         }
                     />
+
                 </Route>
 
                 {/* Default */}

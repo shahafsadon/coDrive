@@ -92,5 +92,19 @@ export async function deletePermission(fileId, permId) {
 export const updateFile = (id, data) =>
     apiPatch(`/files/${id}`, data);
 
-export const toggleStar = (id, isStarred) =>
-    apiPatch(`/files/${id}`, { isStarred });
+export async function toggleStar(id, isStarred) {
+    return apiPatch(`/files/${id}`, { isStarred });
+}
+
+export async function moveToTrash(id) {
+    return apiPatch(`/files/${id}`, { isTrashed: true });
+}
+
+
+export async function restoreFromTrash(id) {
+    return apiPatch(`/files/${id}`, { isTrashed: false });
+}
+
+export async function deleteFilePermanent(id) {
+    return apiDelete(`/files/${id}/permanent`);
+}

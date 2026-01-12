@@ -77,9 +77,6 @@ function createNode({ name, type, ownerId, parentId = null, content = null, file
         content: type === 'file' ? content : null,
         filePath: type === 'file' ? filePath : null,
         mimeType: type === 'file' ? mimeType : null,
-
-        isStarred: false,
-        isTrashed: false,
         permissions: [],
         createdAt: new Date().toISOString()
     };

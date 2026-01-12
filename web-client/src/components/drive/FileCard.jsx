@@ -70,7 +70,7 @@ export default function FileCard({
                 }}
                 onClick={(e) => {
                     e.stopPropagation();                    
-                    onToggleStar(file.id);
+                    onToggleStar(file);
                     
                 }}
                 title="Star"

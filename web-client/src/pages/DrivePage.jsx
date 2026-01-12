@@ -4,13 +4,10 @@ import FileGrid from "../components/drive/FileGrid";
 import FileViewer from "../components/drive/FileViewer";
 import ShareModal from "../components/drive/ShareModal";
 import {
-    getFiles, searchFiles, createFile, renameFile, deleteFile, 
-    getFileById, uploadImageFile, moveFile
+    getFiles, searchFiles, createFile, renameFile, getFileById,
+    uploadImageFile, moveFile ,updateFile, restoreFromTrash, deleteFilePermanent
 } from "../services/filesService";
 import "../components/drive/drive.css";
-import { updateFile } from "../services/filesService";
-
-
 
 export default function DrivePage({ mode }) {
     const [files, setFiles] = useState([]);
@@ -20,13 +17,6 @@ export default function DrivePage({ mode }) {
     const [breadcrumbs, setBreadcrumbs] = useState([{ id: null, name: "My Drive" }]);
     const [deleteId, setDeleteId] = useState(null);
     const [restoreId, setRestoreId] = useState(null);
-    const [starred, setStarred] = useState(() => {
-        return new Set(JSON.parse(localStorage.getItem("starredFiles") || "[]"));
-    });
-    const [trashed, setTrashed] = useState(() => {
-        return JSON.parse(localStorage.getItem("trashedFiles") || "{}");
-    });
-
 
     const [inputModal, setInputModal] = useState({
         open: false,
@@ -66,19 +56,6 @@ export default function DrivePage({ mode }) {
             FILTER BY PAGE
             ========================= */
 
-            // Trash
-            if (path === "/trash") {
-                filesList = filesList.filter(f => f.isTrashed);
-            } else {
-                // All other pages exclude trash
-                filesList = filesList.filter(f => !f.isTrashed);
-            }
-
-            // Starred
-            if (path === "/starred") {
-                filesList = filesList.filter(f => f.isStarred);
-            }
-
             // Shared
             if (path === "/shared") {
                 filesList = filesList.filter(
@@ -102,19 +79,16 @@ export default function DrivePage({ mode }) {
                 filesList = [...filesList].reverse();
             }
 
-            if (mode === "starred") {
-                filesList = filesList.filter(f => starred.has(f.id));
+            if (path === "/trash") {
+                filesList = filesList.filter(f => f.isTrashed);
+            } else {
+                filesList = filesList.filter(f => !f.isTrashed);
             }
 
-            // Hide trashed files from normal views
-            if (mode !== "trash") {
-                filesList = filesList.filter(f => !trashed[f.id]);
+            if (path === "/starred") {
+                filesList = filesList.filter(f => f.isStarred);
             }
 
-            // Show only trashed files in Trash
-            if (mode === "trash") {
-                filesList = filesList.filter(f => trashed[f.id]);
-            }
 
             // Shared – files that have permissions (shared with me)
             if (mode === "shared") {
@@ -124,19 +98,14 @@ export default function DrivePage({ mode }) {
             }
 
 
-            setFiles(
-                filesList.map(f => ({
-                    ...f,
-                    isStarred: starred.has(f.id)
-                }))
-            );
+            setFiles(filesList);
         } catch (err) {
             console.error(err);
             setFiles([]);
         } finally {
             setLoading(false);
         }
-    }, [currentFolderId, searchTerm, starred, trashed, mode]);
+    }, [currentFolderId, mode]);
 
 useEffect(() => {
     loadData();
@@ -149,42 +118,6 @@ useEffect(() => {
             setBreadcrumbs([{ id: null, name: `Results: "${searchTerm}"` }]);
         }
     }, [searchTerm]);
-
-    const toggleStar = (fileId) => {
-        setStarred(prev => {
-            const next = new Set(prev);
-            if (next.has(fileId)) {
-                next.delete(fileId);
-            } else {
-                next.add(fileId);
-            }
-            localStorage.setItem("starredFiles", JSON.stringify([...next]));
-            return next;
-        });
-    };
-
-    const moveToTrash = (file) => {
-        setTrashed(prev => {
-            const next = {
-                ...prev,
-                [file.id]: {
-                    originalParentId: currentFolderId,
-                    trashedAt: Date.now()
-                }
-            };
-            localStorage.setItem("trashedFiles", JSON.stringify(next));
-            return next;
-        });
-    };
-
-    const restoreFromTrash = (fileId) => {
-        setTrashed(prev => {
-            const next = { ...prev };
-            delete next[fileId];
-            localStorage.setItem("trashedFiles", JSON.stringify(next));
-            return next;
-        });
-    };
 
 
     // Handle file/folder click
@@ -263,23 +196,19 @@ useEffect(() => {
         );
     };
 
-    const handleToggleStar = async (file) => {
-        await updateFile(file.id, { isStarred: !file.isStarred });
-        loadData();
-    };
-
 
     const confirmDelete = async () => {
         try {
             if (!deleteId) return;
 
             if (mode === "trash") {
-                await deleteFile(deleteId);
-                restoreFromTrash(deleteId);
+                await deleteFilePermanent(deleteId);
             } else {
                 // soft delete
                 const file = files.find(f => f.id === deleteId);
-                if (file) moveToTrash(file);
+                if (file) {
+                    await updateFile(file.id, { isTrashed: true });
+                }
             }
 
             setDeleteId(null);
@@ -353,7 +282,10 @@ useEffect(() => {
                     }}
                     onShare={setShareFile}
                     onMove={handleMove}
-                    onToggleStar={toggleStar}
+                    onToggleStar={async (file) => {
+                        await updateFile(file.id, { isStarred: !file.isStarred });
+                        loadData();
+                    }}
                     onRestore={(id) => setRestoreId(id)}
                     mode={mode}
                 />
@@ -429,8 +361,8 @@ useEffect(() => {
                         <p>The item will be returned to its original location.</p>
                         <button onClick={() => setRestoreId(null)}>Cancel</button>
                         <button
-                            onClick={() => {
-                                restoreFromTrash(restoreId);
+                            onClick={async () => {
+                                await updateFile(restoreId, {isTrashed: false});
                                 setRestoreId(null);
                                 loadData();
                             }}
