@@ -36,6 +36,15 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    
+                    <Route
+                        path="/recent"
+                        element={
+                            <ProtectedRoute>
+                                <DrivePage mode="recent" />
+                            </ProtectedRoute>
+                        }
+                    />
 
                     <Route
                         path="/starred"
