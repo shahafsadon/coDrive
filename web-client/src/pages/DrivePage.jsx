@@ -5,7 +5,7 @@ import FileViewer from "../components/drive/FileViewer";
 import ShareModal from "../components/drive/ShareModal";
 import {
     getFiles, searchFiles, createFile, renameFile, getFileById,
-    uploadImageFile, moveFile ,updateFile, deleteFilePermanent
+    uploadImageFile, uploadGenericFile, moveFile, updateFile, deleteFilePermanent
 } from "../services/filesService";
 import "../components/drive/drive.css";
 
@@ -27,6 +27,8 @@ export default function DrivePage({ mode }) {
     });
     
     const fileInputRef = useRef(null);
+    const fileUploadRef = useRef(null);
+    const folderUploadRef = useRef(null);
     const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } =
         useOutletContext();
 
@@ -43,7 +45,7 @@ export default function DrivePage({ mode }) {
                 return;
             }
 
-            // 📁 NORMAL MODE
+            // NORMAL MODE
             const data = await getFiles(currentFolderId);
 
             if (Array.isArray(data)) {
@@ -161,6 +163,63 @@ export default function DrivePage({ mode }) {
         openInputModal("New Folder Name", "", async (name) => {
             if (name) await createFile(name, "folder", currentFolderId);
         });
+    };
+
+    const createUploadFile = () => {
+        fileUploadRef.current.click();
+    };
+
+    const createUploadFolder = () => {
+        folderUploadRef.current.click();
+    };
+
+
+    const handleUploadFile = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            await uploadGenericFile(file.name, currentFolderId, file);
+            loadData();
+        } catch {
+            alert("Upload failed");
+        } finally {
+            e.target.value = "";
+        }
+    };
+
+   const handleUploadFolder = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        const folderName = files[0].webkitRelativePath.split("/")[0];
+
+        // Allow only one-level folders
+        const hasInnerFolders = files.some(f => {
+            return f.webkitRelativePath.split("/").length > 2;
+        });
+
+        if (hasInnerFolders) {
+            alert("Folder upload supports only one-level folders (no subfolders).");
+            e.target.value = "";
+            return;
+        }
+
+        try {
+            // Create the folder once
+            const folder = await createFile(folderName, "folder", currentFolderId);
+
+            // Upload all files INTO that folder
+            for (const file of files) {
+                await uploadGenericFile(file.name, folder.id, file);
+            }
+
+            loadData();
+        } catch (err) {
+            alert("Folder upload failed");
+        } finally {
+            e.target.value = "";
+        }
     };
 
     const handleRename = (id, currentName) => {
@@ -367,6 +426,8 @@ export default function DrivePage({ mode }) {
                         <button onClick={createTextFile}>📄 Text file</button>
                         <button onClick={createImageFile}>🖼️ Image file</button>
                         <button onClick={createFolder}>📁 Folder</button>
+                        <button onClick={createUploadFile}>⬆️ Upload file</button>
+                        <button onClick={createUploadFolder}>⬆️ Upload folder</button>
                         <button onClick={() => setCreateMode(false)}>Cancel</button>
                     </div>
                 </div>
@@ -378,6 +439,19 @@ export default function DrivePage({ mode }) {
                 ref={fileInputRef}
                 style={{ display: "none" }}
                 onChange={handleImageSelected}
+            />
+            <input
+                type="file"
+                ref={fileUploadRef}
+                style={{ display: "none" }}
+                onChange={handleUploadFile}
+            />
+            <input
+                type="file"
+                webkitdirectory="true"
+                ref={folderUploadRef}
+                style={{ display: "none" }}
+                onChange={handleUploadFolder}
             />
         </>
     );

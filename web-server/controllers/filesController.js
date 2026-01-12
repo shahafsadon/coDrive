@@ -178,9 +178,23 @@ function downloadFile(req, res) {
     if (!node || node.type !== 'file') return res.status(404).json({ error: 'File not found' });
     if (!node.filePath) return res.status(400).json({ error: 'File has no binary content' });
 
+    const resolvedPath = path.resolve(node.filePath);
+
+    // Set appropriate headers
+    if (!node.mimeType.startsWith("image/")) {
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(node.name)}"`
+        );
+    } else {
+        res.setHeader("Content-Disposition", "inline");
+    }
+
+    // Send file
     res.type(node.mimeType);
-    return res.sendFile(path.resolve(node.filePath));
-}
+    return res.sendFile(resolvedPath);
+
+    }
 
 // Soft delete (move to trash)
 function deleteFile(req, res) {

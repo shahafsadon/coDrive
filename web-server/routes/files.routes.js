@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const { authMiddleware } = require('../middleware/authMiddleware');
-const upload = require('../middleware/upload');
+const { upload, uploadGeneric } = require('../middleware/upload');
 
 const {
     listRootFiles,
@@ -27,7 +27,7 @@ router.get('/', authMiddleware, listRootFiles);
 router.post(
     '/',
     authMiddleware,
-    upload.single('file'),
+    uploadGeneric.single('file'),
     createFile,
     formatCreateFileResponse
 );
