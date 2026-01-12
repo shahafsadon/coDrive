@@ -77,9 +77,14 @@ function createNode({ name, type, ownerId, parentId = null, content = null, file
         content: type === 'file' ? content : null,
         filePath: type === 'file' ? filePath : null,
         mimeType: type === 'file' ? mimeType : null,
+
+        isStarred: false,
+        isTrashed: false,
+
         permissions: [],
         createdAt: new Date().toISOString()
     };
+
 
 
     store.set(id, node);
@@ -163,12 +168,33 @@ function deleteNodeRecursive(userId, nodeId) {
 
 // Search nodes by query
 function searchNodes(userId, query) {
-    const store = getUserStore(userId);
     const lowerQuery = query.toLowerCase();
-    // Search in own files only for simplicity
-    return Array.from(store.values())
-        .filter(node => node.name.toLowerCase().includes(lowerQuery))
-        .map(node => ({ ...node, accessLevel: 'write' }));
+    const results = [];
+
+    for (const store of Object.values(fileSystem)) {
+        for (const node of store.values()) {
+            const access = getEffectiveAccess(userId, node.id);
+            if (!access) continue;
+            if (node.isTrashed) continue;
+
+            const nameMatch =
+                node.name?.toLowerCase().includes(lowerQuery);
+
+            const contentMatch =
+                node.type === 'file' &&
+                typeof node.content === 'string' &&
+                node.content.toLowerCase().includes(lowerQuery);
+
+            if (nameMatch || contentMatch) {
+                results.push({
+                    ...node,
+                    accessLevel: access
+                });
+            }
+        }
+    }
+
+    return results;
 }
 
 module.exports = {

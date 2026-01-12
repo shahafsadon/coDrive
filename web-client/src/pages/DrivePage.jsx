@@ -5,7 +5,7 @@ import FileViewer from "../components/drive/FileViewer";
 import ShareModal from "../components/drive/ShareModal";
 import {
     getFiles, searchFiles, createFile, renameFile, getFileById,
-    uploadImageFile, moveFile ,updateFile, restoreFromTrash, deleteFilePermanent
+    uploadImageFile, moveFile ,updateFile, deleteFilePermanent
 } from "../services/filesService";
 import "../components/drive/drive.css";
 
@@ -33,70 +33,41 @@ export default function DrivePage({ mode }) {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
-            const path = window.location.pathname;
+            let filesList = [];
 
-            let data;
-
-            // Fetch base data
+            // 🔍 SEARCH MODE
             if (searchTerm) {
-                data = await searchFiles(searchTerm);
-            } else {
-                // Always load from root / current folder
-                data = await getFiles(currentFolderId);
+                const data = await searchFiles(searchTerm);
+                filesList = Array.isArray(data) ? data : [];
+                setFiles(filesList);
+                return;
             }
 
-            let filesList = [];
+            // 📁 NORMAL MODE
+            const data = await getFiles(currentFolderId);
+
             if (Array.isArray(data)) {
                 filesList = data;
-            } else if (data && Array.isArray(data.children)) {
+            } else if (data?.children) {
                 filesList = data.children;
             }
 
-            /* =========================
-            FILTER BY PAGE
-            ========================= */
-
-            // Shared
-            if (path === "/shared") {
-                filesList = filesList.filter(
-                    f => Array.isArray(f.permissions) && f.permissions.length > 0
-                );
-            }
-
-            /* =========================
-            SORTING
-            ========================= */
-
-            // My Drive – A → Z
-            if (path === "/drive") {
-                filesList = [...filesList].sort((a, b) =>
-                    a.name.localeCompare(b.name)
-                );
-            }
-
-            // Recent – newest first (left top)
-            if (path === "/recent") {
-                filesList = [...filesList].reverse();
-            }
-
-            if (path === "/trash") {
+            // Page filters
+            if (mode === "trash") {
                 filesList = filesList.filter(f => f.isTrashed);
             } else {
                 filesList = filesList.filter(f => !f.isTrashed);
             }
 
-            if (path === "/starred") {
+            if (mode === "starred") {
                 filesList = filesList.filter(f => f.isStarred);
             }
 
-
-            // Shared – files that have permissions (shared with me)
             if (mode === "shared") {
                 filesList = filesList.filter(
                     f => Array.isArray(f.permissions) && f.permissions.length > 0
                 );
             }
-
 
             setFiles(filesList);
         } catch (err) {
@@ -105,9 +76,11 @@ export default function DrivePage({ mode }) {
         } finally {
             setLoading(false);
         }
-    }, [currentFolderId, mode]);
+    }, [searchTerm, currentFolderId, mode]);
 
-useEffect(() => {
+
+
+    useEffect(() => {
     loadData();
 }, [loadData]);
 
@@ -115,9 +88,12 @@ useEffect(() => {
     // Breadcrumbs
     useEffect(() => {
         if (searchTerm) {
-            setBreadcrumbs([{ id: null, name: `Results: "${searchTerm}"` }]);
+            setBreadcrumbs([{ id: null, name: `Results for "${searchTerm}"` }]);
+        } else {
+            setBreadcrumbs([{ id: null, name: "My Drive" }]);
         }
     }, [searchTerm]);
+
 
 
     // Handle file/folder click
@@ -235,6 +211,8 @@ useEffect(() => {
     };
 
     const enterFolder = (folder) => {
+        if (searchTerm) return;
+
         setCurrentFolderId(folder.id);
         setBreadcrumbs(prev => {
             const exists = prev.find(b => b.id === folder.id);
@@ -244,6 +222,7 @@ useEffect(() => {
             return [...prev, { id: folder.id, name: folder.name }];
         });
     };
+
 
     // Render
     return (

@@ -5,10 +5,6 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import DrivePage from "./pages/DrivePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import RecentPage from "./pages/RecentPage";
-import StarredPage from "./pages/StarredPage";
-import SharedPage from "./pages/SharedPage";
-import TrashPage from "./pages/TrashPage";
 
 function App() {
     const [theme, setTheme] = useState("light");

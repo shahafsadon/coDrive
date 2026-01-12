@@ -52,11 +52,14 @@ function updateFile(req, res) {
 
     if (typeof isStarred === "boolean") {
         node.isStarred = isStarred;
+        return res.status(204).end();
     }
 
     if (typeof isTrashed === "boolean") {
         node.isTrashed = isTrashed;
+        return res.status(204).end();
     }
+
 
 
     // Move Logic with Anti-Steal Protection
@@ -183,7 +186,7 @@ function downloadFile(req, res) {
     return res.sendFile(path.resolve(node.filePath));
 }
 
-// Delete file/folder
+// Soft delete (move to trash)
 function deleteFile(req, res) {
     const node = getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'Not found' });
