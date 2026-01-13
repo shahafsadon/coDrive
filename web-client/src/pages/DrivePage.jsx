@@ -9,6 +9,7 @@ import {
 } from "../services/filesService";
 import "../components/drive/drive.css";
 
+// DrivePage component
 export default function DrivePage({ mode }) {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -26,18 +27,20 @@ export default function DrivePage({ mode }) {
         showRootOption: false
     });
     
+    // Refs for file/folder uploads
     const fileInputRef = useRef(null);
     const fileUploadRef = useRef(null);
     const folderUploadRef = useRef(null);
     const { createMode, setCreateMode, currentFolderId, setCurrentFolderId, searchTerm } =
         useOutletContext();
 
+    // Load files based on current mode, folder, and search term
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
             let filesList = [];
 
-            // 🔍 SEARCH MODE
+            // SEARCH MODE
             if (searchTerm) {
                 const data = await searchFiles(searchTerm);
                 filesList = Array.isArray(data) ? data : [];
@@ -131,6 +134,7 @@ export default function DrivePage({ mode }) {
         setInputModal({ open: true, title, value: defaultValue || "", action, showRootOption });
     };
 
+    // Handle input modal submission
     const handleInputSubmit = async () => {
         try {
             if (inputModal.action) await inputModal.action(inputModal.value);
@@ -141,6 +145,7 @@ export default function DrivePage({ mode }) {
         }
     };
 
+    // Handle move to root action
     const handleMoveToRoot = async () => {
         try {
             if (inputModal.action) await inputModal.action("");
@@ -151,6 +156,7 @@ export default function DrivePage({ mode }) {
         }
     };
 
+    //  Create new file/folder handlers
     const createTextFile = () => {
         setCreateMode(false);
         openInputModal("New File Name", "", async (name) => {
@@ -158,6 +164,7 @@ export default function DrivePage({ mode }) {
         });
     };
 
+    // Create folder
     const createFolder = () => {
         setCreateMode(false);
         openInputModal("New Folder Name", "", async (name) => {
@@ -165,21 +172,25 @@ export default function DrivePage({ mode }) {
         });
     };
 
+    // Upload file
     const createUploadFile = () => {
         fileUploadRef.current.click();
     };
 
+    // Upload folder
     const createUploadFolder = () => {
         folderUploadRef.current.click();
     };
 
 
+    // Handle file upload
     const handleUploadFile = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         try {
             await uploadGenericFile(file.name, currentFolderId, file);
+            setCreateMode(false);
             loadData();
         } catch {
             alert("Upload failed");
@@ -188,6 +199,7 @@ export default function DrivePage({ mode }) {
         }
     };
 
+    // Handle folder upload
    const handleUploadFolder = async (e) => {
         const files = Array.from(e.target.files);
         if (!files.length) return;
@@ -222,12 +234,14 @@ export default function DrivePage({ mode }) {
         }
     };
 
+    // Rename file/folder
     const handleRename = (id, currentName) => {
         openInputModal("Rename File", currentName, async (newName) => {
             if (newName && newName !== currentName) await renameFile(id, newName);
         });
     };
 
+    // Move file/folder
     const handleMove = (file) => {
         openInputModal(
             "Move to Folder Name",
@@ -239,7 +253,7 @@ export default function DrivePage({ mode }) {
         );
     };
 
-
+    // Confirm delete (soft or permanent)
     const confirmDelete = async () => {
         try {
             if (!deleteId) return;
@@ -263,8 +277,10 @@ export default function DrivePage({ mode }) {
     };
 
 
+    // Create image file
     const createImageFile = () => fileInputRef.current.click();
 
+    // Handle image file selection
     const handleImageSelected = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -277,6 +293,7 @@ export default function DrivePage({ mode }) {
         }
     };
 
+    // Enter folder
     const enterFolder = (folder) => {
         if (searchTerm) return;
 

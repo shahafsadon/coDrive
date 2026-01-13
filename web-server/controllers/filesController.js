@@ -167,35 +167,47 @@ function getFileById(req, res) {
 // Download file content
 function downloadFile(req, res) {
     let userId = req.user?.id;
+    const jwt = require("jsonwebtoken");
+    const secret = process.env.JWT_SECRET || "secret";
+
+    // Check Authorization header token if no user from authMiddleware
+    if (!userId && req.headers.authorization) {
+        try {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, secret);
+            userId = decoded.id || decoded.userId;
+        } catch {}
+    }
+
+    // Check query param token as fallback
     if (!userId && req.query.token) {
         try {
-            const jwt = require("jsonwebtoken");
-            userId = jwt.verify(req.query.token, process.env.JWT_SECRET || "secret").userId;
-        } catch { return res.status(401).json({ error: "Invalid token" }); }
+            const decoded = jwt.verify(req.query.token, secret);
+            userId = decoded.id || decoded.userId;
+        } catch {}
     }
+
+    // Check if we have a valid userId now
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-    // Fetch file
+
     const node = getNodeById(userId, req.params.id);
-    if (!node || node.type !== 'file') return res.status(404).json({ error: 'File not found' });
-    if (!node.filePath) return res.status(400).json({ error: 'File has no binary content' });
+    if (!node || node.type !== 'file') {
+        return res.status(404).json({ error: 'File not found' });
+    }
+    if (!node.filePath) {
+        return res.status(400).json({ error: 'File has no binary content' });
+    }
 
-    const resolvedPath = path.resolve(node.filePath);
-
-    // Set appropriate headers
-    if (!node.mimeType.startsWith("image/")) {
-        res.setHeader(
-            "Content-Disposition",
-            `attachment; filename="${encodeURIComponent(node.name)}"`
-        );
+    // Check access
+    if (node.mimeType.startsWith('image/')) {
+        res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(node.name)}"`);
     } else {
-        res.setHeader("Content-Disposition", "inline");
+        res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(node.name)}"`);
     }
 
-    // Send file
     res.type(node.mimeType);
-    return res.sendFile(resolvedPath);
-
-    }
+    return res.sendFile(path.resolve(node.filePath));
+}
 
 // Soft delete (move to trash)
 function deleteFile(req, res) {

@@ -9,22 +9,23 @@ export default function FileViewer({ file, onClose }) {
 
     const canEdit = file.accessLevel === "write";
     const imageInputRef = useRef(null);
+    const token = localStorage.getItem("token");
 
     useEffect(() => {
         setContent(file.content || "");
     }, [file]);
 
-    // 🔐 Load image with Authorization header
+    // Load image with Authorization header
     useEffect(() => {
         if (!file || !file.mimeType?.startsWith("image/")) return;
 
         let objectUrl = null;
-
+        // Function to fetch image
         const loadImage = async () => {
             try {
                 const res = await fetch(`/api/files/${file.id}/download`, {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 });
 
@@ -41,13 +42,15 @@ export default function FileViewer({ file, onClose }) {
 
         loadImage();
 
+        // Cleanup object URL on unmount
         return () => {
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);
             }
         };
-    }, [file]);
+    }, [file, token]); 
 
+    // Save text file content
     const handleSave = async () => {
         if (!canEdit) return;
         try {
@@ -61,10 +64,12 @@ export default function FileViewer({ file, onClose }) {
         }
     };
 
+    // Handle replace image
     const handleReplaceClick = () => {
         imageInputRef.current?.click();
     };
 
+    // Handle image file change
     const handleImageChange = async (e) => {
         const newFile = e.target.files[0];
         if (!newFile) return;
@@ -79,8 +84,10 @@ export default function FileViewer({ file, onClose }) {
         }
     };
 
+    // Determine if file is an image
     const isImage = file.mimeType?.startsWith("image/");
 
+    // Render component
     return (
         <div className="file-viewer-overlay" onClick={onClose}>
             <div className="file-viewer" onClick={(e) => e.stopPropagation()}>
@@ -106,7 +113,7 @@ export default function FileViewer({ file, onClose }) {
                 {/* Body */}
                 <div className="file-viewer-body">
                     {isImage ? (
-    <div style={{ textAlign: "center" }}>
+                        <div style={{ textAlign: "center" }}>
                             {imageUrl ? (
                                 <img
                                     src={imageUrl}
@@ -135,16 +142,17 @@ export default function FileViewer({ file, onClose }) {
                             {/* Download for non-text files */}
                             {file.mimeType !== "text/plain" && file.filePath && (
                                 <div style={{ marginTop: "16px" }}>
+                                    {}
                                     <a
-                                        href={`/api/files/${file.id}/download`}
+                                        href={`http://localhost:3000/api/files/${file.id}/download?token=${token}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        style={{ color: '#1a73e8', textDecoration: 'none', fontWeight: 500 }}
                                     >
-                                        Download file
+                                        ⬇️ Download file
                                     </a>
                                 </div>
                             )}
-                            {}
                         </>
                     )}
                 </div>
@@ -167,9 +175,11 @@ export default function FileViewer({ file, onClose }) {
                                     </button>
                                 </>
                             ) : (
-                                <button onClick={handleSave} disabled={loading}>
-                                    Save
-                                </button>
+                                file.mimeType === "text/plain" && (
+                                    <button onClick={handleSave} disabled={loading}>
+                                        Save
+                                    </button>
+                                )
                             )}
                         </>
                     )}

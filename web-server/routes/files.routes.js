@@ -37,7 +37,7 @@ router.post(
 // download image/file
 router.get(
     '/:id/download',
-    authMiddleware,
+    /////////////// auth middleware to protect file access /////////////////
     downloadFile
 );
 
