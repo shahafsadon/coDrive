@@ -1,19 +1,19 @@
 const { searchNodes } = require('../models/fileSystem.model');
 
-// Search functionality
-const search = (req, res) => {
+/**
+ * GET /search/:query
+ */
+async function search(req, res) {
     const { query } = req.params;
-    const userId = req.user.id; 
+    const userId = req.user.id;
 
-    // Check if query parameter is provided
     if (!query) {
         return res.status(400).json({ error: "Query parameter is required" });
     }
 
-    // Perform search
-    const results = searchNodes(userId, query);
-    res.json(results);
-};
+    const results = await searchNodes(userId, query);
+    return res.json(results);
+}
 
 module.exports = {
     search
