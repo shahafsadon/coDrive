@@ -10,6 +10,14 @@ services:
       - ./articles:/articles
     command: ["8080"]
 
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
   web-server:
     build:
       context: ./web-server
@@ -19,8 +27,10 @@ services:
     environment:
       CPP_SERVER_HOST: cpp-server
       CPP_SERVER_PORT: 8080
+      MONGO_URI: mongodb://mongo:27017/drive
     depends_on:
       - cpp-server
+      - mongo
 
   web-client:
     build:
@@ -30,3 +40,6 @@ services:
       - "3008:3000"
     depends_on:
       - web-server
+
+volumes:
+  mongo-data:

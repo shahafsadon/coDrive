@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const connectDB = require('./config/db');
 const PORT = 3000;
 
 app.use(express.json({
@@ -12,9 +13,19 @@ app.use(express.json({
 const apiRoutes = require('./routes');
 app.use('/api', apiRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+
+async function startServer() {
+    await connectDB();
+
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+startServer().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });
+
 
 const errorHandler = require('./middleware/errorMiddleware');
 
