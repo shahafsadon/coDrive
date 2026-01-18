@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { findUserByUsername } = require('../models/user.model');
 
 // POST /api/tokens
-const authenticateUser = (req, res) => {
+const authenticateUser = async (req, res) => {
     const { username, password } = req.body;
 
     // Validate input
@@ -13,14 +13,14 @@ const authenticateUser = (req, res) => {
     }
 
     // Find user
-    const user = findUserByUsername(username);
+    const user = await findUserByUsername(username);
     if (!user || user.password !== password) {
         return res.status(401).json({
             error: 'Invalid credentials',
         });
     }
 
-    //  CREATE JWT
+    // CREATE JWT
     const token = jwt.sign(
         { userId: user.id },
         process.env.JWT_SECRET || 'secret',

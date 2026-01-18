@@ -5,16 +5,17 @@ const {
     getChildren,
     deleteNodeRecursive,
     findFolderByName,
-    getEffectiveAccess 
+    getEffectiveAccess
 } = require('../models/fileSystem.model');
 
 const { findUserByUsername } = require('../models/user.model');
 const { randomUUID } = require('crypto');
 const path = require('path');
+const jwt = require("jsonwebtoken");
 
 // Update file/folder details
-function updateFile(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function updateFile(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) {
         return res.status(404).json({ error: 'Not found' });
     }
@@ -28,14 +29,14 @@ function updateFile(req, res) {
         isTrashed
     } = req.body;
 
-    const access = getEffectiveAccess(req.user.id, node.id);
+    const access = await getEffectiveAccess(req.user.id, node.id);
     if (!access) return res.status(403).json({ error: 'Access denied' });
 
     const isWriteOperation = (
-        name !== undefined || 
-        content !== undefined || 
-        parentId !== undefined || 
-        parentName !== undefined || 
+        name !== undefined ||
+        content !== undefined ||
+        parentId !== undefined ||
+        parentName !== undefined ||
         isTrashed !== undefined
     );
 
@@ -55,13 +56,13 @@ function updateFile(req, res) {
         node.name = name;
     }
 
-    //  parentName → parentId
+    // parentName → parentId
     let resolvedParentId = parentId;
     if (parentName !== undefined) {
         if (parentName.trim() === '') {
             resolvedParentId = null;
         } else {
-            const foundId = findFolderByName(req.user.id, parentName);
+            const foundId = await findFolderByName(req.user.id, parentName);
             if (!foundId) {
                 return res.status(404).json({ error: `Folder "${parentName}" not found` });
             }
@@ -75,12 +76,12 @@ function updateFile(req, res) {
         }
 
         if (resolvedParentId !== null) {
-            const destAccess = getEffectiveAccess(req.user.id, resolvedParentId);
+            const destAccess = await getEffectiveAccess(req.user.id, resolvedParentId);
             if (destAccess !== 'write') {
                 return res.status(403).json({ error: 'No write access to destination' });
             }
 
-            const dest = getNodeById(req.user.id, resolvedParentId);
+            const dest = await getNodeById(req.user.id, resolvedParentId);
             if (!dest || dest.type !== 'folder') {
                 return res.status(400).json({ error: 'Destination invalid' });
             }
@@ -101,7 +102,6 @@ function updateFile(req, res) {
     return res.status(204).end();
 }
 
-
 // Middleware to prepare file/folder creation
 async function createFile(req, res, next) {
     try {
@@ -109,68 +109,81 @@ async function createFile(req, res, next) {
         let { type, name, parentId, content, mimeType } = req.body;
         if (!type) type = 'folder';
 
-        if (!['file', 'folder'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
-        if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Name is required' });
+        if (!['file', 'folder'].includes(type)) {
+            return res.status(400).json({ error: 'Invalid type' });
+        }
+
+        if (!name || typeof name !== 'string') {
+            return res.status(400).json({ error: 'Name is required' });
+        }
 
         if (parentId) {
-            const access = getEffectiveAccess(userId, parentId);
+            const access = await getEffectiveAccess(userId, parentId);
             if (access !== 'write') {
                 return res.status(403).json({ error: 'No write access to parent folder' });
             }
-            const parent = getNodeById(userId, parentId);
+
+            const parent = await getNodeById(userId, parentId);
             if (!parent || parent.type !== 'folder') {
                 return res.status(400).json({ error: 'Invalid parent folder' });
             }
         }
 
         const uploadedFile = req.file;
-        // For files, either content (text) or uploaded file must be provided
+
         res.locals.nodeData = {
-            type, name, parentId: parentId ?? null,
+            type,
+            name,
+            parentId: parentId ?? null,
             content: type === 'file' && !uploadedFile ? content ?? '' : null,
             filePath: type === 'file' && uploadedFile ? uploadedFile.path : null,
-            mimeType: type === 'file' ? (uploadedFile ? uploadedFile.mimetype : mimeType ?? 'text/plain') : null
+            mimeType: type === 'file'
+                ? (uploadedFile ? uploadedFile.mimetype : mimeType ?? 'text/plain')
+                : null
         };
+
         next();
-    } catch (err) { next(err); }
+    } catch (err) {
+        next(err);
+    }
 }
 
 // Format response after file/folder creation
-function formatCreateFileResponse(req, res) {
-    const node = createNode({ ...res.locals.nodeData, ownerId: req.user.id });
-    if (!node) return res.status(409).json({ error: 'File already exists' }); 
+async function formatCreateFileResponse(req, res) {
+    const node = await createNode({ ...res.locals.nodeData, ownerId: req.user.id });
     return res.status(201).json(node);
 }
 
 // List root files/folders
-function listRootFiles(req, res) {
-    return res.status(200).json(getRootNodes(req.user.id)); 
+async function listRootFiles(req, res) {
+    const nodes = await getRootNodes(req.user.id);
+    return res.status(200).json(nodes);
 }
 
 // Get file/folder by ID
-function getFileById(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function getFileById(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'File not found' });
 
-    const accessLevel = getEffectiveAccess(req.user.id, node.id);
+    const accessLevel = await getEffectiveAccess(req.user.id, node.id);
 
-    if (node.type === 'folder'){
-        return res.status(200).json({ 
-            ...node, 
-            children: getChildren(req.user.id, node.id),
-            accessLevel 
+    if (node.type === 'folder') {
+        const children = await getChildren(req.user.id, node.id);
+        return res.status(200).json({
+            ...node,
+            children,
+            accessLevel
         });
     }
+
     return res.status(200).json({ ...node, accessLevel });
 }
 
 // Download file content
-function downloadFile(req, res) {
+async function downloadFile(req, res) {
     let userId = req.user?.id;
-    const jwt = require("jsonwebtoken");
     const secret = process.env.JWT_SECRET || "secret";
 
-    // Check Authorization header token if no user from authMiddleware
     if (!userId && req.headers.authorization) {
         try {
             const token = req.headers.authorization.split(' ')[1];
@@ -179,7 +192,6 @@ function downloadFile(req, res) {
         } catch {}
     }
 
-    // Check query param token as fallback
     if (!userId && req.query.token) {
         try {
             const decoded = jwt.verify(req.query.token, secret);
@@ -187,18 +199,17 @@ function downloadFile(req, res) {
         } catch {}
     }
 
-    // Check if we have a valid userId now
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const node = getNodeById(userId, req.params.id);
+    const node = await getNodeById(userId, req.params.id);
     if (!node || node.type !== 'file') {
         return res.status(404).json({ error: 'File not found' });
     }
+
     if (!node.filePath) {
         return res.status(400).json({ error: 'File has no binary content' });
     }
 
-    // Check access
     if (node.mimeType.startsWith('image/')) {
         res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(node.name)}"`);
     } else {
@@ -210,110 +221,124 @@ function downloadFile(req, res) {
 }
 
 // Soft delete (move to trash)
-function deleteFile(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function deleteFile(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'Not found' });
-    
-    // Only owner can delete
+
     if (node.ownerId !== req.user.id) {
         return res.status(403).json({ error: 'Only owner can delete files' });
     }
-    
+
     node.isTrashed = true;
     return res.status(204).end();
 }
 
 // Permissions management
-function getPermissions(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function getPermissions(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'File not found' });
     if (node.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
     return res.status(200).json(node.permissions);
 }
 
-// Add permission to a file/folder
-function addPermission(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function addPermission(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     const { username, access } = req.body;
+
     if (!node) return res.status(404).json({ error: 'File not found' });
     if (node.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
-    // Find target user
-    const targetUser = findUserByUsername(username);
+    const targetUser = await findUserByUsername(username);
     if (!targetUser) return res.status(404).json({ error: 'User not found' });
-    if (!['read', 'write'].includes(access)) return res.status(400).json({ error: 'Invalid access type' });
+    if (!['read', 'write'].includes(access)) {
+        return res.status(400).json({ error: 'Invalid access type' });
+    }
 
-    // Check if permission already exists
     const existing = node.permissions.find(p => p.userId === targetUser.id);
-    if (existing) return res.status(400).json({ error: 'User already has permission' });
+    if (existing) {
+        return res.status(400).json({ error: 'User already has permission' });
+    }
 
-    // Add permission
-    const permission = { id: randomUUID(), userId: targetUser.id, username: targetUser.username, access };
+    const permission = {
+        id: randomUUID(),
+        userId: targetUser.id,
+        username: targetUser.username,
+        access
+    };
+
     node.permissions.push(permission);
     return res.status(201).json(permission);
 }
 
-// Update permission
-function updatePermission(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function updatePermission(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'File not found' });
     if (node.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
-    // Find permission
     const perm = node.permissions.find(p => p.id === req.params.pid);
     if (!perm) return res.status(404).json({ error: 'Permission not found' });
-    if (!['read', 'write'].includes(req.body.access)) return res.status(400).json({ error: 'Invalid access' });
+    if (!['read', 'write'].includes(req.body.access)) {
+        return res.status(400).json({ error: 'Invalid access' });
+    }
 
-    // Update access
     perm.access = req.body.access;
     return res.status(204).end();
 }
 
-// Delete permission
-function deletePermission(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function deletePermission(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node) return res.status(404).json({ error: 'File not found' });
     if (node.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
-    // Find permission
     node.permissions = node.permissions.filter(p => p.id !== req.params.pid);
     return res.status(204).end();
 }
 
-// Replace image file
-function replaceImage(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
-    if (!node || node.type !== "file") return res.status(404).json({ error: "File not found" });
-    
-    // Check write access
-    const access = getEffectiveAccess(req.user.id, node.id);
+async function replaceImage(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
+    if (!node || node.type !== "file") {
+        return res.status(404).json({ error: "File not found" });
+    }
+
+    const access = await getEffectiveAccess(req.user.id, node.id);
     if (access !== 'write') {
         return res.status(403).json({ error: 'Read-only access' });
     }
 
-    if (!req.file) return res.status(400).json({ error: "No image uploaded" });
+    if (!req.file) {
+        return res.status(400).json({ error: "No image uploaded" });
+    }
 
-    // Update file details
     node.filePath = req.file.path;
     node.mimeType = req.file.mimetype;
     node.name = req.file.originalname;
     node.content = null;
+
     return res.status(200).json(node);
 }
 
-// Delete file/folder permanently from trash
-function deleteFilePermanent(req, res) {
-    const node = getNodeById(req.user.id, req.params.id);
+async function deleteFilePermanent(req, res) {
+    const node = await getNodeById(req.user.id, req.params.id);
     if (!node || !node.isTrashed) {
         return res.status(404).json({ error: "Not found" });
     }
 
-    deleteNodeRecursive(req.user.id, node.id);
+    await deleteNodeRecursive(req.user.id, node.id);
     return res.status(204).end();
 }
 
-
 module.exports = {
-    listRootFiles, createFile, formatCreateFileResponse, getFileById, downloadFile, deleteFile,
-    updateFile, replaceImage, getPermissions, addPermission, updatePermission, deletePermission, deleteFilePermanent
+    listRootFiles,
+    createFile,
+    formatCreateFileResponse,
+    getFileById,
+    downloadFile,
+    deleteFile,
+    updateFile,
+    replaceImage,
+    getPermissions,
+    addPermission,
+    updatePermission,
+    deletePermission,
+    deleteFilePermanent
 };

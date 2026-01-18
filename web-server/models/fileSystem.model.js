@@ -1,211 +1,224 @@
+const mongoose = require('mongoose');
 const { randomUUID } = require('crypto');
 
-// In-memory storage: { [userId]: Map<nodeId, node> }
-const fileSystem = {};
+/**
+ * @typedef {Object} Permission
+ * @property {string} userId
+ * @property {string} username
+ * @property {'read'|'write'} access
+ */
 
-// Helper: Get or create user store
-function getUserStore(userId) {
-    if (!fileSystem[userId]) {
-        fileSystem[userId] = new Map();
-    }
-    return fileSystem[userId];
-}
+const permissionSchema = new mongoose.Schema(
+    {
+        id: { type: String },
+        userId: { type: String, required: true },
+        username: { type: String },
+        access: {
+            type: String,
+            enum: ['read', 'write'],
+            required: true,
+        },
+    },
+    { _id: false }
+);
 
-// Find node globally across all stores
-function findNodeGlobal(nodeId) {
-    for (const store of Object.values(fileSystem)) {
-        if (store.has(nodeId)) return store.get(nodeId);
-    }
-    return null;
-}
+/**
+ * @typedef {Object} FileSystemNodeDoc
+ * @property {string} id
+ * @property {string} name
+ * @property {'file'|'folder'} type
+ * @property {string} ownerId
+ * @property {string|null} parentId
+ * @property {string|null} content
+ * @property {string|null} filePath
+ * @property {string|null} mimeType
+ * @property {boolean} isStarred
+ * @property {boolean} isTrashed
+ * @property {Permission[]} permissions
+ */
 
-// Helper: Calculate access recursively
-function getEffectiveAccess(userId, nodeId) {
-    let currentId = nodeId;
-    
-    while (currentId) {
-        const node = findNodeGlobal(currentId);
-        if (!node) break;
+const fileSystemSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true, index: true },
+    name: { type: String, required: true },
+    type: { type: String, enum: ['file', 'folder'], required: true },
+    ownerId: { type: String, required: true, index: true },
+    parentId: { type: String, default: null, index: true },
+    content: { type: String, default: null },
+    filePath: { type: String, default: null },
+    mimeType: { type: String, default: null },
+    isStarred: { type: Boolean, default: false },
+    isTrashed: { type: Boolean, default: false },
+    permissions: { type: [permissionSchema], default: [] },
+    createdAt: { type: Date, default: Date.now },
+});
 
-        // Owner always has write access
-        if (node.ownerId === userId) return 'write';
+const FileSystemNode = mongoose.model('FileSystemNode', fileSystemSchema);
 
-        // Explicit permission
-        const perm = node.permissions?.find(p => p.userId === userId);
-        if (perm) return perm.access;
-
-        // Go up to parent
-        currentId = node.parentId;
-    }
-    
-    return null; 
-}
-
-// Find node by name and parent
-function findByNameAndParent(userId, name, parentId) {
-    const store = getUserStore(userId);
-    return Array.from(store.values()).find(
-        node => node.name === name && node.parentId === parentId
-    );
-}
-
-// Find folder by name
-function findFolderByName(userId, folderName) {
-    const store = getUserStore(userId);
-    for (const node of store.values()) {
-        if (node.type === 'folder' && node.name === folderName) {
-            return node.id;
-        }
-    }
-    return null; 
-}
-
-// Create new file/folder node
-function createNode({ name, type, ownerId, parentId = null, content = null, filePath = null, mimeType = 'text/plain'}) {
-    const store = getUserStore(ownerId);
-    
-    // Removed duplicate check to allow multiple files with same name (Google Drive style)
-    
-    const id = randomUUID();
-    const node = {
-        id,
+/**
+ * Create file or folder
+ */
+async function createNode({ name, type, ownerId, parentId = null, content = null,
+                              filePath = null, mimeType = 'text/plain' }) {
+    const node = new FileSystemNode({
+        id: randomUUID(),
         name,
         type,
         ownerId,
         parentId,
-
         content: type === 'file' ? content : null,
         filePath: type === 'file' ? filePath : null,
         mimeType: type === 'file' ? mimeType : null,
-
-        isStarred: false,
-        isTrashed: false,
-
         permissions: [],
-        createdAt: new Date().toISOString()
-    };
+    });
 
-
-
-    store.set(id, node);
-    return node;
+    return node.save();
 }
 
-function getNodeById(userId, nodeId) {
-    const node = findNodeGlobal(nodeId);
-    if (!node) return null;
+/**
+ * Find node by external id
+ */
+async function findNodeGlobal(nodeId) {
+    if (!nodeId) return null;
+    return FileSystemNode.findOne({ id: nodeId
+    }).lean();
+}
 
-    const access = getEffectiveAccess(userId, nodeId);
-    if (access) return node;
+/**
+ * Resolve effective access recursively
+ */
+async function getEffectiveAccess(userId, nodeId) {
+    let currentId = nodeId;
+
+    while (currentId) {
+        const node = await findNodeGlobal(currentId);
+        if (!node) break;
+
+        if (node.ownerId === userId) return 'write';
+
+        const perm = node.permissions?.find(p => p.userId === userId);
+        if (perm) return perm.access;
+
+        currentId = node.parentId;
+    }
 
     return null;
 }
 
-// Get root nodes for user
-function getRootNodes(userId) {
+/**
+ * Get node by id with access check
+ */
+async function getNodeById(userId, nodeId) {
+    const access = await getEffectiveAccess(userId, nodeId);
+    if (!access) return null;
+    return findNodeGlobal(nodeId);
+}
+
+/**
+ * Get children of folder
+ */
+async function getChildren(userId, parentId) {
+    const access = await getEffectiveAccess(userId, parentId);
+    if (!access) return [];
+
+    const nodes = await FileSystemNode.find({ parentId
+    }).lean();
+
+    return nodes
+        .map(node => ({
+            ...node,
+            accessLevel: access,
+            isSharedWithMe: node.ownerId !== userId,
+        }));
+}
+
+/**
+ * Get root nodes
+ */
+async function getRootNodes(userId) {
     const result = [];
-    const seenIds = new Set();
+    const seen = new Set();
 
-    // My root files
-    const myStore = getUserStore(userId);
-    for (const node of myStore.values()) {
-        if (node.parentId === null) { 
-            result.push({ ...node, accessLevel: 'write', isSharedWithMe: false });
-            seenIds.add(node.id);
+    const own = await FileSystemNode.find({ ownerId: userId,
+        parentId: null }).lean();
+    for (const node of own) {
+        result.push({ ...node, accessLevel: 'write', isSharedWithMe: false });
+        seen.add(node.id);
+    }
+
+    const shared = await FileSystemNode.find({ ownerId:
+            { $ne: userId }, isTrashed: false }).lean();
+    for (const node of shared) {
+        if (seen.has(node.id)) continue;
+        const access = await getEffectiveAccess(userId, node.id);
+        if (!access) continue;
+        if (node.permissions?.some(p => p.userId === userId)) {
+            result.push({ ...node, accessLevel: access, isSharedWithMe: true });
         }
     }
 
-    // Shared directly with me
-    for (const store of Object.values(fileSystem)) {
-        for (const node of store.values()) {
-            if (node.ownerId !== userId) {
-                const access = getEffectiveAccess(userId, node.id);
-                if (access && !seenIds.has(node.id) && !node.isTrashed) {
-                    if (node.permissions?.some(p => p.userId === userId)) {
-                        result.push({ ...node, accessLevel: access, isSharedWithMe: true });
-                        seenIds.add(node.id);
-                    }
-                }
-            }
-        }
-    }
     return result;
 }
 
-// Get children of a folder
-function getChildren(userId, parentId) {
-    const parentAccess = getEffectiveAccess(userId, parentId);
-    if (!parentAccess) return [];
+/**
+ * Search nodes
+ */
+async function searchNodes(userId, query) {
+    const q = query.toLowerCase();
+    const nodes = await FileSystemNode.find({ isTrashed:
+            false }).lean();
 
-    const children = [];
-    for (const store of Object.values(fileSystem)) {
-        for (const node of store.values()) {
-            if (node.parentId === parentId) { 
-                const access = getEffectiveAccess(userId, node.id);
-                if (access) {
-                    children.push({ 
-                        ...node, 
-                        accessLevel: access,
-                        isSharedWithMe: node.ownerId !== userId 
-                    });
-                }
+    return nodes
+        .filter(node => {
+            if (!node.name?.toLowerCase().includes(q)) {
+                if (node.type !== 'file') return false;
+                if (!node.content) return false;
+                return node.content.toLowerCase().includes(q);
             }
-        }
-    }
-    return children;
+            return true;
+        })
+        .map(node => ({ ...node, accessLevel: 'read' }));
 }
 
-// Delete node recursively
-function deleteNodeRecursive(userId, nodeId) {
-    const store = getUserStore(userId);
-    const node = findNodeGlobal(nodeId); 
-    if (!node) return;
+/**
+ * Delete recursively (owner only)
+ */
+async function deleteNodeRecursive(userId, nodeId) {
+    const node = await findNodeGlobal(nodeId);
+    if (!node || node.ownerId !== userId) return;
 
-    if (node.ownerId === userId) {
-        const myChildren = Array.from(store.values()).filter(n => n.parentId === nodeId);
-        myChildren.forEach(child => deleteNodeRecursive(userId, child.id));
-        store.delete(nodeId);
+    const children = await FileSystemNode.find({ parentId: nodeId,
+        ownerId: userId }).lean();
+    for (const child of children) {
+        await deleteNodeRecursive(userId, child.id);
     }
+
+    await FileSystemNode.deleteOne({ id: nodeId });
 }
 
-// Search nodes by query
-function searchNodes(userId, query) {
-    const lowerQuery = query.toLowerCase();
-    const results = [];
+/**
+ * Helpers restored for parity
+ */
+async function findByNameAndParent(userId, name, parentId) {
+    return FileSystemNode.findOne({ ownerId: userId,
+        name, parentId }).lean();
+}
 
-    for (const store of Object.values(fileSystem)) {
-        for (const node of store.values()) {
-            const access = getEffectiveAccess(userId, node.id);
-            if (!access) continue;
-            if (node.isTrashed) continue;
-
-            const nameMatch =
-                node.name?.toLowerCase().includes(lowerQuery);
-
-            const contentMatch =
-                node.type === 'file' &&
-                typeof node.content === 'string' &&
-                node.content.toLowerCase().includes(lowerQuery);
-
-            if (nameMatch || contentMatch) {
-                results.push({
-                    ...node,
-                    accessLevel: access
-                });
-            }
-        }
-    }
-
-    return results;
+async function findFolderByName(userId, folderName) {
+    const folder = await FileSystemNode.findOne({ ownerId: userId,
+        type: 'folder', name: folderName }).lean();
+    return folder ? folder.id : null;
 }
 
 module.exports = {
+    FileSystemNode,
     createNode,
+    findNodeGlobal,
+    getEffectiveAccess,
     getNodeById,
-    getRootNodes,
     getChildren,
-    deleteNodeRecursive,
+    getRootNodes,
     searchNodes,
+    deleteNodeRecursive,
+    findByNameAndParent,
     findFolderByName,
-    getEffectiveAccess 
 };
