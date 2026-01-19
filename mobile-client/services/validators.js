@@ -1,17 +1,9 @@
 /**
  * Custom Validation Functions for Mobile App
- * No external dependencies - pure TypeScript validators
+ * No external dependencies - pure validators
  */
 
-export interface ValidationError {
-    field: string;
-    message: string;
-}
-
-/**
- * Validate email format
- */
-export function validateEmail(email: string): ValidationError | null {
+function validateEmail(email) {
     if (!email) {
         return null; // Email is optional
     }
@@ -27,10 +19,7 @@ export function validateEmail(email: string): ValidationError | null {
     return null;
 }
 
-/**
- * Validate username
- */
-export function validateUsername(username: string): ValidationError | null {
+function validateUsername(username) {
     if (!username) {
         return {
             field: 'username',
@@ -63,10 +52,7 @@ export function validateUsername(username: string): ValidationError | null {
     return null;
 }
 
-/**
- * Validate password strength
- */
-export function validatePassword(password: string): ValidationError | null {
+function validatePassword(password) {
     if (!password) {
         return {
             field: 'password',
@@ -98,10 +84,7 @@ export function validatePassword(password: string): ValidationError | null {
     return null;
 }
 
-/**
- * Validate full name
- */
-export function validateFullName(fullName: string): ValidationError | null {
+function validateFullName(fullName) {
     if (!fullName) {
         return {
             field: 'fullName',
@@ -134,13 +117,7 @@ export function validateFullName(fullName: string): ValidationError | null {
     return null;
 }
 
-/**
- * Validate password confirmation
- */
-export function validatePasswordConfirmation(
-    password: string,
-    confirmPassword: string
-): ValidationError | null {
+function validatePasswordConfirmation(password, confirmPassword) {
     if (!confirmPassword) {
         return {
             field: 'confirmPassword',
@@ -158,10 +135,7 @@ export function validatePasswordConfirmation(
     return null;
 }
 
-/**
- * Validate phone number (optional, basic format)
- */
-export function validatePhoneNumber(phoneNumber: string): ValidationError | null {
+function validatePhoneNumber(phoneNumber) {
     if (!phoneNumber) {
         return null; // Phone is optional
     }
@@ -193,10 +167,7 @@ export function validatePhoneNumber(phoneNumber: string): ValidationError | null
     return null;
 }
 
-/**
- * Validate birth date format (YYYY-MM-DD)
- */
-export function validateBirthDate(birthDate: string): ValidationError | null {
+function validateBirthDate(birthDate) {
     if (!birthDate) {
         return null; // Birth date is optional
     }
@@ -239,21 +210,8 @@ export function validateBirthDate(birthDate: string): ValidationError | null {
     return null;
 }
 
-/**
- * Validate registration form
- */
-export interface RegistrationFormData {
-    username: string;
-    password: string;
-    confirmPassword: string;
-    fullName: string;
-    email?: string;
-    phoneNumber?: string;
-    birthDate?: string;
-}
-
-export function validateRegistrationForm(formData: RegistrationFormData): ValidationError[] {
-    const errors: ValidationError[] = [];
+function validateRegistrationForm(formData) {
+    const errors = [];
 
     // Validate username
     const usernameError = validateUsername(formData.username);
@@ -294,3 +252,14 @@ export function validateRegistrationForm(formData: RegistrationFormData): Valida
 
     return errors;
 }
+
+module.exports = {
+    validateEmail,
+    validateUsername,
+    validatePassword,
+    validateFullName,
+    validatePasswordConfirmation,
+    validatePhoneNumber,
+    validateBirthDate,
+    validateRegistrationForm,
+};
