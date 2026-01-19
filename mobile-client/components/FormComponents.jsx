@@ -19,13 +19,14 @@ export function FormInput({
   ...props
 }) {
   return (
-    <View style={{ marginBottom: Spacing.md }}>
+    <View style={{ marginBottom: error ? Spacing.xs : Spacing.md }}>
       {label && <Text style={GlobalStyles.label}>{label}</Text>}
       <TextInput
         style={[
           GlobalStyles.inputBase,
           error && GlobalStyles.inputError,
           !editable && { opacity: 0.5 },
+          { height: 44 }
         ]}
         placeholder={placeholder}
         placeholderTextColor={AppColors.textSecondary}

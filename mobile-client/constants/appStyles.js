@@ -8,17 +8,20 @@ import { Colors } from './theme';
 
 const theme = 'light'; // Can be 'light' or 'dark'
 
-// 🎨 Core Colors
+// 🎨 Core Colors (Google-style)
 export const AppColors = {
-  primary: Colors[theme].tint,
-  background: Colors[theme].background,
-  text: Colors[theme].text,
-  textSecondary: '#666',
-  error: '#ff6b6b',
-  errorBackground: '#ffe0e0',
-  success: '#51cf66',
-  successBackground: '#e7f5ed',
-  border: '#e0e0e0',
+  primary: '#1a73e8',
+  primaryDark: '#1557b0',
+  primaryLight: '#4285f4',
+  background: '#ffffff',
+  backgroundSecondary: '#f0f2f5',
+  text: '#202124',
+  textSecondary: '#5f6368',
+  error: '#d93025',
+  errorBackground: '#fce8e6',
+  success: '#1e8e3e',
+  successBackground: '#e6f4ea',
+  border: '#dadce0',
   disabled: '#ccc',
   white: '#ffffff',
   black: '#000000',
@@ -81,12 +84,12 @@ export const GlobalStyles = StyleSheet.create({
   // Containers
   screenContainer: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: 'transparent',
     paddingHorizontal: Spacing.md,
   },
   screenContainerNoHPadding: {
     flex: 1,
-    backgroundColor: AppColors.background,
+    backgroundColor: 'transparent',
   },
   flexCenter: {
     justifyContent: 'center',
@@ -133,12 +136,23 @@ export const GlobalStyles = StyleSheet.create({
   // Buttons
   buttonPrimary: {
     backgroundColor: AppColors.primary,
-    paddingVertical: Spacing.sm,
+    paddingVertical: 12,
     paddingHorizontal: Spacing.md,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: Spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: AppColors.primary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   buttonSecondary: {
     backgroundColor: 'transparent',
@@ -197,10 +211,16 @@ export const GlobalStyles = StyleSheet.create({
 // 🖼️ Image Styles
 export const ImageStyles = StyleSheet.create({
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: AppColors.border,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: AppColors.backgroundSecondary,
+  },
+  profileImageSmall: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: AppColors.backgroundSecondary,
   },
   thumbnail: {
     width: 80,

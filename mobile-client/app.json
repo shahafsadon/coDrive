@@ -13,7 +13,15 @@
       "infoPlist": {
         "NSCameraUsageDescription": "We need camera access to take profile photos",
         "NSPhotoLibraryUsageDescription": "We need photo library access to select profile photos",
-        "NSPhotoLibraryAddUsageDescription": "We need permission to save photos"
+        "NSPhotoLibraryAddUsageDescription": "We need permission to save photos",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true,
+          "NSExceptionDomains": {
+            "localhost": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        }
       }
     },
     "android": {

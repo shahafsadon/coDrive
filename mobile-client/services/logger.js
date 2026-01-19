@@ -18,32 +18,30 @@ class Logger {
   }
 
   log(level, tag, message, data = null) {
-    if (!this.isDevelopment) return;
-
-    const timestamp = new Date().toLocaleTimeString();
-    const prefix = `[${timestamp}] [${level}] [${tag}]`;
-
-    if (data) {
-      console.log(`${prefix}`, message, data);
-    } else {
-      console.log(`${prefix}`, message);
-    }
+    // Disabled for production
+    return;
   }
 
   debug(tag, message, data) {
-    this.log(LogLevel.DEBUG, tag, message, data);
+    // Disabled for production
+    return;
   }
 
   info(tag, message, data) {
-    this.log(LogLevel.INFO, tag, message, data);
+    // Disabled for production
+    return;
   }
 
   warn(tag, message, data) {
-    console.warn(`[${tag}]`, message, data);
+    // Disabled for production
+    return;
   }
 
   error(tag, message, data) {
-    console.error(`[${tag}]`, message, data);
+    // Keep errors in production
+    if (this.isDevelopment) {
+      console.error(`[${tag}]`, message, data);
+    }
   }
 }
 

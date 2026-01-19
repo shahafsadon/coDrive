@@ -1,8 +1,72 @@
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from './logger';
+import { Platform } from 'react-native';
 
-// Update with your backend URL
-const API_BASE_URL = 'http://192.168.1.100:3000/api'; // Change to your backend URL
+/**
+ * Get API base URL based on environment and platform
+ */
+const getAPIBaseURL = () => {
+    // Check for environment variable first
+    if (process.env.EXPO_PUBLIC_API_URL) {
+        logger.debug('API', `Using API URL from env: ${process.env.EXPO_PUBLIC_API_URL}`);
+        return process.env.EXPO_PUBLIC_API_URL;
+    }
+
+    // Fallback: Smart defaults based on platform
+    if (Platform.OS === 'web') {
+        return 'http://localhost:3000/api';
+    }
+    
+    // For native platforms on LAN, use the computer's IP
+    return 'http://172.18.52.102:3000/api';
+};
+
+const API_BASE_URL = getAPIBaseURL();
+
+/**
+ * Create storage wrapper with unified async interface
+ */
+const createStorageWrapper = () => {
+    // Use AsyncStorage for web and as fallback for native
+    if (Platform.OS === 'web') {
+        return {
+            getItemAsync: AsyncStorage.getItem,
+            setItemAsync: AsyncStorage.setItem,
+            deleteItemAsync: AsyncStorage.removeItem,
+        };
+    }
+    
+    // Try SecureStore for native platforms, fallback to AsyncStorage
+    return {
+        getItemAsync: async (key) => {
+            try {
+                return await SecureStore.getItemAsync(key);
+            } catch (err) {
+                logger.warn('API', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.getItem(key);
+            }
+        },
+        setItemAsync: async (key, value) => {
+            try {
+                return await SecureStore.setItemAsync(key, value);
+            } catch (err) {
+                logger.warn('API', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.setItem(key, value);
+            }
+        },
+        deleteItemAsync: async (key) => {
+            try {
+                return await SecureStore.deleteItemAsync(key);
+            } catch (err) {
+                logger.warn('API', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.removeItem(key);
+            }
+        },
+    };
+};
+
+const storage = createStorageWrapper();
 
 /**
  * Generic fetch wrapper with auth token
@@ -15,12 +79,12 @@ async function fetchWithAuth(endpoint, options = {}) {
 
         // Add auth token if available
         try {
-            const token = await SecureStore.getItemAsync('token');
+            const token = await storage.getItemAsync('token');
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
         } catch (err) {
-            logger.error('API', 'Failed to retrieve token from secure storage', err);
+            logger.error('API', 'Failed to retrieve token from storage', err);
         }
 
         // Set content type for JSON if not FormData
@@ -271,6 +335,51 @@ export const api = {
                 data: null,
                 error: err.message || 'Health check failed',
             };
+        }
+    },
+};
+
+/**
+ * Token storage utilities
+ */
+export const tokenStorage = {
+    /**
+     * Save token to storage
+     * @param {string} token
+     */
+    saveToken: async (token) => {
+        try {
+            await storage.setItemAsync('token', token);
+            logger.debug('API', 'Token saved successfully');
+        } catch (err) {
+            logger.error('API', 'Failed to save token', err);
+            throw err;
+        }
+    },
+
+    /**
+     * Get token from storage
+     * @returns {Promise<string|null>}
+     */
+    getToken: async () => {
+        try {
+            return await storage.getItemAsync('token');
+        } catch (err) {
+            logger.error('API', 'Failed to get token', err);
+            return null;
+        }
+    },
+
+    /**
+     * Clear token from storage
+     */
+    clearToken: async () => {
+        try {
+            await storage.deleteItemAsync('token');
+            logger.debug('API', 'Token cleared successfully');
+        } catch (err) {
+            logger.error('API', 'Failed to clear token', err);
+            throw err;
         }
     },
 };

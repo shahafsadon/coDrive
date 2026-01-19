@@ -1,13 +1,13 @@
-import { View, Text, Alert } from 'react-native';
+import { View, Text, Alert, Image, ImageBackground } from 'react-native';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
+import { KeyboardAvoidingWrapper } from '@/components/KeyboardAvoidingWrapper';
 import { FormInput, PrimaryButton, TextButton, Section } from '@/components/FormComponents';
 import { Typography, AppColors, Spacing, GlobalStyles } from '@/constants/appStyles';
 import { logger } from '@/services/logger';
 import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 
 export default function LoginScreen() {
     const { login } = useAuth();
@@ -60,16 +60,10 @@ export default function LoginScreen() {
             const token = response.data.token;
             const userId = response.data.userId || response.data.id;
 
-            await SecureStore.setItemAsync('token', token);
-            if (userId) {
-                await SecureStore.setItemAsync('userId', userId.toString());
-                await SecureStore.setItemAsync('username', username);
-            }
-
             logger.info('Auth', 'Login successful');
 
-            // Update auth context and navigate
-            await login(token);
+            // Update auth context (handles storage with proper platform detection)
+            await login(token, userId, username);
             router.replace('/(tabs)');
         } catch (err) {
             logger.error('Auth', 'Unexpected error', err);
@@ -93,9 +87,29 @@ export default function LoginScreen() {
     };
 
     return (
-        <ScreenWrapper scrollable>
-            <View style={{ flex: 1, justifyContent: 'center', paddingVertical: Spacing.lg }}>
-                <Section title="Welcome Back">
+        <ImageBackground
+            source={require('@/assets/images/background.jpg')}
+            style={{ flex: 1 }}
+            resizeMode="cover"
+        >
+            <ScreenWrapper>
+                <KeyboardAvoidingWrapper>
+                    <View style={{ flex: 1, justifyContent: 'center', paddingVertical: Spacing.sm }}>
+                    {/* Logo */}
+                    <View style={{ alignItems: 'center', marginBottom: Spacing.lg, marginTop: -80 }}>
+                        <Image
+                            source={require('@/assets/images/logo.png')}
+                            style={{ width: 400, height: 110, resizeMode: 'contain' }}
+                        />
+                        <Text style={[Typography.h2, { color: AppColors.primary, marginTop: Spacing.sm }]}>
+                            Sign In
+                        </Text>
+                        <Text style={[Typography.bodySmall, { color: AppColors.textSecondary, marginTop: 4 }]}>
+                            to continue to CoDrive
+                        </Text>
+                    </View>
+
+                    <Section>
                     {/* Username Input */}
                     <FormInput
                         label="Username"
@@ -120,8 +134,8 @@ export default function LoginScreen() {
 
                     {/* Error Message */}
                     {error && (
-                        <View style={{ backgroundColor: AppColors.errorBackground, padding: 12, borderRadius: 8, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: AppColors.error }}>
-                            <Text style={[Typography.bodySmall, { color: AppColors.error }]}>{error}</Text>
+                        <View style={{ backgroundColor: AppColors.errorBackground, padding: 10, borderRadius: 6, marginBottom: 15, border: 1, borderColor: '#fad2cf' }}>
+                            <Text style={[Typography.bodySmall, { color: AppColors.error, textAlign: 'center' }]}>{error}</Text>
                         </View>
                     )}
 
@@ -134,15 +148,18 @@ export default function LoginScreen() {
                     />
 
                     {/* Sign Up Link */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: Spacing.lg }}>
-                        <Text style={Typography.bodySmall}>Don't have an account?</Text>
+                    <View style={{ alignItems: 'center', marginTop: Spacing.lg, gap: 5 }}>
+                        <Text style={[Typography.bodySmall, { color: AppColors.textSecondary }]}>New to CoDrive?</Text>
                         <TextButton
-                            title="Sign up"
+                            title="Create account"
                             onPress={() => router.push('/(auth)/register')}
+                            style={{ fontSize: 17, fontWeight: '700' }}
                         />
                     </View>
                 </Section>
-            </View>
-        </ScreenWrapper>
+                    </View>
+                </KeyboardAvoidingWrapper>
+            </ScreenWrapper>
+        </ImageBackground>
     );
 }

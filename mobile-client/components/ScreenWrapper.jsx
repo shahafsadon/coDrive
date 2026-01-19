@@ -22,9 +22,9 @@ export function ScreenWrapper({
   const Component = scrollable ? ScrollView : View;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor || AppColors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor || 'transparent' }}>
       <Component
-        style={containerStyle}
+        style={[containerStyle, { backgroundColor: 'transparent' }]}
         contentContainerStyle={scrollable ? contentContainerStyle : undefined}
       >
         {loading ? (
