@@ -1,0 +1,411 @@
+:root {
+    --accent-blue: #1a73e8;
+}
+
+
+/* File grid & cards */
+
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 16px;
+    padding: 24px;
+    align-content: start;
+}
+
+.file-card {
+    background: transparent;
+    border: 3.5px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition:
+            box-shadow 0.15s ease,
+            background-color 0.15s ease,
+            border-color 0.15s ease;
+}
+
+.file-card:hover {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(0, 0, 0, 0.28);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.16);
+}
+
+.file-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.file-name {
+    font-size: 13px;
+    color: #3c4043;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Empty / state messages */
+.empty-state {
+    color: #5f6368;
+    font-size: 14px;
+    padding: 32px;
+}
+
+.state-message {
+    margin-top: 40px;
+    font-size: 16px;
+    color: #5f6368;
+}
+
+.state-message.error {
+    color: #d93025;
+}
+
+/* Drive layout */
+
+.drive-container {
+    display: flex;
+    height: calc(100vh - 56px);
+}
+
+.drive-main {
+    flex: 1;
+    padding: 16px 24px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+}
+
+.drive-title {
+    margin-bottom: 16px;
+    font-size: 22px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.drive-actions {
+    margin-bottom: 16px;
+}
+
+.new-file-btn {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.new-file-btn:hover {
+    background-color: #1669c1;
+}
+
+/* Breadcrumb */
+
+.breadcrumb {
+    margin-bottom: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: inherit;
+}
+
+.breadcrumb span.current {
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
+
+.breadcrumb span.separator {
+    color: #9aa0a6;
+}
+
+.breadcrumb span.current {
+    font-weight: 600;
+}
+
+/* File Viewer (Preview) */
+
+.file-viewer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(32, 33, 36, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.file-viewer {
+    background: #ffffff;
+    width: 80%;
+    max-width: 900px;
+    max-height: 80%;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header */
+.file-viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.file-viewer-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.file-viewer-header button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #5f6368;
+}
+
+.file-viewer-header button:hover {
+    color: #202124;
+}
+
+/* Body */
+.file-viewer-body {
+    padding: 16px;
+    overflow: auto;
+    flex: 1;
+}
+
+/* Text file */
+.file-viewer-textarea {
+    width: 100%;
+    height: 320px;
+    border: 1px solid #dadce0;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+/* Image */
+.file-viewer-image {
+    display: block;
+    max-width: 100%;
+    max-height: 65vh;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+/* Footer actions */
+.file-viewer-actions {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.file-viewer-actions button {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.file-viewer-actions button:hover {
+    background-color: #1669c1;
+}
+
+.file-viewer-actions button.secondary {
+    background-color: #e0e0e0;
+    color: #202124;
+}
+
+.file-viewer-actions button.secondary:hover {
+    background-color: #d2d2d2;
+}
+
+/* Loading */
+.file-viewer-loading {
+    text-align: center;
+    color: #5f6368;
+    font-size: 14px;
+    margin-top: 40px;
+}
+
+/* Dark mode – Drive */
+
+body.dark .drive-main {
+    background-color: #1f1f1f;
+}
+
+body.dark .drive-title,
+body.dark .state-message,
+body.dark .empty-state,
+body.dark .file-viewer-loading {
+    color: #e8eaed;
+}
+
+body.dark .state-message.error {
+    color: #f28b82;
+}
+
+/* Cards */
+body.dark .file-card {
+    border: 3.5px solid rgba(255, 255, 255, 0.22);
+}
+
+body.dark .file-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+
+
+body.dark .file-name {
+    color: #e8eaed;
+}
+/* Breadcrumb */
+body.dark .breadcrumb {
+    color: #8ab4f8;
+}
+
+body.dark .breadcrumb span.current {
+    color: #e8eaed;
+}
+
+/* Viewer */
+body.dark .file-viewer {
+    background: #2a2a2a;
+}
+
+body.dark .file-viewer-header {
+    border-bottom: 1px solid #3c4043;
+}
+
+body.dark .file-viewer-header h3 {
+    color: #e8eaed;
+}
+
+body.dark .file-viewer-header button {
+    color: #bdc1c6;
+}
+
+body.dark .file-viewer-header button:hover {
+    color: #e8eaed;
+}
+
+body.dark .file-viewer-actions {
+    border-top: 1px solid #3c4043;
+}
+
+body.dark .file-viewer-textarea {
+    background: #303134;
+    color: #e8eaed;
+    border: 1px solid #5f6368;
+}
+
+/* Create New Modal */
+
+.create-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background: #ffffff;
+    color: #202124;
+
+    padding: 20px;
+    border-radius: 12px;
+    min-width: 260px;
+
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    z-index: 3000;
+}
+
+.create-modal h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.create-modal button {
+    margin: 6px 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #dadce0;
+    background: #f1f3f4;
+    cursor: pointer;
+}
+
+.create-modal button:hover {
+    background: #e8eaed;
+}
+
+/* Dark Mode – Create Modal */
+
+body.dark .create-modal {
+    background: #2a2a2a;
+    color: #e8eaed;
+    border: 1px solid #3c4043;
+}
+
+body.dark .create-modal button {
+    background: #303134;
+    color: #e8eaed;
+    border: 1px solid #5f6368;
+}
+
+body.dark .create-modal button:hover {
+    background: #3c4043;
+}
+
+.breadcrumbs {
+    color: #5f6368;
+}
+
+.breadcrumb-active {
+    color: #1a73e8;
+    font-weight: bold;
+}
+
+.image-file-name {
+    font-size: 11px;
+    color: #5f6368;
+    font-weight: 400;
+    text-transform: none;
+    margin-top: 4px;
+}
+
+.file-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.file-actions button svg {
+    color: #5f6368;
+}
+
+.file-actions button:hover svg {
+    color: #1a73e8;
+}
+
+body.dark .file-actions button svg {
+    color: #e8eaed;
+}
+

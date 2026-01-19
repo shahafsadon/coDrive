@@ -1,9 +1,16 @@
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
+
 #include "../src/CommandParser.h"
-#include "../src/ConcreteCommands.h"
 #include "../src/FileManager.h"
+
+// Commands
+#include "../src/commands/AddArticleCommand.h"
+#include "../src/commands/GetArticleCommand.h"
+#include "../src/commands/SearchArticleCommand.h"
+#include "../src/commands/DeleteArticleCommand.h"
+#include "../src/commands/InvalidCommand.h"
 
 /**
  * @brief Test fixture providing a shared FileManager and CommandParser
@@ -11,18 +18,18 @@
  */
 class ParserTest : public ::testing::Test {
 protected:
-    FileManager fm;       // Dummy FileManager (not actually writing files here)
-    CommandParser parser; // Parser under test
+    FileManager fm;
+    CommandParser parser;
 
 public:
     ParserTest() : fm(), parser(fm) {}
 };
 
 /**
- * @brief Ensures that a valid 'add' input produces AddArticleCommand.
+ * @brief Ensures that a valid POST input produces AddArticleCommand.
  */
 TEST_F(ParserTest, ShouldParseAddCommand) {
-    std::string input = "add file1 someText123";
+    std::string input = "POST file1 someText123";
     auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
@@ -30,10 +37,10 @@ TEST_F(ParserTest, ShouldParseAddCommand) {
 }
 
 /**
- * @brief Ensures that a valid 'get' input produces GetArticleCommand.
+ * @brief Ensures that a valid GET input produces GetArticleCommand.
  */
 TEST_F(ParserTest, ShouldParseGetCommand) {
-    std::string input = "get file1";
+    std::string input = "GET file1";
     auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
@@ -41,14 +48,25 @@ TEST_F(ParserTest, ShouldParseGetCommand) {
 }
 
 /**
- * @brief Ensures that a valid 'search' input produces SearchArticleCommand.
+ * @brief Ensures that a valid SEARCH input produces SearchArticleCommand.
  */
 TEST_F(ParserTest, ShouldParseSearchCommand) {
-    std::string input = "search abc123";
+    std::string input = "search abc123";   // lowercase keyword is OK
     auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
     EXPECT_NE(dynamic_cast<SearchArticleCommand*>(cmd.get()), nullptr);
+}
+
+/**
+ * @brief Ensures DELETE command is parsed correctly.
+ */
+TEST_F(ParserTest, ShouldParseDeleteCommand) {
+    std::string input = "DELETE fileX";
+    auto cmd = parser.parse(input);
+
+    ASSERT_NE(cmd, nullptr);
+    EXPECT_NE(dynamic_cast<DeleteArticleCommand*>(cmd.get()), nullptr);
 }
 
 /**
@@ -61,36 +79,35 @@ TEST_F(ParserTest, ShouldIgnoreInvalidCommand) {
     ASSERT_NE(cmd, nullptr);
     EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
 
-    // Invalid commands must return empty output
-    EXPECT_EQ(cmd->execute(), "");
+    EXPECT_EQ(cmd->execute(fm), "400 Bad Request\n");
 }
 
 /**
- * @brief 'add' with no arguments must be treated as invalid.
+ * @brief 'POST' with no arguments must be treated as invalid.
  */
 TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_AddWithoutArgs) {
-    std::string input = "add";
+    std::string input = "POST";
     auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
     EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
-    EXPECT_EQ(cmd->execute(), "");
+    EXPECT_EQ(cmd->execute(fm), "400 Bad Request\n");
 }
 
 /**
- * @brief 'get' without filename must be treated as invalid.
+ * @brief 'GET' without filename must be treated as invalid.
  */
 TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_GetWithoutArgs) {
-    std::string input = "get";
+    std::string input = "GET";
     auto cmd = parser.parse(input);
 
     ASSERT_NE(cmd, nullptr);
     EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
-    EXPECT_EQ(cmd->execute(), "");
+    EXPECT_EQ(cmd->execute(fm), "400 Bad Request\n");
 }
 
 /**
- * @brief 'search' without content must be treated as invalid.
+ * @brief 'SEARCH' without content must be treated as invalid.
  */
 TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_SearchWithoutArgs) {
     std::string input = "search";
@@ -98,5 +115,5 @@ TEST_F(ParserTest, ShouldIgnoreIncompleteCommand_SearchWithoutArgs) {
 
     ASSERT_NE(cmd, nullptr);
     EXPECT_NE(dynamic_cast<InvalidCommand*>(cmd.get()), nullptr);
-    EXPECT_EQ(cmd->execute(), "");
+    EXPECT_EQ(cmd->execute(fm), "400 Bad Request\n");
 }

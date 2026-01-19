@@ -1,0 +1,46 @@
+services:
+  cpp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cpp-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./articles:/articles
+    command: ["8080"]
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  web-server:
+    build:
+      context: ./web-server
+    container_name: web-server
+    ports:
+      - "3000:3000"
+    environment:
+      JWT_SECRET: your-secret-key-here-change-in-production
+      CPP_SERVER_HOST: cpp-server
+      CPP_SERVER_PORT: 8080
+      MONGO_URI: mongodb://mongo:27017/coDrive
+    depends_on:
+      - cpp-server
+      - mongo
+
+  web-client:
+    build:
+      context: ./web-client
+    container_name: web-client
+    ports:
+      - "3008:3000"
+    depends_on:
+      - web-server
+
+volumes:
+  mongo-data:

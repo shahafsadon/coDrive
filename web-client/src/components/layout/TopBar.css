@@ -1,0 +1,229 @@
+/* Top Bar Container */
+.topbar {
+    height: 64px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: #5f6368;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* Dark mode override */
+body.dark .topbar {
+    background-color: #1f1f1f;
+    border-bottom: 1px solid #3c4043;
+    color: #e8eaed;
+}
+
+/* Left Section (Logo & New Button) */
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 230px; /* Space for sidebar alignment */
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: 400;
+    color: #5f6368;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.logo span {
+    position: relative;
+    top: 1px;
+}
+
+.new-btn {
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+    border-radius: 24px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #3c4043;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.new-btn:hover {
+    background-color: #f8f9fa;
+    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
+}
+
+/* Dark mode overrides */
+body.dark .logo {
+    color: #e8eaed;
+}
+
+body.dark .logo img {
+    filter: brightness(0.9);
+}
+
+body.dark .new-btn {
+    background-color: #303134;
+    border-color: transparent;
+    color: #e8eaed;
+}
+
+body.dark .new-btn:hover {
+    background-color: #3c4043;
+}
+
+/* Center Section (Search) */
+.topbar-search {
+    flex: 1;
+    max-width: 700px;
+    margin: 0 20px;
+    background-color: #f1f3f4;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.topbar-search:focus-within {
+    background-color: #ffffff;
+    box-shadow: 0 1px 1px 0 rgba(65,69,73,0.3), 0 1px 3px 1px rgba(65,69,73,0.15);
+}
+
+.search-icon {
+    font-size: 20px;
+    color: #5f6368;
+    opacity: 0.7;
+}
+
+.topbar-search input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 16px;
+    color: #3c4043;
+    outline: none;
+}
+
+/* Dark mode overrides */
+body.dark .topbar-search {
+    background-color: #303134;
+}
+
+body.dark .topbar-search input {
+    color: #e8eaed;
+}
+
+body.dark .search-icon {
+    color: #9aa0a6;
+}
+
+/* right Section (Theme, User, Logout) */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    border: none;
+    background: none;
+    color: #5f6368;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.theme-toggle-btn:hover {
+    background: none;
+}
+
+
+body.dark .theme-toggle-btn {
+    color: #e8eaed;
+}
+
+body.dark .theme-toggle-btn:hover {
+    background: none;
+}
+
+
+/* User Info Container */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 10px;
+    border-left: 1px solid #e0e0e0;
+}
+
+body.dark .user-info {
+    border-left-color: #3c4043;
+}
+
+/* User Avatar (Circle) */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #1a73e8; 
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Logout Button */
+.logout-btn {
+    border: none;
+    background: transparent;
+    color: #5f6368;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.15s;
+}
+
+.logout-btn:hover {
+    background-color: rgba(60,64,67,0.08);
+    color: #202124;
+}
+
+body.dark .logout-btn {
+    color: #e8eaed;
+}
+
+body.dark .logout-btn:hover {
+    background-color: rgba(232,234,237,0.08);
+}
