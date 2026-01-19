@@ -164,9 +164,14 @@ class TcpClient {
       const response = this.recvBuffer;
       this.recvBuffer = '';
 
+      // Parse HTTP-like response: "STATUS CODE\n\nBODY"
+      const parts = response.split('\n\n');
+      const statusLine = parts[0];
+      const body = parts.slice(1).join('\n\n');
+
       const { resolve } = this.inFlight;
       this.inFlight = null;
-      resolve(response);
+      resolve(body);  // Return only the body, not the status line
 
       this._pumpQueue().catch(() => {});
     }, this.responseIdleMs);

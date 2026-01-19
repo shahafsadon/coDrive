@@ -128,8 +128,8 @@ export default function FileViewer({ file, onClose }) {
                         </div>
                     ) : (
                         <>
-                            {/* Text file */}
-                            {file.mimeType === "text/plain" && (
+                            {/* Text file - show if mimeType is text/plain or if no filePath (text content) */}
+                            {(file.mimeType === "text/plain" || !file.filePath) && (
                                 <textarea
                                     className="file-viewer-textarea"
                                     value={content}
@@ -175,7 +175,7 @@ export default function FileViewer({ file, onClose }) {
                                     </button>
                                 </>
                             ) : (
-                                file.mimeType === "text/plain" && (
+                                (file.mimeType === "text/plain" || !file.filePath) && (
                                     <button onClick={handleSave} disabled={loading}>
                                         Save
                                     </button>
