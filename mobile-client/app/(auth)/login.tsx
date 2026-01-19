@@ -1,7 +1,7 @@
 import { View, Text, TextInput, StyleSheet, Button, Alert } from 'react-native';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-// import { API_BASE_URL } from '@/services/api'; // FOR ALON
+import { api, ApiError } from '@/services/api';
 
 export default function LoginScreen() {
     const { login } = useAuth();
@@ -19,12 +19,21 @@ export default function LoginScreen() {
         try {
             setLoading(true);
 
-            /**
-             * 🔐 MOCK LOGIN
-             * SCRUM-526 does NOT depend on real API
-             */
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await login('mock-token');
+            // Call real API endpoint
+            const response = await api.login(username, password);
+
+            if (response.error) {
+                Alert.alert('Login failed', response.error);
+                return;
+            }
+
+            if (!response.data?.token) {
+                Alert.alert('Login failed', 'No token received');
+                return;
+            }
+
+            // Store token and update auth state
+            await login(response.data.token);
 
         } catch (err: any) {
             Alert.alert('Login failed', err.message || 'Login failed');
@@ -43,6 +52,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 value={username}
                 onChangeText={setUsername}
+                editable={!loading}
             />
 
             <TextInput
@@ -51,6 +61,7 @@ export default function LoginScreen() {
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
+                editable={!loading}
             />
 
             <Button

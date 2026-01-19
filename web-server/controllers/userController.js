@@ -3,9 +3,10 @@ const {
     findUserByUsername,
     findUserById,
 } = require('../models/user.model');
+const { AppError } = require('../middleware/errorMiddleware');
 
 // New user registration
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
     const {
         username,
         password,
@@ -16,68 +17,68 @@ const registerUser = async (req, res) => {
         image,
     } = req.body;
 
-    // Server Side Validation
+    try {
+        // Server Side Validation
 
-    // Check mandatory fields
-    if (!username || !password || !fullName) {
-        return res.status(400).json({
-            error: "Missing mandatory fields: username, password, and fullName are required.",
+        // Check mandatory fields
+        if (!username || !password || !fullName) {
+            throw new AppError("Missing mandatory fields: username, password, and fullName are required.", 400);
+        }
+
+        // Check password length
+        if (password.length < 8) {
+            throw new AppError("Password must be at least 8 characters long.", 400);
+        }
+
+        // Check password complexity (English letters)
+        if (!/[a-zA-Z]/.test(password)) {
+            throw new AppError("Password must contain at least one English letter.", 400);
+        }
+
+        // Check if user already exists
+        const existingUser = await findUserByUsername(username);
+        if (existingUser) {
+            throw new AppError("Username already exists.", 409);
+        }
+
+        // Create new user
+        const newUser = await createUser({
+            username,
+            password,
+            fullName,
+            email,
+            phoneNumber,
+            birthDate,
+            image,
         });
-    }
 
-    // Check password length
-    if (password.length < 8) {
-        return res.status(400).json({
-            error: "Password must be at least 8 characters long.",
+        // Respond with created user details (excluding password)
+        res.status(201).json({
+            id: newUser.id,
+            username: newUser.username,
+            fullName: newUser.fullName,
         });
+    } catch (err) {
+        next(err);
     }
-
-    // Check password complexity (English letters)
-    if (!/[a-zA-Z]/.test(password)) {
-        return res.status(400).json({
-            error: "Password must contain at least one English letter.",
-        });
-    }
-
-    // Check if user already exists
-    const existingUser = await findUserByUsername(username);
-    if (existingUser) {
-        return res.status(409).json({
-            error: "Username already exists.",
-        });
-    }
-
-    // Create new user
-    const newUser = await createUser({
-        username,
-        password,
-        fullName,
-        email,
-        phoneNumber,
-        birthDate,
-        image,
-    });
-
-    // Respond with created user details (excluding password)
-    res.status(201).json({
-        id: newUser.id,
-        username: newUser.username,
-        fullName: newUser.fullName,
-    });
 };
 
 // Fetch user details by ID
-const getUserById = async (req, res) => {
-    const user = await findUserById(req.params.id);
+const getUserById = async (req, res, next) => {
+    try {
+        const user = await findUserById(req.params.id);
 
-    // Check if user exists
-    if (!user) {
-        return res.status(404).json({ error: "User not found" });
+        // Check if user exists
+        if (!user) {
+            throw new AppError("User not found", 404);
+        }
+
+        // Construct user object without password
+        const { password, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+    } catch (err) {
+        next(err);
     }
-
-    // Construct user object without password
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
 };
 
 module.exports = {

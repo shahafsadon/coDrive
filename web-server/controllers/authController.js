@@ -1,29 +1,26 @@
 const jwt = require('jsonwebtoken');
 const { findUserByUsername } = require('../models/user.model');
+const { AppError } = require('../middleware/errorMiddleware');
 
 // POST /api/tokens
-const authenticateUser = async (req, res) => {
+const authenticateUser = async (req, res, next) => {
     const { username, password } = req.body;
 
     // Validate input
     if (!username || !password) {
-        return res.status(400).json({
-            error: 'username and password are required',
-        });
+        return next(new AppError('Username and password are required', 400));
     }
 
     // Find user
     const user = await findUserByUsername(username);
     if (!user || user.password !== password) {
-        return res.status(401).json({
-            error: 'Invalid credentials',
-        });
+        return next(new AppError('Invalid credentials', 401));
     }
 
     // CREATE JWT
     const token = jwt.sign(
         { userId: user.id },
-        process.env.JWT_SECRET || 'secret',
+        process.env.JWT_SECRET,
         { expiresIn: '1h' }
     );
 

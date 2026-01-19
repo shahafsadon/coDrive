@@ -79,8 +79,12 @@ async function createNode({ name, type, ownerId, parentId = null, content = null
  */
 async function findNodeGlobal(nodeId) {
     if (!nodeId) return null;
-    return FileSystemNode.findOne({ id: nodeId
-    }).lean();
+    return FileSystemNode.findOne({ id: nodeId }).lean();
+}
+
+async function findNodeGlobalFull(nodeId) {
+    if (!nodeId) return null;
+    return FileSystemNode.findOne({ id: nodeId });
 }
 
 /**
@@ -110,7 +114,7 @@ async function getEffectiveAccess(userId, nodeId) {
 async function getNodeById(userId, nodeId) {
     const access = await getEffectiveAccess(userId, nodeId);
     if (!access) return null;
-    return findNodeGlobal(nodeId);
+    return findNodeGlobalFull(nodeId);
 }
 
 /**
@@ -213,6 +217,7 @@ module.exports = {
     FileSystemNode,
     createNode,
     findNodeGlobal,
+    findNodeGlobalFull,
     getEffectiveAccess,
     getNodeById,
     getChildren,

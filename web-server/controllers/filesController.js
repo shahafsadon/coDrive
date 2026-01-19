@@ -15,8 +15,10 @@ const jwt = require("jsonwebtoken");
 
 // Update file/folder details
 async function updateFile(req, res) {
+    console.log("[PATCH /files/:id] User:", req.user?.id, "File ID:", req.params.id);
     const node = await getNodeById(req.user.id, req.params.id);
     if (!node) {
+        console.log("[PATCH] Node not found:", req.params.id);
         return res.status(404).json({ error: 'Not found' });
     }
 
@@ -94,10 +96,16 @@ async function updateFile(req, res) {
         if (typeof content !== 'string') {
             return res.status(400).json({ error: 'Content must be string' });
         }
+        console.log("[PATCH] Updating file content, length:", content.length);
         node.content = content;
         node.filePath = null;
         node.mimeType = 'text/plain';
     }
+
+    // SAVE CHANGES TO DATABASE
+    console.log("[PATCH] Saving node...");
+    await node.save();
+    console.log("[PATCH] Node saved successfully");
 
     return res.status(204).end();
 }
@@ -167,22 +175,25 @@ async function getFileById(req, res) {
 
     const accessLevel = await getEffectiveAccess(req.user.id, node.id);
 
+    // Convert Mongoose document to plain object
+    const nodeObj = node.toObject ? node.toObject() : { ...node };
+
     if (node.type === 'folder') {
         const children = await getChildren(req.user.id, node.id);
         return res.status(200).json({
-            ...node,
+            ...nodeObj,
             children,
             accessLevel
         });
     }
 
-    return res.status(200).json({ ...node, accessLevel });
+    return res.status(200).json({ ...nodeObj, accessLevel });
 }
 
 // Download file content
 async function downloadFile(req, res) {
     let userId = req.user?.id;
-    const secret = process.env.JWT_SECRET || "secret";
+    const secret = process.env.JWT_SECRET;
 
     if (!userId && req.headers.authorization) {
         try {
@@ -230,6 +241,7 @@ async function deleteFile(req, res) {
     }
 
     node.isTrashed = true;
+    await node.save();
     return res.status(204).end();
 }
 
@@ -267,6 +279,7 @@ async function addPermission(req, res) {
     };
 
     node.permissions.push(permission);
+    await node.save();
     return res.status(201).json(permission);
 }
 
@@ -282,6 +295,7 @@ async function updatePermission(req, res) {
     }
 
     perm.access = req.body.access;
+    await node.save();
     return res.status(204).end();
 }
 
@@ -291,6 +305,7 @@ async function deletePermission(req, res) {
     if (node.ownerId !== req.user.id) return res.status(403).json({ error: 'Forbidden' });
 
     node.permissions = node.permissions.filter(p => p.id !== req.params.pid);
+    await node.save();
     return res.status(204).end();
 }
 
@@ -314,6 +329,7 @@ async function replaceImage(req, res) {
     node.name = req.file.originalname;
     node.content = null;
 
+    await node.save();
     return res.status(200).json(node);
 }
 

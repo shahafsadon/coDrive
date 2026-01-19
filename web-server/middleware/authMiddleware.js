@@ -1,20 +1,24 @@
 const jwt = require("jsonwebtoken");
+const { AppError } = require('./errorMiddleware');
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.header("Authorization");
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res.status(401).json({ error: "User is not authenticated" });
+        console.log("[AUTH] Missing or invalid Authorization header:", authHeader);
+        return next(new AppError("User is not authenticated", 401));
     }
 
     const token = authHeader.split(" ")[1];
 
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET || "secret");
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
         req.user = { id: payload.userId };
+        console.log("[AUTH] Token verified for user:", payload.userId);
         next();
     } catch (err) {
-        return res.status(401).json({ error: "Invalid token" });
+        console.log("[AUTH] Token verification failed:", err.message);
+        return next(err);
     }
 };
 
