@@ -39,7 +39,7 @@ export default function LoginScreen() {
             setLoading(true);
             logger.debug('Auth', 'Attempting login', { username });
 
-            // Call API endpoint
+            // Call API endpoint to authenticate
             const response = await api.login(username, password);
 
             if (response.error) {
