@@ -1,6 +1,7 @@
-import { View, Text, Alert, Image, ImageBackground } from 'react-native';
+import { View, Text, Alert, Image, ImageBackground, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { api } from '@/services/api';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { KeyboardAvoidingWrapper } from '@/components/KeyboardAvoidingWrapper';
@@ -11,6 +12,7 @@ import { router } from 'expo-router';
 
 export default function LoginScreen() {
     const { login } = useAuth();
+    const { isDarkMode, toggleTheme, colors } = useTheme();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -92,6 +94,24 @@ export default function LoginScreen() {
             style={{ flex: 1 }}
             resizeMode="cover"
         >
+            {isDarkMode && (
+                <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.7)' }} />
+            )}
+            {/* Theme Toggle Button */}
+            <TouchableOpacity
+                style={{
+                    position: 'absolute',
+                    top: 50,
+                    right: 20,
+                    zIndex: 100,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderRadius: 24,
+                    padding: 10,
+                }}
+                onPress={toggleTheme}
+            >
+                <Text style={{ fontSize: 24 }}>{isDarkMode ? '🌙' : '☀️'}</Text>
+            </TouchableOpacity>
             <ScreenWrapper>
                 <KeyboardAvoidingWrapper>
                     <View style={{ flex: 1, justifyContent: 'center', paddingVertical: Spacing.sm }}>

@@ -168,8 +168,10 @@ async function getRootNodes(userId) {
  */
 async function searchNodes(userId, query) {
     const q = query.toLowerCase();
-    const nodes = await FileSystemNode.find({ isTrashed:
-            false }).lean();
+    const nodes = await FileSystemNode.find({ 
+        ownerId: userId,
+        isTrashed: false 
+    }).lean();
 
     return nodes
         .filter(node => {

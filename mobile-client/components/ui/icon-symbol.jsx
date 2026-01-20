@@ -38,6 +38,8 @@ export function IconSymbol({
     'folder.fill': 'folder',
     'star.fill': 'star',
     'trash.fill': 'trash-can',
+    'house': 'home-outline',
+    'person.2': 'account-multiple-outline',
   };
 
   const materialIconName = materialIconMap[name] || name;

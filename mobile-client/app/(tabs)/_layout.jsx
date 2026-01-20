@@ -34,16 +34,18 @@ export default function TabLayout() {
                 tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
             }}
         >
+            {/* Home tab - leftmost (hollow house icon) */}
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'My Drive',
+                    title: 'Home',
                     tabBarIcon: ({ color }) => (
-                        <IconSymbol size={26} name="folder.fill" color={color} />
+                        <IconSymbol size={26} name="house" color={color} />
                     ),
                 }}
             />
 
+            {/* Starred tab (keep current) */}
             <Tabs.Screen
                 name="starred"
                 options={{
@@ -54,13 +56,41 @@ export default function TabLayout() {
                 }}
             />
 
+            {/* Shared tab (person with shadow) */}
+            <Tabs.Screen
+                name="shared"
+                options={{
+                    title: 'Shared',
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={26} name="person.2" color={color} />
+                    ),
+                }}
+            />
+
+            {/* Files tab - rightmost (was My Drive, renamed to Files) */}
+            <Tabs.Screen
+                name="files"
+                options={{
+                    title: 'Files',
+                    tabBarIcon: ({ color }) => (
+                        <IconSymbol size={26} name="folder.fill" color={color} />
+                    ),
+                }}
+            />
+
+            {/* Hide trash from bottom tabs - can access via settings/menu */}
             <Tabs.Screen
                 name="trash"
                 options={{
-                    title: 'Trash',
-                    tabBarIcon: ({ color }) => (
-                        <IconSymbol size={26} name="trash.fill" color={color} />
-                    ),
+                    href: null, // Hide from tabs
+                }}
+            />
+
+            {/* Hide drive.jsx from tabs - it's just a component */}
+            <Tabs.Screen
+                name="drive"
+                options={{
+                    href: null, // Hide from tabs
                 }}
             />
         </Tabs>

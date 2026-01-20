@@ -1,9 +1,10 @@
-import { View, Text, Alert, Image, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, Alert, Image, ScrollView, TouchableOpacity, ImageBackground, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import { api } from '@/services/api';
+import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
 import { KeyboardAvoidingWrapper } from '@/components/KeyboardAvoidingWrapper';
 import { FormInput, PrimaryButton, TextButton, Section } from '@/components/FormComponents';
@@ -12,6 +13,7 @@ import { logger } from '@/services/logger';
 import * as SecureStore from 'expo-secure-store';
 
 export default function RegisterScreen() {
+    const { isDarkMode, toggleTheme } = useTheme();
     // Form State
     const [formData, setFormData] = useState({
         username: '',
@@ -236,6 +238,24 @@ export default function RegisterScreen() {
             style={{ flex: 1 }}
             resizeMode="cover"
         >
+            {isDarkMode && (
+                <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.7)' }} />
+            )}
+            {/* Theme Toggle Button */}
+            <TouchableOpacity
+                style={{
+                    position: 'absolute',
+                    top: 50,
+                    right: 20,
+                    zIndex: 100,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    borderRadius: 24,
+                    padding: 10,
+                }}
+                onPress={toggleTheme}
+            >
+                <Text style={{ fontSize: 24 }}>{isDarkMode ? '🌙' : '☀️'}</Text>
+            </TouchableOpacity>
             <ScreenWrapper>
                 <KeyboardAvoidingWrapper>
                     <View style={{ paddingVertical: Spacing.md }}>
