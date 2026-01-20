@@ -1,9 +1,11 @@
-import { View, Text, Alert, Image, ScrollView } from 'react-native';
+import { View, Text, Alert, Image, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 import { api } from '@/services/api';
 import { ScreenWrapper } from '@/components/ScreenWrapper';
+import { KeyboardAvoidingWrapper } from '@/components/KeyboardAvoidingWrapper';
 import { FormInput, PrimaryButton, TextButton, Section } from '@/components/FormComponents';
 import { GlobalStyles, Spacing, AppColors, ImageStyles, Typography } from '@/constants/appStyles';
 import { logger } from '@/services/logger';
@@ -20,6 +22,8 @@ export default function RegisterScreen() {
         phoneNumber: '',
         birthDate: '',
     });
+
+    const [countryCode, setCountryCode] = useState('+972');
 
     const [selectedImage, setSelectedImage] = useState(null);
     const [errors, setErrors] = useState({});
@@ -79,7 +83,7 @@ export default function RegisterScreen() {
 
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
+                allowsEditing: false,
                 aspect: [1, 1],
                 quality: 0.8,
             });
@@ -108,7 +112,7 @@ export default function RegisterScreen() {
             }
 
             const result = await ImagePicker.launchCameraAsync({
-                allowsEditing: true,
+                allowsEditing: false,
                 aspect: [1, 1],
                 quality: 0.8,
             });
@@ -127,11 +131,11 @@ export default function RegisterScreen() {
         }
     };
 
-    // Validation function (from web-client)
+    // Validation function - check required fields first, then validate format
     const validate = () => {
         const newErrors = {};
 
-        // Check mandatory fields
+        // Step 1: Check all required fields first
         if (!formData.username) {
             newErrors.username = 'Username is required';
         }
@@ -142,7 +146,19 @@ export default function RegisterScreen() {
 
         if (!formData.password) {
             newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
+        }
+
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        }
+
+        // If any required field is missing, return immediately
+        if (Object.keys(newErrors).length > 0) {
+            return newErrors;
+        }
+
+        // Step 2: Validate password format
+        if (formData.password.length < 8) {
             newErrors.password = 'Password must be at least 8 characters long';
         } else if (!/[a-zA-Z]/.test(formData.password)) {
             newErrors.password = 'Password must contain at least one English letter';
@@ -150,13 +166,12 @@ export default function RegisterScreen() {
             newErrors.password = 'Password must contain at least one number';
         }
 
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Please confirm your password';
-        } else if (formData.password !== formData.confirmPassword) {
+        // Step 3: Check if passwords match
+        if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
 
-        // Validate email if provided
+        // Step 4: Validate email if provided
         if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Invalid email address';
         }
@@ -169,8 +184,13 @@ export default function RegisterScreen() {
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
-            setGeneralError('Please fix all errors before registering');
-            logger.warn('Register', 'Validation failed');
+            
+            // Get the first error message to display
+            const firstErrorKey = Object.keys(validationErrors)[0];
+            const firstErrorMessage = validationErrors[firstErrorKey];
+            setGeneralError(firstErrorMessage);
+            
+            logger.warn('Register', 'Validation failed', validationErrors);
             return;
         }
 
@@ -179,11 +199,14 @@ export default function RegisterScreen() {
             setGeneralError(null);
             logger.debug('Register', 'Starting registration');
 
+            // Combine phone with country code
+            const fullPhoneNumber = formData.phoneNumber ? `${countryCode}${formData.phoneNumber}` : '';
+
             // Remove confirmPassword from API call
-            const { confirmPassword, ...apiData } = formData;
+            const { confirmPassword, phoneNumber, ...apiData } = formData;
 
             // Call API with or without image
-            const response = await api.register(apiData, selectedImage);
+            const response = await api.register({ ...apiData, phoneNumber: fullPhoneNumber }, selectedImage);
 
             if (response.error) {
                 logger.error('Register', 'Registration failed', response.error);
@@ -208,49 +231,67 @@ export default function RegisterScreen() {
     };
 
     return (
-        <ScreenWrapper scrollable>
-            <View style={{ paddingVertical: Spacing.lg }}>
-                <Section title="Create Account">
-                    {/* Profile Image Section */}
-                    <View style={[GlobalStyles.flexCenter, { marginBottom: Spacing.lg }]}>
-                        {selectedImage ? (
-                            <Image
-                                source={{ uri: selectedImage.uri }}
-                                style={ImageStyles.profileImage}
-                            />
-                        ) : (
-                            <View style={[ImageStyles.profileImage, GlobalStyles.flexCenter, { borderWidth: 2, borderColor: AppColors.border, borderStyle: 'dashed' }]}>
-                                <Text style={{ color: AppColors.textSecondary, fontSize: 36 }}>📷</Text>
-                            </View>
-                        )}
-                        <View style={{ gap: Spacing.sm, marginTop: Spacing.md, width: '100%' }}>
-                            <PrimaryButton
-                                title={selectedImage ? 'Change Photo' : 'Pick from Gallery'}
-                                onPress={handlePickImage}
-                                disabled={loading}
-                            />
-                            <PrimaryButton
-                                title="Take Photo"
-                                onPress={handleCameraCapture}
-                                disabled={loading}
-                            />
-                            {selectedImage && (
-                                <PrimaryButton
-                                    title="Remove Photo"
-                                    onPress={() => setSelectedImage(null)}
-                                    disabled={loading}
-                                    style={{ backgroundColor: AppColors.textSecondary }}
-                                />
-                            )}
-                        </View>
+        <ImageBackground
+            source={require('@/assets/images/background.jpg')}
+            style={{ flex: 1 }}
+            resizeMode="cover"
+        >
+            <ScreenWrapper>
+                <KeyboardAvoidingWrapper>
+                    <View style={{ paddingVertical: Spacing.md }}>
+                    {/* Logo and Header */}
+                    <View style={{ alignItems: 'center', marginBottom: Spacing.md }}>
+                        <Image
+                            source={require('@/assets/images/logo.png')}
+                            style={{ width: 400, height: 110, resizeMode: 'contain' }}
+                        />
+                        <Text style={[Typography.h2, { color: AppColors.primary, marginTop: Spacing.xs, fontSize: 26, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 }]}>
+                            Create Account
+                        </Text>
                     </View>
 
-                    {/* General Error Message */}
-                    {generalError && (
-                        <View style={{ backgroundColor: AppColors.errorBackground, padding: 12, borderRadius: 8, marginBottom: 16, borderLeftWidth: 4, borderLeftColor: AppColors.error }}>
-                            <Text style={[Typography.bodySmall, { color: AppColors.error }]}>{generalError}</Text>
-                        </View>
-                    )}
+
+                    <Section>
+                            {/* Profile Image Section - Original with buttons */}
+                            <View style={[GlobalStyles.flexCenter, { marginBottom: Spacing.lg }]}>
+                                {selectedImage ? (
+                                    <Image
+                                        source={{ uri: selectedImage.uri }}
+                                        style={ImageStyles.profileImage}
+                                    />
+                                ) : (
+                                    <View style={[ImageStyles.profileImage, GlobalStyles.flexCenter, { borderWidth: 2, borderColor: AppColors.border, borderStyle: 'dashed' }]}>
+                                        <Text style={{ color: AppColors.textSecondary, fontSize: 36 }}>📷</Text>
+                                    </View>
+                                )}
+                                <View style={{ gap: Spacing.sm, marginTop: Spacing.md, width: '100%' }}>
+                                    <PrimaryButton
+                                        title={selectedImage ? 'Change Photo' : 'Pick from Gallery'}
+                                        onPress={handlePickImage}
+                                        disabled={loading}
+                                    />
+                                    <PrimaryButton
+                                        title="Take Photo"
+                                        onPress={handleCameraCapture}
+                                        disabled={loading}
+                                    />
+                                    {selectedImage && (
+                                        <PrimaryButton
+                                            title="Remove Photo"
+                                            onPress={() => setSelectedImage(null)}
+                                            disabled={loading}
+                                            style={{ backgroundColor: AppColors.textSecondary }}
+                                        />
+                                    )}
+                                </View>
+                            </View>
+
+                            {/* General Error Message */}
+                            {generalError && (
+                                <View style={{ backgroundColor: AppColors.errorBackground, padding: 10, borderRadius: 6, marginBottom: 10 }}>
+                                    <Text style={[Typography.bodySmall, { color: AppColors.error, textAlign: 'center' }]}>{generalError}</Text>
+                                </View>
+                            )}
 
                     {/* Username */}
                     <FormInput
@@ -284,16 +325,36 @@ export default function RegisterScreen() {
                         keyboardType="email-address"
                     />
 
-                    {/* Phone Number */}
-                    <FormInput
-                        label="Phone Number (Optional)"
-                        placeholder="+972 5X-XXX-XXXX"
-                        value={formData.phoneNumber}
-                        onChangeText={value => handleFieldChange('phoneNumber', value)}
-                        error={errors.phoneNumber}
-                        editable={!loading}
-                        keyboardType="phone-pad"
-                    />
+                    {/* Phone Number with Country Code */}
+                    <View style={{ marginBottom: Spacing.md }}>
+                        <Text style={GlobalStyles.label}>Phone Number (Optional)</Text>
+                        <View style={{ flexDirection: 'row', gap: 5 }}>
+                            <View style={{ width: 100 }}>
+                                <Picker
+                                    selectedValue={countryCode}
+                                    onValueChange={(itemValue) => setCountryCode(itemValue)}
+                                    style={[GlobalStyles.inputBase, { height: 44 }]}
+                                    enabled={!loading}
+                                >
+                                    <Picker.Item label="🇮🇱 +972" value="+972" />
+                                    <Picker.Item label="🇺🇸 +1" value="+1" />
+                                    <Picker.Item label="🇬🇧 +44" value="+44" />
+                                    <Picker.Item label="🇫🇷 +33" value="+33" />
+                                    <Picker.Item label="🇩🇪 +49" value="+49" />
+                                </Picker>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <FormInput
+                                    placeholder="5X-XXX-XXXX"
+                                    value={formData.phoneNumber}
+                                    onChangeText={value => handleFieldChange('phoneNumber', value)}
+                                    error={errors.phoneNumber}
+                                    editable={!loading}
+                                    keyboardType="phone-pad"
+                                />
+                            </View>
+                        </View>
+                    </View>
 
                     {/* Birth Date */}
                     <FormInput
@@ -305,27 +366,31 @@ export default function RegisterScreen() {
                         editable={!loading}
                     />
 
-                    {/* Password */}
-                    <FormInput
-                        label="Password *"
-                        placeholder="Min 8 chars, letter & number"
-                        value={formData.password}
-                        onChangeText={value => handleFieldChange('password', value)}
-                        error={errors.password}
-                        editable={!loading}
-                        secureTextEntry
-                    />
-
-                    {/* Confirm Password */}
-                    <FormInput
-                        label="Confirm Password *"
-                        placeholder="Repeat password"
-                        value={formData.confirmPassword}
-                        onChangeText={value => handleFieldChange('confirmPassword', value)}
-                        error={errors.confirmPassword}
-                        editable={!loading}
-                        secureTextEntry
-                    />
+                    {/* Passwords in Row */}
+                    <View style={{ flexDirection: 'row', gap: 10, marginBottom: Spacing.md }}>
+                        <View style={{ flex: 1 }}>
+                            <FormInput
+                                label="Password *"
+                                placeholder="******"
+                                value={formData.password}
+                                onChangeText={value => handleFieldChange('password', value)}
+                                error={errors.password}
+                                editable={!loading}
+                                secureTextEntry
+                            />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <FormInput
+                                label="Confirm *"
+                                placeholder="******"
+                                value={formData.confirmPassword}
+                                onChangeText={value => handleFieldChange('confirmPassword', value)}
+                                error={errors.confirmPassword}
+                                editable={!loading}
+                                secureTextEntry
+                            />
+                        </View>
+                    </View>
 
                     {/* Register Button */}
                     <PrimaryButton
@@ -336,15 +401,18 @@ export default function RegisterScreen() {
                     />
 
                     {/* Login Link */}
-                    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: Spacing.lg }}>
-                        <Text style={Typography.bodySmall}>Already have an account?</Text>
+                    <View style={{ alignItems: 'center', marginTop: Spacing.md, gap: 5 }}>
+                        <Text style={[Typography.bodySmall, { color: AppColors.textSecondary }]}>Already have an account?</Text>
                         <TextButton
-                            title="Login"
-                            onPress={() => router.replace('/(auth)/login')}
+                            title="Log in"
+                            onPress={() => router.push('/(auth)/login')}
+                            style={{ fontSize: 17, fontWeight: '700' }}
                         />
                     </View>
-                </Section>
-            </View>
-        </ScreenWrapper>
+                        </Section>
+                    </View>
+                </KeyboardAvoidingWrapper>
+            </ScreenWrapper>
+        </ImageBackground>
     );
 }

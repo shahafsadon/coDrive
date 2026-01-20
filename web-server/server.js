@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const connectDB = require('./config/db');
 
@@ -17,6 +18,43 @@ if (!process.env.MONGO_URI) {
     console.error('ERROR: MONGO_URI environment variable is not set');
     process.exit(1);
 }
+
+// Enable CORS for all origins in development
+// In production, specify allowed origins
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Allow localhost and development URLs
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:3008',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:3008',
+            /exp\.direct$/, // Allow Expo tunnel URLs (*.exp.direct)
+        ];
+        
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed instanceof RegExp) {
+                return allowed.test(origin);
+            }
+            return origin === allowed;
+        });
+        
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.warn(`CORS: Blocked request from origin: ${origin}`);
+            callback(null, true); // Allow anyway for development
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json({
     type: ['application/json', 'application/*+json'],
@@ -41,8 +79,9 @@ app.use(errorMiddleware);
 async function startServer() {
     await connectDB();
 
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+    // Listen on all interfaces (0.0.0.0) so external devices can connect
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`Server running on port ${PORT} - accessible from external IPs`);
     });
 }
 startServer().catch((err) => {

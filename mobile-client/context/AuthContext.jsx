@@ -1,8 +1,54 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { logger } from '@/services/logger';
 
 const AuthContext = createContext(undefined);
+
+/**
+ * Create storage wrapper with unified async interface
+ */
+const createStorageWrapper = () => {
+    // Use AsyncStorage for web and as fallback for native
+    if (Platform.OS === 'web') {
+        return {
+            getItemAsync: AsyncStorage.getItem,
+            setItemAsync: AsyncStorage.setItem,
+            deleteItemAsync: AsyncStorage.removeItem,
+        };
+    }
+    
+    // Try SecureStore for native platforms, fallback to AsyncStorage
+    return {
+        getItemAsync: async (key) => {
+            try {
+                return await SecureStore.getItemAsync(key);
+            } catch (err) {
+                logger.warn('Auth', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.getItem(key);
+            }
+        },
+        setItemAsync: async (key, value) => {
+            try {
+                return await SecureStore.setItemAsync(key, value);
+            } catch (err) {
+                logger.warn('Auth', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.setItem(key, value);
+            }
+        },
+        deleteItemAsync: async (key) => {
+            try {
+                return await SecureStore.deleteItemAsync(key);
+            } catch (err) {
+                logger.warn('Auth', 'SecureStore unavailable, falling back to AsyncStorage', err);
+                return await AsyncStorage.removeItem(key);
+            }
+        },
+    };
+};
+
+const storage = createStorageWrapper();
 
 export function AuthProvider({ children }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,15 +60,15 @@ export function AuthProvider({ children }) {
 
         const loadToken = async () => {
             try {
-                const token = await SecureStore.getItemAsync('token');
-                const userId = await SecureStore.getItemAsync('userId');
-                const username = await SecureStore.getItemAsync('username');
+                const token = await storage.getItemAsync('token');
+                const userId = await storage.getItemAsync('userId');
+                const username = await storage.getItemAsync('username');
 
                 if (mounted) {
                     if (token) {
                         setIsAuthenticated(true);
                         setUser({ token, userId, username });
-                        logger.debug('Auth', 'Token loaded from secure store');
+                        logger.debug('Auth', 'Token loaded from storage');
                     } else {
                         setIsAuthenticated(false);
                         setUser(null);
@@ -50,12 +96,12 @@ export function AuthProvider({ children }) {
 
     const login = async (token, userId = null, username = null) => {
         try {
-            await SecureStore.setItemAsync('token', token);
+            await storage.setItemAsync('token', token);
             if (userId) {
-                await SecureStore.setItemAsync('userId', userId.toString());
+                await storage.setItemAsync('userId', userId.toString());
             }
             if (username) {
-                await SecureStore.setItemAsync('username', username);
+                await storage.setItemAsync('username', username);
             }
             
             setIsAuthenticated(true);
@@ -69,9 +115,9 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         try {
-            await SecureStore.deleteItemAsync('token');
-            await SecureStore.deleteItemAsync('userId');
-            await SecureStore.deleteItemAsync('username');
+            await storage.deleteItemAsync('token');
+            await storage.deleteItemAsync('userId');
+            await storage.deleteItemAsync('username');
             
             setIsAuthenticated(false);
             setUser(null);
