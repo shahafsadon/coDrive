@@ -139,6 +139,127 @@ async function fetchWithAuth(endpoint, options = {}) {
  */
 export const api = {
     /**
+     * Generic GET request
+     * @param {string} endpoint
+     * @returns {Promise<{data, error}>}
+     */
+    get: async (endpoint) => {
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'GET',
+            });
+
+            return {
+                data: response,
+                error: null,
+            };
+        } catch (err) {
+            return {
+                data: null,
+                error: err.message || 'GET request failed',
+            };
+        }
+    },
+
+    /**
+     * Generic POST request
+     * @param {string} endpoint
+     * @param {Object} body
+     * @returns {Promise<{data, error}>}
+     */
+    post: async (endpoint, body) => {
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'POST',
+                body: JSON.stringify(body),
+            });
+
+            return {
+                data: response,
+                error: null,
+            };
+        } catch (err) {
+            return {
+                data: null,
+                error: err.message || 'POST request failed',
+            };
+        }
+    },
+
+    /**
+     * Generic POST request with FormData
+     * @param {string} endpoint
+     * @param {FormData} formData
+     * @returns {Promise<{data, error}>}
+     */
+    postFormData: async (endpoint, formData) => {
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'POST',
+                body: formData,
+            });
+
+            return {
+                data: response,
+                error: null,
+            };
+        } catch (err) {
+            return {
+                data: null,
+                error: err.message || 'POST request failed',
+            };
+        }
+    },
+
+    /**
+     * Generic PATCH request
+     * @param {string} endpoint
+     * @param {Object} body
+     * @returns {Promise<{data, error}>}
+     */
+    patch: async (endpoint, body) => {
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'PATCH',
+                body: JSON.stringify(body),
+            });
+
+            return {
+                data: response,
+                error: null,
+            };
+        } catch (err) {
+            return {
+                data: null,
+                error: err.message || 'PATCH request failed',
+            };
+        }
+    },
+
+    /**
+     * Generic DELETE request
+     * @param {string} endpoint
+     * @returns {Promise<{data, error}>}
+     */
+    delete: async (endpoint) => {
+        try {
+            const response = await fetchWithAuth(endpoint, {
+                method: 'DELETE',
+            });
+
+            return {
+                data: response,
+                error: null,
+            };
+        } catch (err) {
+            return {
+                data: null,
+                error: err.message || 'DELETE request failed',
+            };
+        }
+    },
+
+    /**
      * Login user
      * @param {string} username
      * @param {string} password

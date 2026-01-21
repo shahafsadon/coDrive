@@ -6,10 +6,8 @@
 import { StyleSheet, Platform } from 'react-native';
 import { Colors } from './theme';
 
-const theme = 'light'; // Can be 'light' or 'dark'
-
-// 🎨 Core Colors (Google-style)
-export const AppColors = {
+// Core Colors - Light Mode
+const LightColors = {
   primary: '#1a73e8',
   primaryDark: '#1557b0',
   primaryLight: '#4285f4',
@@ -27,7 +25,32 @@ export const AppColors = {
   black: '#000000',
 };
 
-// 📏 Spacing System (8px base)
+// Core Colors - Dark Mode
+const DarkColors = {
+  primary: '#8ab4f8',
+  primaryDark: '#669df6',
+  primaryLight: '#aecbfa',
+  background: '#202124',
+  backgroundSecondary: '#292a2d',
+  text: '#e8eaed',
+  textSecondary: '#9aa0a6',
+  error: '#f28b82',
+  errorBackground: '#5c2925',
+  success: '#81c995',
+  successBackground: '#1e4620',
+  border: '#3c4043',
+  disabled: '#5f6368',
+  white: '#ffffff',
+  black: '#000000',
+};
+
+// Default to light mode
+export const AppColors = LightColors;
+
+// Function to get colors based on theme
+export const getColors = (isDark = false) => isDark ? DarkColors : LightColors;
+
+// Spacing System (8px base)
 export const Spacing = {
   xs: 4,
   sm: 8,
@@ -37,7 +60,7 @@ export const Spacing = {
   xxl: 48,
 };
 
-// 🔤 Typography
+// Typography
 export const Typography = StyleSheet.create({
   h1: {
     fontSize: 32,
@@ -79,7 +102,7 @@ export const Typography = StyleSheet.create({
   },
 });
 
-// 🎯 Reusable Component Styles
+// Reusable Component Styles
 export const GlobalStyles = StyleSheet.create({
   // Containers
   screenContainer: {
@@ -208,7 +231,7 @@ export const GlobalStyles = StyleSheet.create({
   },
 });
 
-// 🖼️ Image Styles
+// Image Styles
 export const ImageStyles = StyleSheet.create({
   profileImage: {
     width: 100,
