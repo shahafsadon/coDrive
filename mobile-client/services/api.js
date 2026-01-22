@@ -18,8 +18,13 @@ const getAPIBaseURL = () => {
         return 'http://localhost:3000/api';
     }
     
-    // For native platforms on LAN, use the computer's IP
-    return 'http://172.18.52.102:3000/api';
+    // For Android emulator, use special IP to reach host machine
+    if (Platform.OS === 'android') {
+        return 'http://10.0.2.2:3000/api';
+    }
+    
+    // For iOS simulator
+    return 'http://localhost:3000/api';
 };
 
 const API_BASE_URL = getAPIBaseURL();

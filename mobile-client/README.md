@@ -1,39 +1,95 @@
-# Welcome to your Expo app 👋
+# CoDrive Mobile Client 📱
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+React Native mobile application for CoDrive using Expo.
 
-## Get started
+## Prerequisites
+- Node.js (v18+)
+- npm or yarn
+- Expo Go app on your phone/emulator
 
-1. Install dependencies
+## First Time Setup (IMPORTANT!)
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
+### 1. Install Dependencies
 ```bash
-npm run reset-project
+cd mobile-client
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Configure Environment ⚠️
+**This is REQUIRED before running!**
+
+```bash
+# Copy the example env file
+cp .env.example .env
+```
+
+Edit `.env` and set your API URL based on your device:
+- **Android Emulator:** `http://10.0.2.2:3000/api`
+- **iOS Simulator:** `http://localhost:3000/api`
+- **Physical Device:** `http://YOUR_COMPUTER_IP:3000/api`
+
+### 3. Start Development Server
+```bash
+# Recommended: Clear cache on first run
+npx expo start --tunnel -c
+```
+
+## 🚨 Common Issues & Solutions
+
+### "Network request failed" Error
+**Causes:**
+- Web server not running
+- Wrong API URL in `.env`
+- Missing `.env` file
+
+**Solutions:**
+1. Start backend: `cd .. && docker compose up -d`
+2. Verify `.env` exists and has correct URL
+3. For Android Emulator, MUST use `10.0.2.2` not `localhost`
+
+### After `git pull` or `git merge`
+**ALWAYS run this after pulling code:**
+```bash
+npm install
+```
+
+This updates dependencies if `package.json` changed.
+
+### Missing Module Errors
+If you see "Cannot find module" errors:
+```bash
+rm -rf node_modules
+rm package-lock.json
+npm install
+npx expo start -c
+```
+
+### For Team Members Cloning Repo
+1. Clone repo
+2. Run `npm install` in mobile-client folder
+3. **Create `.env` from `.env.example`**
+4. Update API URL in `.env` for your device
+5. Start with `npx expo start --tunnel -c`
+
+## 📂 Important Files (Git Behavior)
+
+### ✅ Committed to Git:
+- `package.json` - Dependencies list
+- `package-lock.json` - Exact versions
+- `.env.example` - Template for configuration
+- Source code (`app/`, `components/`, etc.)
+
+### ❌ NOT in Git (in `.gitignore`):
+- `.env` - Your personal config (contains local URLs)
+- `node_modules/` - Dependencies (too large, regenerate with `npm install`)
+- `.expo/` - Build cache
+
+## 🔄 Team Workflow
+
+1. **Before coding:** `git pull` then `npm install`
+2. **Adding packages:** Commit both `package.json` AND `package-lock.json`
+3. **Sharing config:** Update `.env.example`, not `.env`
+4. **After merge conflicts:** Run `npm install` to sync dependencies
 
 ## Learn more
 
