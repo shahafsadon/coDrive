@@ -22,10 +22,13 @@ export function ScreenWrapper({
   const Component = scrollable ? ScrollView : View;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor || 'transparent' }}>
+      <SafeAreaView
+          style={{ flex: 1, backgroundColor: backgroundColor || 'transparent' }}
+          edges={['top']}>
       <Component
         style={[containerStyle, { backgroundColor: 'transparent' }]}
         contentContainerStyle={scrollable ? contentContainerStyle : undefined}
+        keyboardShouldPersistTaps="handled"
       >
         {loading ? (
           <View style={[{ flex: 1 }, GlobalStyles.flexCenter]}>

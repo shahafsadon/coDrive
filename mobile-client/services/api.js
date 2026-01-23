@@ -7,25 +7,20 @@ import { Platform } from 'react-native';
  * Get API base URL based on environment and platform
  */
 const getAPIBaseURL = () => {
-    // Check for environment variable first
+    // ENV
     if (process.env.EXPO_PUBLIC_API_URL) {
         logger.debug('API', `Using API URL from env: ${process.env.EXPO_PUBLIC_API_URL}`);
         return process.env.EXPO_PUBLIC_API_URL;
     }
 
-    // Fallback: Smart defaults based on platform
     if (Platform.OS === 'web') {
         return 'http://localhost:3000/api';
     }
-    
-    // For Android emulator, use special IP to reach host machine
-    if (Platform.OS === 'android') {
-        return 'http://10.0.2.2:3000/api';
-    }
-    
-    // For iOS simulator
-    return 'http://localhost:3000/api';
+
+    //  Expo Go
+    return 'http://192.168.1.31:3000/api';
 };
+
 
 const API_BASE_URL = getAPIBaseURL();
 
@@ -121,12 +116,19 @@ async function fetchWithAuth(endpoint, options = {}) {
         // Check if response is OK
         if (!response.ok) {
             let errorMessage = data?.error || data?.message || `HTTP ${response.status}`;
-            
+
             // User-friendly error messages
             if (errorMessage === 'Invalid credentials') {
                 errorMessage = 'Incorrect username or password';
             }
-            
+
+            // Token expired / Unauthorized → clear stored auth
+            if (response.status === 401) {
+                await storage.deleteItemAsync('token');
+                await storage.deleteItemAsync('userId');
+                await storage.deleteItemAsync('username');
+            }
+
             logger.error('API', `HTTP ${response.status}: ${errorMessage}`);
             throw new Error(errorMessage);
         }

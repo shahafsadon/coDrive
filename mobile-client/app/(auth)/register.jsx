@@ -186,12 +186,11 @@ export default function RegisterScreen() {
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
-            
-            // Get the first error message to display
+
             const firstErrorKey = Object.keys(validationErrors)[0];
             const firstErrorMessage = validationErrors[firstErrorKey];
             setGeneralError(firstErrorMessage);
-            
+
             logger.warn('Register', 'Validation failed', validationErrors);
             return;
         }
@@ -202,14 +201,19 @@ export default function RegisterScreen() {
             logger.debug('Register', 'Starting registration');
 
             // Combine phone with country code
-            const fullPhoneNumber = formData.phoneNumber ? `${countryCode}${formData.phoneNumber}` : '';
+            const fullPhoneNumber = formData.phoneNumber
+                ? `${countryCode}${formData.phoneNumber}`
+                : '';
 
-            // Remove confirmPassword from API call
+            // Remove fields not sent to API
             const { confirmPassword, phoneNumber, ...apiData } = formData;
 
-            // Call API with or without image
-            const response = await api.register({ ...apiData, phoneNumber: fullPhoneNumber }, selectedImage);
+            const response = await api.register(
+                { ...apiData, phoneNumber: fullPhoneNumber },
+                selectedImage
+            );
 
+            // ❌ API-level error
             if (response.error) {
                 logger.error('Register', 'Registration failed', response.error);
                 setGeneralError(response.error);
@@ -217,11 +221,21 @@ export default function RegisterScreen() {
                 return;
             }
 
-            logger.info('Register', 'Registration successful');
-            Alert.alert('Success', 'User registered successfully');
+            // ✅ SUCCESS: backend returns created user object
+            if (response.data?.id) {
+                logger.info('Register', 'Registration successful', response.data);
+                Alert.alert('Success', 'User registered successfully');
 
-            // Navigate to login
-            router.replace('/(auth)/login');
+                // Register does NOT log in – redirect to login
+                router.replace('/(auth)/login');
+                return;
+            }
+
+
+
+            // ❌ Unexpected response shape
+            logger.error('Register', 'Unexpected registration response', response);
+            Alert.alert('Error', 'Registration failed unexpectedly');
         } catch (err) {
             logger.error('Register', 'Unexpected error', err);
             const errorMsg = err.message || 'Registration failed';
@@ -231,6 +245,7 @@ export default function RegisterScreen() {
             setLoading(false);
         }
     };
+
 
     return (
         <ImageBackground

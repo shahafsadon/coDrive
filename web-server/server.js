@@ -27,14 +27,11 @@ const corsOptions = {
         if (!origin) return callback(null, true);
         
         // Allow localhost and development URLs
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:3008',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:3008',
-            /exp\.direct$/, // Allow Expo tunnel URLs (*.exp.direct)
-        ];
-        
+        const corsOptions = {
+            origin: true,
+            credentials: true,
+        };
+
         const isAllowed = allowedOrigins.some(allowed => {
             if (allowed instanceof RegExp) {
                 return allowed.test(origin);

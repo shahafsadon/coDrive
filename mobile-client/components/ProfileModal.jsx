@@ -6,9 +6,11 @@
 
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function ProfileModal({ visible, user, onClose }) {
     if (!user) return null;
+    const insets = useSafeAreaInsets();
 
     return (
         <Modal
@@ -18,8 +20,15 @@ export function ProfileModal({ visible, user, onClose }) {
         >
             <View style={styles.container}>
                 {/* Header with Done button */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Profile</Text>
+                <View
+                    style={[
+                        styles.header,
+                        {
+                            paddingTop: insets.top,
+                        },
+                    ]}
+                >
+                <Text style={styles.headerTitle}>Profile</Text>
                     <TouchableOpacity onPress={onClose} style={styles.doneButton}>
                         <Text style={styles.doneText}>Done</Text>
                     </TouchableOpacity>

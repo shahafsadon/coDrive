@@ -22,6 +22,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 import { updateFile, replaceImage } from '@/services/filesService';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function FileViewer({ visible, file, onClose, onRefresh }) {
     const [content, setContent] = useState('');
@@ -31,6 +32,7 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     const canEdit = file?.accessLevel === 'write';
     const isImage = file?.mimeType?.startsWith('image/');
     const isTextFile = file?.mimeType === 'text/plain' || !file?.filePath;
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         if (file) {
@@ -113,8 +115,15 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
         >
             <View style={styles.container}>
                 {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.headerContent}>
+                <View
+                    style={[
+                        styles.header,
+                        {
+                            paddingTop: insets.top,
+                        },
+                    ]}
+                >
+                <View style={styles.headerContent}>
                         <Text style={styles.fileName} numberOfLines={1}>
                             {file.name}
                         </Text>

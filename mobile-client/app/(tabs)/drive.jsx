@@ -13,7 +13,8 @@ import {
     Alert,
     ImageBackground,
     TouchableOpacity,
-    Text 
+    Text,
+    Image,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -50,7 +51,7 @@ import {
 import { logger } from '@/services/logger';
 
 export default function DriveScreen({ mode = 'drive' }) {
-    const { logout, user } = useAuth();
+    const { logout, user, isAuthenticated, loading: authLoading } = useAuth();
     const { isDarkMode, toggleTheme, colors } = useTheme();
     
     // State
@@ -80,6 +81,9 @@ export default function DriveScreen({ mode = 'drive' }) {
 
     // Load files data
     const loadData = useCallback(async (isRefreshing = false) => {
+        if (authLoading || !isAuthenticated) {
+            return;
+        }
         if (isRefreshing) {
             setRefreshing(true);
         } else {
@@ -99,7 +103,7 @@ export default function DriveScreen({ mode = 'drive' }) {
 
             // Normal mode - get files
             const data = await getFiles(currentFolderId);
-            
+
             logger.info('DriveScreen', `Loaded ${Array.isArray(data) ? data.length : (data?.children?.length || 0)} files from server`);
 
             if (Array.isArray(data)) {
@@ -164,16 +168,19 @@ export default function DriveScreen({ mode = 'drive' }) {
 
     // Load data on mount and when dependencies change
     useEffect(() => {
+        if (authLoading || !isAuthenticated) return;
         loadData();
-    }, [loadData]);
+    }, [loadData, authLoading, isAuthenticated]);
 
     // Reload data when tab comes into focus (fixes sync issues between tabs)
     useFocusEffect(
         useCallback(() => {
+            if (authLoading || !isAuthenticated) return;
             logger.info('DriveScreen', `Tab focused, reloading data for mode: ${mode}`);
             loadData();
-        }, [loadData, mode])
+        }, [loadData, mode, authLoading, isAuthenticated])
     );
+
 
     // Reset folder navigation when changing modes
     useEffect(() => {

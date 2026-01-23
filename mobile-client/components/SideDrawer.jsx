@@ -6,27 +6,40 @@
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 import { useTheme } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
     const { colors } = useTheme();
+    const insets = useSafeAreaInsets();
 
     return (
         <Modal
             visible={visible}
-            transparent={true}
+            transparent
             animationType="slide"
             onRequestClose={onClose}
         >
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.overlay}
                 activeOpacity={1}
                 onPress={onClose}
             >
                 <View style={[styles.drawer, { backgroundColor: colors.surface }]}>
                     <TouchableOpacity activeOpacity={1}>
-                        {/* Header */}
-                        <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-                            <Text style={[styles.headerTitle, { color: colors.text }]}>Menu</Text>
+                        {/* Header Card */}
+                        <View
+                            style={[
+                                styles.headerCard,
+                                {
+                                    backgroundColor: colors.background,
+                                    borderColor: colors.border,
+                                    marginTop: insets.top + 8,
+                                },
+                            ]}
+                        >
+                            <Text style={[styles.headerTitle, { color: colors.text }]}>
+                                coDrive
+                            </Text>
                         </View>
 
                         {/* Menu Items */}
@@ -39,7 +52,9 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
                                 }}
                             >
                                 <Text style={styles.menuIcon}>🕐</Text>
-                                <Text style={[styles.menuText, { color: colors.text }]}>Recent</Text>
+                                <Text style={[styles.menuText, { color: colors.text }]}>
+                                    Recent
+                                </Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -50,10 +65,17 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
                                 }}
                             >
                                 <Text style={styles.menuIcon}>🗑️</Text>
-                                <Text style={[styles.menuText, { color: colors.text }]}>Trash</Text>
+                                <Text style={[styles.menuText, { color: colors.text }]}>
+                                    Trash
+                                </Text>
                             </TouchableOpacity>
 
-                            <View style={[styles.separator, { backgroundColor: colors.border }]} />
+                            <View
+                                style={[
+                                    styles.separator,
+                                    { backgroundColor: colors.border },
+                                ]}
+                            />
 
                             <TouchableOpacity
                                 style={[styles.menuItem, styles.logoutItem]}
@@ -63,7 +85,14 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
                                 }}
                             >
                                 <Text style={styles.menuIcon}>🚪</Text>
-                                <Text style={[styles.menuText, styles.logoutText]}>Logout</Text>
+                                <Text
+                                    style={[
+                                        styles.menuText,
+                                        styles.logoutText,
+                                    ]}
+                                >
+                                    Logout
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </TouchableOpacity>
@@ -76,12 +105,12 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.25)',
         justifyContent: 'flex-start',
     },
     drawer: {
-        width: '80%',
-        maxWidth: 320,
+        width: '70%',
+        maxWidth: 280,
         height: '100%',
         shadowColor: '#000',
         shadowOffset: { width: 2, height: 0 },
@@ -89,27 +118,35 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 10,
     },
-    header: {
+
+    headerCard: {
+        marginLeft: Spacing.md,
+        marginBottom: Spacing.md,
         paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.xl,
-        borderBottomWidth: 1,
+        paddingVertical: Spacing.sm,
+        width: '60%',
+        maxWidth: 220,
+        borderRadius: 12,
+        borderWidth: 1,
+        justifyContent: 'center',
     },
     headerTitle: {
-        ...Typography.h3,
-        fontSize: 24,
+        fontSize: 16,
         fontWeight: '600',
+        letterSpacing: 0.4,
     },
+
     menuItems: {
-        paddingVertical: Spacing.md,
+        paddingVertical: Spacing.sm,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
+        paddingVertical: Spacing.sm,
     },
     menuIcon: {
-        fontSize: 24,
+        fontSize: 22,
         marginRight: Spacing.md,
         width: 32,
     },
@@ -126,7 +163,7 @@ const styles = StyleSheet.create({
         marginTop: Spacing.sm,
     },
     logoutText: {
-        color: '#d93025',
-        fontWeight: '600',
+        color: AppColors.error || '#d93025',
+        fontWeight: '500',
     },
 });

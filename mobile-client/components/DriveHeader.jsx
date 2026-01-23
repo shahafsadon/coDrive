@@ -6,9 +6,18 @@
  * - Right: Profile picture + dark/light mode toggle
  */
 
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    TextInput,
+    KeyboardAvoidingView,
+    Platform,
+} from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 import { useTheme } from '@/context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function DriveHeader({ 
     onMenuPress, 
@@ -19,10 +28,23 @@ export function DriveHeader({
     userName 
 }) {
     const { isDarkMode, colors } = useTheme();
-
+    const insets = useSafeAreaInsets();
     return (
-        <View style={[styles.container, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-            {/* Left: Hamburger Menu */}
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={8}
+        >
+        <View
+            style={[
+                styles.container,
+                {
+                    backgroundColor: colors.surface,
+                    borderBottomColor: colors.border,
+                    paddingTop: insets.top,
+                },
+            ]}
+        >
+        {/* Left: Hamburger Menu */}
             <TouchableOpacity 
                 style={styles.iconButton}
                 onPress={onMenuPress}
@@ -63,7 +85,8 @@ export function DriveHeader({
                 </View>
             </TouchableOpacity>
         </View>
-    );
+        </KeyboardAvoidingView>
+);
 }
 
 const styles = StyleSheet.create({
