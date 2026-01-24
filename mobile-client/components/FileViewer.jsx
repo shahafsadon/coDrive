@@ -33,13 +33,14 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     const [content, setContent] = useState('');
     const [loading, setLoading] = useState(false);
     const [imageUri, setImageUri] = useState(null);
+    const [imageError, setImageError] = useState(false);
 
     const canEdit = file?.accessLevel === 'write';
     const isImage =
         file?.mimeType?.startsWith('image/') ||
         /\.(jpg|jpeg|png|gif|webp)$/i.test(file?.name || '');
 
-    const isTextFile = file?.mimeType === 'text/plain' || !file?.filePath;
+    const isTextFile = file?.mimeType === 'text/plain';
     const insets = useSafeAreaInsets();
     const { colors } = useTheme();
 
@@ -49,9 +50,44 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
         setContent(file.content || '');
 
         if (isImage) {
-            setImageUri(`${API_URL}/files/${file.id}/download`);
+            loadImage();
         }
     }, [file, isImage]);
+
+    const loadImage = async () => {
+        try {
+            setLoading(true);
+            setImageError(false);
+            setImageUri(null);
+            
+            const token = await AsyncStorage.getItem('token');
+            const downloadUrl = `${API_URL}/files/${file.id}/download`;
+
+            // Download image to local storage with auth
+            const fileUri = FileSystem.documentDirectory + `temp_${file.id}_${file.name}`;
+            
+            const downloadResumable = FileSystem.createDownloadResumable(
+                downloadUrl,
+                fileUri,
+                {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }
+            );
+
+            const result = await downloadResumable.downloadAsync();
+            
+            if (result && result.uri) {
+                setImageUri(result.uri);
+            } else {
+                setImageError(true);
+            }
+        } catch (error) {
+            console.error('Failed to load image:', error);
+            setImageError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!canEdit || !file) return;
@@ -107,16 +143,22 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
             // Get auth token
             const token = await AsyncStorage.getItem('token');
             const downloadUrl = `${API_URL}/files/${file.id}/download`;
-
-            // Download to temp directory
             const fileUri = FileSystem.documentDirectory + file.name;
-            const downloadResult = await FileSystem.downloadAsync(
+
+            // Create download resumable
+            const downloadResumable = FileSystem.createDownloadResumable(
                 downloadUrl,
                 fileUri,
                 {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},
                 }
             );
+
+            const downloadResult = await downloadResumable.downloadAsync();
+
+            if (!downloadResult || !downloadResult.uri) {
+                throw new Error('Download failed - no file received');
+            }
 
             // Share/save the file using native share dialog
             if (await Sharing.isAvailableAsync()) {
@@ -131,7 +173,7 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
             }
         } catch (error) {
             console.error('Download error:', error);
-            Alert.alert('Error', 'Failed to download file');
+            Alert.alert('Error', `Failed to download file: ${error.message}`);
         } finally {
             setLoading(false);
         }
@@ -193,11 +235,34 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
                 >
                     {isImage ? (
                         <View style={styles.imageContainer}>
-                            {imageUri ? (
+                            {loading && !imageUri ? (
+                                <ActivityIndicator size="large" color={colors.tint} />
+                            ) : imageError ? (
+                                <View style={{ alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 48, marginBottom: 12 }}>🖼️</Text>
+                                    <Text
+                                        style={[
+                                            styles.loadingText,
+                                            { color: colors.textSecondary },
+                                        ]}
+                                    >
+                                        Failed to load image
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={[styles.retryButton, { marginTop: 16 }]}
+                                        onPress={loadImage}
+                                    >
+                                        <Text style={{ color: colors.tint, fontSize: 16 }}>
+                                            Retry
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ) : imageUri ? (
                                 <Image
                                     source={{ uri: imageUri }}
                                     style={styles.image}
                                     resizeMode="contain"
+                                    onError={() => setImageError(true)}
                                 />
                             ) : (
                                 <Text
@@ -380,6 +445,9 @@ const styles = StyleSheet.create({
     loadingText: {
         ...Typography.body,
         padding: Spacing.xl,
+    },
+    retryButton: {
+        padding: Spacing.sm,
     },
     textArea: {
         ...Typography.body,

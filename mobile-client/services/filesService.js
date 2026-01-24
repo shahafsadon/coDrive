@@ -571,22 +571,28 @@ export async function copyShareableLink(fileId) {
  * @returns {Promise<string>} Local file path
  */
 export async function downloadFile(fileId, fileName, mimeType) {
-    const FileSystem = require('expo-file-system').default;
+    const FileSystem = require('expo-file-system');
     const Sharing = require('expo-sharing');
     
     try {
         const token = await AsyncStorage.getItem('token');
         const downloadUrl = `${getAPIBaseURL()}/files/${fileId}/download`;
-
-        // Download to temp directory
         const fileUri = FileSystem.documentDirectory + fileName;
-        const downloadResult = await FileSystem.downloadAsync(
+
+        // Use createDownloadResumable instead of downloadAsync
+        const downloadResumable = FileSystem.createDownloadResumable(
             downloadUrl,
             fileUri,
             {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
             }
         );
+
+        const downloadResult = await downloadResumable.downloadAsync();
+
+        if (!downloadResult || !downloadResult.uri) {
+            throw new Error('Download failed - no file received');
+        }
 
         // Share/save using native dialog
         if (await Sharing.isAvailableAsync()) {
