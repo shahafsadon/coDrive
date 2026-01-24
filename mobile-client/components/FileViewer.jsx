@@ -5,7 +5,8 @@
  * Images: display image with Replace Image button
  * Other files: download link
  */
-import * as Linking from 'expo-linking';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { API_URL } from '@/services/api';
 import { useState, useEffect } from 'react';
 import {
@@ -98,10 +99,41 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     };
 
     const handleDownload = async () => {
+        if (!file) return;
+
         try {
-            await Linking.openURL(`${API_URL}/files/${file.id}/download`);
-        } catch {
-            Alert.alert('Error', 'Cannot open file');
+            setLoading(true);
+
+            // Get auth token
+            const token = await AsyncStorage.getItem('token');
+            const downloadUrl = `${API_URL}/files/${file.id}/download`;
+
+            // Download to temp directory
+            const fileUri = FileSystem.documentDirectory + file.name;
+            const downloadResult = await FileSystem.downloadAsync(
+                downloadUrl,
+                fileUri,
+                {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                }
+            );
+
+            // Share/save the file using native share dialog
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(downloadResult.uri, {
+                    mimeType: file.mimeType || 'application/octet-stream',
+                    dialogTitle: `Save ${file.name}`,
+                    UTI: file.mimeType || 'public.item',
+                });
+                Alert.alert('Success', isImage ? 'Image ready to save' : 'File ready to save');
+            } else {
+                Alert.alert('Error', 'Sharing is not available on this device');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            Alert.alert('Error', 'Failed to download file');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -215,16 +247,23 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
                             <TouchableOpacity
                                 style={styles.downloadButton}
                                 onPress={handleDownload}
+                                disabled={loading}
                             >
-                                <Text style={styles.downloadIcon}>📂</Text>
-                                <Text
-                                    style={[
-                                        styles.downloadText,
-                                        { color: colors.tint },
-                                    ]}
-                                >
-                                    Open file
-                                </Text>
+                                {loading ? (
+                                    <ActivityIndicator color={colors.tint} />
+                                ) : (
+                                    <>
+                                        <Text style={styles.downloadIcon}>💾</Text>
+                                        <Text
+                                            style={[
+                                                styles.downloadText,
+                                                { color: colors.tint },
+                                            ]}
+                                        >
+                                            Download file
+                                        </Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
                         </View>
                     )}
@@ -248,6 +287,22 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
                             ) : (
                                 <Text style={styles.primaryButtonText}>
                                     {isImage ? 'Replace Image' : 'Save'}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    )}
+
+                    {isImage && (
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={handleDownload}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.primaryButtonText}>
+                                    Download Image
                                 </Text>
                             )}
                         </TouchableOpacity>

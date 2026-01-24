@@ -431,7 +431,7 @@ export default function DriveScreen({ mode = 'drive' }) {
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                mediaTypes: ['images'],
                 allowsEditing: false,
                 quality: 0.9,
             });
@@ -692,6 +692,8 @@ export default function DriveScreen({ mode = 'drive' }) {
                     renderItem={renderFile}
                     keyExtractor={(item) => String(item.id || item._id || Math.random())}
                     contentContainerStyle={styles.listContent}
+                    numColumns={viewMode === 'grid' ? 2 : 1}
+                    columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : null}
                     ListEmptyComponent={!loading ? renderEmpty : null}
                     refreshControl={
                         <RefreshControl
@@ -845,7 +847,6 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-end',
         paddingVertical: Spacing.xs,
         paddingHorizontal: Spacing.sm,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
         borderRadius: 8,
     },
     viewToggleIcon: {

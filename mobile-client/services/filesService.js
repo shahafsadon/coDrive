@@ -4,8 +4,9 @@
  * Uses same API endpoints and logic as web version
  */
 
-import { api } from './api';
+import { api, getAPIBaseURL } from './api';
 import { logger } from './logger';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Get files - either all files or children of a specific folder
@@ -563,19 +564,42 @@ export async function copyShareableLink(fileId) {
 }
 
 /**
- * Download file to device
+ * Download file to device using Sharing API
  * @param {string} fileId - File ID to download
  * @param {string} fileName - File name
+ * @param {string} mimeType - File mime type
  * @returns {Promise<string>} Local file path
  */
-export async function downloadFile(fileId, fileName) {
+export async function downloadFile(fileId, fileName, mimeType) {
+    const FileSystem = require('expo-file-system').default;
+    const Sharing = require('expo-sharing');
+    
     try {
-        // This will use FileSystem API to download
-        // For now, return the download endpoint
-        const downloadUrl = `/files/${fileId}/download`;
-        
-        logger.info('FilesService', `Downloading file ${fileId}`);
-        return downloadUrl;
+        const token = await AsyncStorage.getItem('token');
+        const downloadUrl = `${getAPIBaseURL()}/files/${fileId}/download`;
+
+        // Download to temp directory
+        const fileUri = FileSystem.documentDirectory + fileName;
+        const downloadResult = await FileSystem.downloadAsync(
+            downloadUrl,
+            fileUri,
+            {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            }
+        );
+
+        // Share/save using native dialog
+        if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(downloadResult.uri, {
+                mimeType: mimeType || 'application/octet-stream',
+                dialogTitle: `Save ${fileName}`,
+                UTI: mimeType || 'public.item',
+            });
+            logger.info('FilesService', `File shared: ${fileName}`);
+            return downloadResult.uri;
+        } else {
+            throw new Error('Sharing is not available on this device');
+        }
     } catch (err) {
         logger.error('FilesService', 'downloadFile failed', err);
         throw err;

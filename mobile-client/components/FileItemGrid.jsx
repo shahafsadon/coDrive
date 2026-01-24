@@ -66,7 +66,7 @@ export function FileItemGrid({ file, onPress, onMenuPress }) {
 
 const styles = StyleSheet.create({
     container: {
-        width: '100%',
+        width: '48%',
         padding: Spacing.md,
         borderRadius: 12,
         marginBottom: Spacing.md,
