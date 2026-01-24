@@ -42,7 +42,7 @@ router.get(
 );
 
 // replace image
-router.patch(
+router.post(
     '/:id/image',
     authMiddleware,
     upload.single('file'),

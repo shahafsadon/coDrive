@@ -79,6 +79,9 @@ const storage = createStorageWrapper();
 async function fetchWithAuth(endpoint, options = {}) {
     try {
         const headers = {
+            ...(options.body instanceof FormData
+                ? {}
+                : { 'Content-Type': 'application/json' }),
             ...options.headers,
         };
 
@@ -90,11 +93,6 @@ async function fetchWithAuth(endpoint, options = {}) {
             }
         } catch (err) {
             logger.error('API', 'Failed to retrieve token from storage', err);
-        }
-
-        // Set content type for JSON if not FormData
-        if (!(options.body instanceof FormData)) {
-            headers['Content-Type'] = 'application/json';
         }
 
         const url = `${API_BASE_URL}${endpoint}`;
@@ -516,3 +514,5 @@ export const tokenStorage = {
         }
     },
 };
+
+export const apiBaseUrl = API_BASE_URL;

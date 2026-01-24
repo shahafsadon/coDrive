@@ -6,8 +6,8 @@
  * Other files: download link
  */
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
-import { API_URL } from '@/services/api';
+import * as FileSystem from 'expo-file-system/legacy';
+import { apiBaseUrl } from '@/services/api';
 import { useState, useEffect } from 'react';
 import {
     View,
@@ -55,13 +55,14 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     }, [file, isImage]);
 
     const loadImage = async () => {
+        if (!file?.id) return;
         try {
             setLoading(true);
             setImageError(false);
             setImageUri(null);
             
             const token = await AsyncStorage.getItem('token');
-            const downloadUrl = `${API_URL}/files/${file.id}/download`;
+            const downloadUrl = `${apiBaseUrl}/files/${file.id}/download`;
 
             // Download image to local storage with auth
             const fileUri = FileSystem.documentDirectory + `temp_${file.id}_${file.name}`;
@@ -142,7 +143,7 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
 
             // Get auth token
             const token = await AsyncStorage.getItem('token');
-            const downloadUrl = `${API_URL}/files/${file.id}/download`;
+            const downloadUrl = `${apiBaseUrl}/files/${file.id}/download`;
             const fileUri = FileSystem.documentDirectory + file.name;
 
             // Create download resumable

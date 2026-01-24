@@ -114,7 +114,9 @@ async function updateFile(req, res) {
 async function createFile(req, res, next) {
     try {
         const userId = req.user.id;
+
         let { type, name, parentId, content, mimeType } = req.body;
+
         if (!type) type = 'folder';
 
         if (!['file', 'folder'].includes(type)) {
@@ -123,6 +125,10 @@ async function createFile(req, res, next) {
 
         if (!name || typeof name !== 'string') {
             return res.status(400).json({ error: 'Name is required' });
+        }
+
+        if (parentId === '' || parentId === 'null') {
+            parentId = null;
         }
 
         if (parentId) {
@@ -139,15 +145,36 @@ async function createFile(req, res, next) {
 
         const uploadedFile = req.file;
 
+        if (uploadedFile) {
+            console.log('[UPLOAD] file received:', {
+                originalname: uploadedFile.originalname,
+                mimetype: uploadedFile.mimetype,
+                size: uploadedFile.size,
+                path: uploadedFile.path,
+            });
+        }
+
         res.locals.nodeData = {
             type,
             name,
             parentId: parentId ?? null,
-            content: type === 'file' && !uploadedFile ? content ?? '' : null,
-            filePath: type === 'file' && uploadedFile ? uploadedFile.path : null,
-            mimeType: type === 'file'
-                ? (uploadedFile ? uploadedFile.mimetype : mimeType ?? 'text/plain')
-                : null
+
+            content:
+                type === 'file' && !uploadedFile
+                    ? (content ?? '')
+                    : null,
+
+            filePath:
+                type === 'file' && uploadedFile
+                    ? uploadedFile.path
+                    : null,
+
+            mimeType:
+                type === 'file'
+                    ? (uploadedFile
+                        ? uploadedFile.mimetype
+                        : (mimeType ?? 'text/plain'))
+                    : null,
         };
 
         next();
@@ -155,6 +182,7 @@ async function createFile(req, res, next) {
         next(err);
     }
 }
+
 
 // Format response after file/folder creation
 async function formatCreateFileResponse(req, res) {
@@ -215,6 +243,16 @@ async function downloadFile(req, res) {
     const node = await getNodeById(userId, req.params.id);
     if (!node || node.type !== 'file') {
         return res.status(404).json({ error: 'File not found' });
+    }
+
+    // text file stored as content
+    if (!node.filePath && node.content) {
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${encodeURIComponent(node.name)}"`
+        );
+        res.type('text/plain');
+        return res.send(node.content);
     }
 
     if (!node.filePath) {
@@ -325,7 +363,7 @@ async function replaceImage(req, res) {
     }
 
     node.filePath = req.file.path;
-    node.mimeType = req.file.mimetype;
+    node.mimeType = req.file.mimetype || 'image/jpeg';
     node.name = req.file.originalname;
     node.content = null;
 

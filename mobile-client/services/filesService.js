@@ -7,7 +7,7 @@
 import { api, getAPIBaseURL } from './api';
 import { logger } from './logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Platform } from 'react-native';
 /**
  * Get files - either all files or children of a specific folder
  * @param {string|null} parentId - Parent folder ID (null for root)
@@ -220,48 +220,51 @@ export async function getFileById(id) {
     }
 }
 
-/**
- * Upload a file (image or generic)
- * @param {string} name - File name
- * @param {string|null} parentId - Parent folder ID
- * @param {Object} fileUri - File URI object from picker {uri, name, type}
- * @returns {Promise<Object>} Uploaded file
- */
 export async function uploadFile(name, parentId, fileUri) {
     const ALLOWED_FILE_TYPES = [
         'text/plain',
-        'application/pdf'
+        'application/pdf',
+        'application/octet-stream',
     ];
 
-    if (!ALLOWED_FILE_TYPES.includes(fileUri.type)) {
+    if (!fileUri || typeof fileUri !== 'object') {
+        throw new Error('Invalid file object');
+    }
+
+    if (fileUri.type && !ALLOWED_FILE_TYPES.includes(fileUri.type)) {
         throw new Error('Only text files and PDF files are supported');
     }
 
-
     try {
         const formData = new FormData();
+
         formData.append('name', name);
         formData.append('type', 'file');
-        
-        if (parentId !== null) {
+
+        if (parentId !== null && parentId !== undefined) {
             formData.append('parentId', parentId);
         }
-        
-        // Create file object for FormData
+
+        const rawUri = fileUri.uri;
+        const fixedUri =
+            Platform.OS === 'android' && rawUri && !rawUri.startsWith('file://')
+                ? `file://${rawUri}`
+                : rawUri;
+
         const file = {
-            uri: fileUri.uri,
+            uri: fixedUri,
             name: fileUri.name || name,
-            type: fileUri.type || 'application/octet-stream'
+            type: fileUri.type || 'application/octet-stream',
         };
-        
+
         formData.append('file', file);
-        
+
         const response = await api.postFormData('/files', formData);
-        
+
         if (response.error) {
             throw new Error(response.error);
         }
-        
+
         logger.info('FilesService', `Uploaded file: ${name}`);
         return response.data;
     } catch (err) {
@@ -269,6 +272,7 @@ export async function uploadFile(name, parentId, fileUri) {
         throw err;
     }
 }
+
 
 /**
  * Toggle star status of a file
@@ -452,14 +456,6 @@ export async function updatePermission(fileId, permId, newPermission) {
 export async function removePermission(fileId, permId) {
     return deletePermission(fileId, permId);
 }
-
-/**
- * Upload image file using expo-image-picker
- * @param {string} name - File name
- * @param {string|null} parentId - Parent folder ID
- * @param {string} fileUri - Local file URI from image picker
- * @returns {Promise<Object>} Created file object
- */
 export async function uploadImageFile(name, parentId, fileUri) {
     try {
         if (!fileUri || typeof fileUri !== 'string') {
@@ -475,9 +471,16 @@ export async function uploadImageFile(name, parentId, fileUri) {
             formData.append('parentId', parentId);
         }
 
+        const filename = fileUri.split('/').pop() || name;
+
+        const fixedUri =
+            Platform.OS === 'android' && !fileUri.startsWith('file://')
+                ? `file://${fileUri}`
+                : fileUri;
+
         formData.append('file', {
-            uri: fileUri,
-            name,
+            uri: fixedUri,
+            name: filename,
             type: 'image/jpeg',
         });
 
@@ -496,7 +499,6 @@ export async function uploadImageFile(name, parentId, fileUri) {
 }
 
 
-
 /**
  * Upload generic file (reuses uploadFile logic)
  * @param {string} name - File name
@@ -509,20 +511,23 @@ export async function uploadGenericFile(name, parentId, fileUri) {
     return uploadFile(name, parentId, fileUri);
 }
 
-/**
- * Replace image in existing file
- * @param {string} fileId - File ID to replace
- * @param {string} fileUri - New image URI
- * @returns {Promise<Object>} Updated file
- */
 export async function replaceImage(fileId, fileUri) {
     try {
+        if (!fileUri || typeof fileUri !== 'string') {
+            throw new Error('Invalid image URI');
+        }
+
         const formData = new FormData();
 
         const filename = fileUri.split('/').pop() || 'image.jpg';
 
+        const fixedUri =
+            Platform.OS === 'android' && !fileUri.startsWith('file://')
+                ? `file://${fileUri}`
+                : fileUri;
+
         formData.append('file', {
-            uri: fileUri,
+            uri: fixedUri,
             name: filename,
             type: 'image/jpeg',
         });
@@ -542,6 +547,7 @@ export async function replaceImage(fileId, fileUri) {
         throw err;
     }
 }
+
 
 
 /**
@@ -577,7 +583,8 @@ export async function downloadFile(fileId, fileName, mimeType) {
     try {
         const token = await AsyncStorage.getItem('token');
         const downloadUrl = `${getAPIBaseURL()}/files/${fileId}/download`;
-        const fileUri = FileSystem.documentDirectory + fileName;
+        const safeName = encodeURIComponent(fileName);
+        const fileUri = FileSystem.documentDirectory + safeName;
 
         // Use createDownloadResumable instead of downloadAsync
         const downloadResumable = FileSystem.createDownloadResumable(
