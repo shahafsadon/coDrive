@@ -110,7 +110,9 @@ export default function LoginScreen() {
                 }}
                 onPress={toggleTheme}
             >
-                <Text style={{ fontSize: 24 }}>{isDarkMode ? '🌙' : '☀️'}</Text>
+                <Text style={{ fontSize: 24 }}>
+                    {isDarkMode ? '☀️' : '🌙'}
+                </Text>
             </TouchableOpacity>
             <ScreenWrapper>
                 <KeyboardAvoidingWrapper>

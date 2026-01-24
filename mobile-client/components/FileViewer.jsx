@@ -5,7 +5,8 @@
  * Images: display image with Replace Image button
  * Other files: download link
  */
-
+import * as Linking from 'expo-linking';
+import { API_URL } from '@/services/api';
 import { useState, useEffect } from 'react';
 import {
     View,
@@ -18,11 +19,14 @@ import {
     Image,
     ActivityIndicator,
     Alert,
+    Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 import { updateFile, replaceImage } from '@/services/filesService';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/context/ThemeContext';
 
 export function FileViewer({ visible, file, onClose, onRefresh }) {
     const [content, setContent] = useState('');
@@ -30,33 +34,34 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     const [imageUri, setImageUri] = useState(null);
 
     const canEdit = file?.accessLevel === 'write';
-    const isImage = file?.mimeType?.startsWith('image/');
+    const isImage =
+        file?.mimeType?.startsWith('image/') ||
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(file?.name || '');
+
     const isTextFile = file?.mimeType === 'text/plain' || !file?.filePath;
     const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
 
     useEffect(() => {
-        if (file) {
-            setContent(file.content || '');
-            
-            // Load image if file is an image
-            if (isImage && file.filePath) {
-                // In mobile, we'll use the API endpoint to load the image
-                const token = localStorage.getItem('token');
-                setImageUri(`http://localhost:3000/api/files/${file.id}/download?token=${token}`);
-            }
+        if (!file) return;
+
+        setContent(file.content || '');
+
+        if (isImage) {
+            setImageUri(`${API_URL}/files/${file.id}/download`);
         }
     }, [file, isImage]);
 
     const handleSave = async () => {
         if (!canEdit || !file) return;
-        
+
         try {
             setLoading(true);
             await updateFile(file.id, { content });
             Alert.alert('Success', 'File saved successfully');
-            if (onRefresh) onRefresh();
+            onRefresh?.();
             onClose();
-        } catch (error) {
+        } catch {
             Alert.alert('Error', 'Failed to save file');
         } finally {
             setLoading(false);
@@ -66,80 +71,94 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
     const handleReplaceImage = async () => {
         if (!canEdit || !file) return;
 
+        const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!granted) {
+            Alert.alert('Permission Required', 'Please allow access to your photo library');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            quality: 1,
+        });
+
+        if (result.canceled) return;
+
         try {
-            // Request permission
-            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            
-            if (!permissionResult.granted) {
-                Alert.alert('Permission Required', 'Please allow access to your photo library');
-                return;
-            }
-
-            // Launch image picker
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                quality: 1,
-            });
-
-            if (!result.canceled && result.assets[0]) {
-                setLoading(true);
-                const imageAsset = result.assets[0];
-                
-                await replaceImage(file.id, imageAsset.uri);
-                
-                Alert.alert('Success', 'Image replaced successfully');
-                if (onRefresh) onRefresh();
-                onClose();
-            }
-        } catch (error) {
-            console.error('Replace image error:', error);
+            setLoading(true);
+            await replaceImage(file.id, result.assets[0].uri);
+            Alert.alert('Success', 'Image replaced successfully');
+            onRefresh?.();
+            onClose();
+        } catch {
             Alert.alert('Error', 'Failed to replace image');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDownload = () => {
-        // Download will be implemented separately
-        Alert.alert('Download', 'Download functionality will open the file');
+    const handleDownload = async () => {
+        try {
+            await Linking.openURL(`${API_URL}/files/${file.id}/download`);
+        } catch {
+            Alert.alert('Error', 'Cannot open file');
+        }
     };
 
     if (!file) return null;
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            onRequestClose={onClose}
-        >
-            <View style={styles.container}>
+        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
                 {/* Header */}
                 <View
                     style={[
                         styles.header,
                         {
                             paddingTop: insets.top,
+                            backgroundColor: colors.backgroundSecondary,
                         },
                     ]}
                 >
-                <View style={styles.headerContent}>
-                        <Text style={styles.fileName} numberOfLines={1}>
+                    <View style={styles.headerContent}>
+                        <Text
+                            style={[styles.fileName, { color: colors.text }]}
+                            numberOfLines={1}
+                        >
                             {file.name}
                         </Text>
+
                         {!canEdit && (
-                            <View style={styles.readOnlyBadge}>
-                                <Text style={styles.readOnlyText}>Read Only</Text>
+                            <View
+                                style={[
+                                    styles.readOnlyBadge,
+                                    { backgroundColor: colors.backgroundSecondary },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.readOnlyText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Read Only
+                                </Text>
                             </View>
                         )}
                     </View>
+
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                        <Text style={styles.closeButtonText}>✕</Text>
+                        <Text style={[styles.closeButtonText, { color: colors.text }]}>
+                            ✕
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
                 {/* Body */}
-                <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+                <ScrollView
+                    style={styles.body}
+                    contentContainerStyle={styles.bodyContent}
+                >
                     {isImage ? (
                         <View style={styles.imageContainer}>
                             {imageUri ? (
@@ -149,78 +168,98 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
                                     resizeMode="contain"
                                 />
                             ) : (
-                                <Text style={styles.loadingText}>Loading image...</Text>
+                                <Text
+                                    style={[
+                                        styles.loadingText,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Loading image...
+                                </Text>
                             )}
                         </View>
+                    ) : isTextFile ? (
+                        <TextInput
+                            style={[
+                                styles.textArea,
+                                {
+                                    backgroundColor: canEdit
+                                        ? colors.background
+                                        : colors.backgroundSecondary,
+                                    color: colors.text,
+                                },
+                            ]}
+                            value={content}
+                            onChangeText={setContent}
+                            multiline
+                            editable={canEdit}
+                            placeholder="Enter text content..."
+                            placeholderTextColor={colors.textSecondary}
+                        />
                     ) : (
-                        <>
-                            {isTextFile ? (
-                                <TextInput
+                        <View style={styles.downloadContainer}>
+                            <Text style={{ fontSize: 48, marginBottom: 12 }}>📄</Text>
+
+                            <Text
+                                style={{
+                                    fontSize: 16,
+                                    fontWeight: '600',
+                                    marginBottom: 16,
+                                    textAlign: 'center',
+                                    color: colors.text,
+                                }}
+                            >
+                                {file.name}
+                            </Text>
+
+                            <TouchableOpacity
+                                style={styles.downloadButton}
+                                onPress={handleDownload}
+                            >
+                                <Text style={styles.downloadIcon}>📂</Text>
+                                <Text
                                     style={[
-                                        styles.textArea,
-                                        !canEdit && styles.textAreaReadOnly
+                                        styles.downloadText,
+                                        { color: colors.tint },
                                     ]}
-                                    value={content}
-                                    onChangeText={setContent}
-                                    multiline
-                                    editable={canEdit}
-                                    placeholder="Enter text content..."
-                                    placeholderTextColor={AppColors.textSecondary}
-                                />
-                            ) : (
-                                <View style={styles.downloadContainer}>
-                                    <TouchableOpacity
-                                        style={styles.downloadButton}
-                                        onPress={handleDownload}
-                                    >
-                                        <Text style={styles.downloadIcon}>⬇️</Text>
-                                        <Text style={styles.downloadText}>Download file</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </>
+                                >
+                                    Open file
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </ScrollView>
 
-                {/* Footer Actions */}
-                <View style={styles.footer}>
+                {/* Footer */}
+                <View
+                    style={[
+                        styles.footer,
+                        { backgroundColor: colors.backgroundSecondary },
+                    ]}
+                >
                     {canEdit && (
-                        <>
-                            {isImage ? (
-                                <TouchableOpacity
-                                    style={styles.primaryButton}
-                                    onPress={handleReplaceImage}
-                                    disabled={loading}
-                                >
-                                    {loading ? (
-                                        <ActivityIndicator color={AppColors.white} />
-                                    ) : (
-                                        <Text style={styles.primaryButtonText}>Replace Image</Text>
-                                    )}
-                                </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={isImage ? handleReplaceImage : handleSave}
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <ActivityIndicator color="#fff" />
                             ) : (
-                                isTextFile && (
-                                    <TouchableOpacity
-                                        style={styles.primaryButton}
-                                        onPress={handleSave}
-                                        disabled={loading}
-                                    >
-                                        {loading ? (
-                                            <ActivityIndicator color={AppColors.white} />
-                                        ) : (
-                                            <Text style={styles.primaryButtonText}>Save</Text>
-                                        )}
-                                    </TouchableOpacity>
-                                )
+                                <Text style={styles.primaryButtonText}>
+                                    {isImage ? 'Replace Image' : 'Save'}
+                                </Text>
                             )}
-                        </>
+                        </TouchableOpacity>
                     )}
+
                     <TouchableOpacity
-                        style={styles.secondaryButton}
+                        style={styles.primaryButton}
                         onPress={onClose}
                     >
-                        <Text style={styles.secondaryButtonText}>Close</Text>
+                        <Text style={styles.primaryButtonText}>Close</Text>
                     </TouchableOpacity>
+
                 </View>
             </View>
         </Modal>
@@ -230,7 +269,6 @@ export function FileViewer({ visible, file, onClose, onRefresh }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: AppColors.white,
     },
     header: {
         flexDirection: 'row',
@@ -240,7 +278,6 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: AppColors.border,
-        backgroundColor: AppColors.backgroundSecondary,
     },
     headerContent: {
         flex: 1,
@@ -252,18 +289,15 @@ const styles = StyleSheet.create({
         ...Typography.title,
         fontSize: 18,
         fontWeight: '600',
-        color: AppColors.text,
         flex: 1,
     },
     readOnlyBadge: {
-        backgroundColor: '#eee',
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 4,
     },
     readOnlyText: {
         fontSize: 11,
-        color: '#666',
     },
     closeButton: {
         padding: Spacing.sm,
@@ -271,7 +305,6 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         fontSize: 24,
-        color: AppColors.text,
         fontWeight: 'bold',
     },
     body: {
@@ -291,7 +324,6 @@ const styles = StyleSheet.create({
     },
     loadingText: {
         ...Typography.body,
-        color: AppColors.textSecondary,
         padding: Spacing.xl,
     },
     textArea: {
@@ -302,10 +334,6 @@ const styles = StyleSheet.create({
         borderColor: AppColors.border,
         borderRadius: 8,
         textAlignVertical: 'top',
-    },
-    textAreaReadOnly: {
-        backgroundColor: '#f9f9f9',
-        color: '#555',
     },
     downloadContainer: {
         alignItems: 'center',
@@ -321,7 +349,6 @@ const styles = StyleSheet.create({
     },
     downloadText: {
         ...Typography.body,
-        color: '#1a73e8',
         fontSize: 16,
         fontWeight: '500',
     },
@@ -331,7 +358,6 @@ const styles = StyleSheet.create({
         padding: Spacing.lg,
         borderTopWidth: 1,
         borderTopColor: AppColors.border,
-        backgroundColor: AppColors.backgroundSecondary,
     },
     primaryButton: {
         flex: 1,
@@ -361,7 +387,6 @@ const styles = StyleSheet.create({
     },
     secondaryButtonText: {
         ...Typography.body,
-        color: AppColors.text,
         fontSize: 16,
         fontWeight: '600',
     },

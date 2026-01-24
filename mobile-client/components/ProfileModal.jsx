@@ -7,10 +7,12 @@
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import { useTheme } from '@/context/ThemeContext';
 export function ProfileModal({ visible, user, onClose }) {
     if (!user) return null;
+
     const insets = useSafeAreaInsets();
+    const { colors } = useTheme();
 
     return (
         <Modal
@@ -18,29 +20,37 @@ export function ProfileModal({ visible, user, onClose }) {
             animationType="slide"
             onRequestClose={onClose}
         >
-            <View style={styles.container}>
-                {/* Header with Done button */}
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
+                {/* Header */}
                 <View
                     style={[
                         styles.header,
                         {
                             paddingTop: insets.top,
+                            backgroundColor: colors.backgroundSecondary,
                         },
                     ]}
                 >
-                <Text style={styles.headerTitle}>Profile</Text>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>
+                        Profile
+                    </Text>
+
                     <TouchableOpacity onPress={onClose} style={styles.doneButton}>
-                        <Text style={styles.doneText}>Done</Text>
+                        <Text style={[styles.doneText, { color: colors.text }]}>
+                            Done
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
                 <ScrollView contentContainerStyle={styles.content}>
-                    {/* Email (if exists) */}
+                    {/* Email */}
                     {user.email && (
-                        <Text style={styles.email}>{user.email}</Text>
+                        <Text style={[styles.email, { color: colors.textSecondary }]}>
+                            {user.email}
+                        </Text>
                     )}
 
-                    {/* Profile Picture Circle */}
+                    {/* Profile Picture */}
                     <View style={styles.profileCircle}>
                         <Text style={styles.profileInitial}>
                             {user.username ? user.username[0].toUpperCase() : 'U'}
@@ -48,28 +58,73 @@ export function ProfileModal({ visible, user, onClose }) {
                     </View>
 
                     {/* Greeting */}
-                    <Text style={styles.greeting}>
+                    <Text style={[styles.greeting, { color: colors.text }]}>
                         Hi, {user.username || 'User'}!
                     </Text>
 
-                    {/* User Details */}
-                    <View style={styles.detailsContainer}>
+                    {/* Details */}
+                    <View
+                        style={[
+                            styles.detailsContainer,
+                            { backgroundColor: colors.backgroundSecondary },
+                        ]}
+                    >
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Username</Text>
-                            <Text style={styles.detailValue}>{user.username || 'N/A'}</Text>
+                            <Text
+                                style={[
+                                    styles.detailLabel,
+                                    { color: colors.textSecondary },
+                                ]}
+                            >
+                                Username
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.detailValue,
+                                    { color: colors.text },
+                                ]}
+                            >
+                                {user.username || 'N/A'}
+                            </Text>
                         </View>
 
                         {user.email && (
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Email</Text>
-                                <Text style={styles.detailValue}>{user.email}</Text>
+                                <Text
+                                    style={[
+                                        styles.detailLabel,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Email
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.detailValue,
+                                        { color: colors.text },
+                                    ]}
+                                >
+                                    {user.email}
+                                </Text>
                             </View>
                         )}
 
                         {user.createdAt && (
                             <View style={styles.detailRow}>
-                                <Text style={styles.detailLabel}>Member since</Text>
-                                <Text style={styles.detailValue}>
+                                <Text
+                                    style={[
+                                        styles.detailLabel,
+                                        { color: colors.textSecondary },
+                                    ]}
+                                >
+                                    Member since
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.detailValue,
+                                        { color: colors.text },
+                                    ]}
+                                >
                                     {new Date(user.createdAt).toLocaleDateString()}
                                 </Text>
                             </View>
@@ -84,7 +139,6 @@ export function ProfileModal({ visible, user, onClose }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: AppColors.white,
     },
     header: {
         flexDirection: 'row',
@@ -94,7 +148,6 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
         borderBottomWidth: 1,
         borderBottomColor: AppColors.border,
-        backgroundColor: AppColors.backgroundSecondary,
     },
     headerTitle: {
         ...Typography.h3,
@@ -109,7 +162,6 @@ const styles = StyleSheet.create({
         ...Typography.body,
         fontSize: 16,
         fontWeight: '600',
-        color: '#1a73e8',
     },
     content: {
         alignItems: 'center',
@@ -119,7 +171,6 @@ const styles = StyleSheet.create({
     email: {
         ...Typography.body,
         fontSize: 14,
-        color: AppColors.textSecondary,
         marginBottom: Spacing.lg,
     },
     profileCircle: {
@@ -144,7 +195,6 @@ const styles = StyleSheet.create({
     },
     detailsContainer: {
         width: '100%',
-        backgroundColor: AppColors.backgroundSecondary,
         borderRadius: 12,
         padding: Spacing.lg,
     },
@@ -159,12 +209,10 @@ const styles = StyleSheet.create({
     detailLabel: {
         ...Typography.body,
         fontSize: 14,
-        color: AppColors.textSecondary,
         fontWeight: '600',
     },
     detailValue: {
         ...Typography.body,
         fontSize: 14,
-        color: AppColors.text,
     },
 });

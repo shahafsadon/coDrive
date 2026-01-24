@@ -68,7 +68,8 @@ export default function DriveScreen({ mode = 'drive' }) {
     const [drawerVisible, setDrawerVisible] = useState(false); // Side drawer
     const [profileVisible, setProfileVisible] = useState(false); // Profile modal
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
-    
+    const [isPicking, setIsPicking] = useState(false);
+
     // Modal state
     const [inputModal, setInputModal] = useState({
         visible: false,
@@ -212,6 +213,7 @@ export default function DriveScreen({ mode = 'drive' }) {
         loadData(true);
     };
 
+
     // Handle file/folder press
     const handleFilePress = async (file) => {
         try {
@@ -312,31 +314,29 @@ export default function DriveScreen({ mode = 'drive' }) {
 
     // Upload file
     const handleUploadFile = async () => {
-        try {
-            // Request permissions first
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission denied', 'Camera roll permission is required');
-                return;
+        console.log('UPLOAD FILE CLICKED');
+
+        const result = await DocumentPicker.getDocumentAsync({
+            copyToCacheDirectory: true,
+        });
+
+        if (result.canceled) return;
+
+        const asset = result.assets[0];
+
+        await uploadFile(
+            asset.name,
+            currentFolderId,
+            {
+                uri: asset.uri,
+                name: asset.name,
+                type: asset.mimeType,
             }
-
-            // Pick file
-            const result = await DocumentPicker.getDocumentAsync({
-                type: '*/*',
-                copyToCacheDirectory: true
-            });
-
-            if (result.canceled) return;
-
-            const file = result.assets[0];
-            await uploadFile(file.name, currentFolderId, file);
-            loadData();
-            Alert.alert('Success', 'File uploaded');
-        } catch (err) {
-            logger.error('DriveScreen', 'Upload failed', err);
-            Alert.alert('Error', 'Failed to upload file');
-        }
+        );
+        onRefresh?.();
     };
+
+
 
     // Rename file/folder
     const handleRename = (file) => {
@@ -421,32 +421,43 @@ export default function DriveScreen({ mode = 'drive' }) {
 
     // Upload image file (replaces take photo)
     const handleUploadImage = async () => {
+        console.log('UPLOAD IMAGE CLICKED');
+
         try {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                Alert.alert('Permission denied', 'Camera roll permission is required');
+            const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!permission.granted) {
+                Alert.alert('Permission denied', 'Gallery access is required');
                 return;
             }
 
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: false,
-                quality: 1,
+                quality: 0.9,
             });
 
             if (result.canceled) return;
 
             const asset = result.assets[0];
-            const fileName = asset.uri.split('/').pop() || 'image.jpg';
-            
-            await uploadImageFile(fileName, currentFolderId, asset.uri);
-            loadData();
-            Alert.alert('Success', 'Image uploaded');
+
+            const name =
+                asset.fileName ||
+                asset.uri.split('/').pop() ||
+                'image.jpg';
+
+            await uploadImageFile(
+                name,
+                currentFolderId,
+                asset.uri
+            );
+
+            await onRefresh?.();
         } catch (err) {
-            logger.error('DriveScreen', 'Image upload failed', err);
+            console.error('Upload image failed:', err);
             Alert.alert('Error', 'Failed to upload image');
         }
     };
+
 
     // Upload folder 
     const handleUploadFolder = async () => {

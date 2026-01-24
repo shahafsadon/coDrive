@@ -227,6 +227,16 @@ export async function getFileById(id) {
  * @returns {Promise<Object>} Uploaded file
  */
 export async function uploadFile(name, parentId, fileUri) {
+    const ALLOWED_FILE_TYPES = [
+        'text/plain',
+        'application/pdf'
+    ];
+
+    if (!ALLOWED_FILE_TYPES.includes(fileUri.type)) {
+        throw new Error('Only text files and PDF files are supported');
+    }
+
+
     try {
         const formData = new FormData();
         formData.append('name', name);
@@ -451,31 +461,40 @@ export async function removePermission(fileId, permId) {
  */
 export async function uploadImageFile(name, parentId, fileUri) {
     try {
+        if (!fileUri || typeof fileUri !== 'string') {
+            throw new Error('Invalid image URI');
+        }
+
         const formData = new FormData();
+
         formData.append('name', name);
         formData.append('type', 'file');
-        if (parentId) formData.append('parentId', parentId);
-        
-        // Add the file with proper React Native format
+
+        if (parentId) {
+            formData.append('parentId', parentId);
+        }
+
         formData.append('file', {
             uri: fileUri,
-            name: name,
-            type: 'image/jpeg', // or detect mime type
+            name,
+            type: 'image/jpeg',
         });
 
         const response = await api.postFormData('/files', formData);
-        
+
         if (response.error) {
             throw new Error(response.error);
         }
-        
-        logger.info('FilesService', `Uploaded image file: ${name}`);
+
+        logger.info('FilesService', `Uploaded image: ${name}`);
         return response.data;
     } catch (err) {
         logger.error('FilesService', 'uploadImageFile failed', err);
         throw err;
     }
 }
+
+
 
 /**
  * Upload generic file (reuses uploadFile logic)
@@ -498,29 +517,31 @@ export async function uploadGenericFile(name, parentId, fileUri) {
 export async function replaceImage(fileId, fileUri) {
     try {
         const formData = new FormData();
-        
-        // Extract filename from URI or use default
+
         const filename = fileUri.split('/').pop() || 'image.jpg';
-        
+
         formData.append('file', {
             uri: fileUri,
             name: filename,
             type: 'image/jpeg',
         });
 
-        const response = await api.postFormData(`/files/${fileId}/replace`, formData);
-        
+        const response = await api.postFormData(
+            `/files/${fileId}/image`,
+            formData
+        );
+
         if (response.error) {
             throw new Error(response.error);
         }
-        
-        logger.info('FilesService', `Replaced image for file ${fileId}`);
+
         return response.data;
     } catch (err) {
         logger.error('FilesService', 'replaceImage failed', err);
         throw err;
     }
 }
+
 
 /**
  * Copy shareable link to clipboard

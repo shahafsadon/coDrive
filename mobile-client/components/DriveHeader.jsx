@@ -65,12 +65,12 @@ export function DriveHeader({
             </View>
 
             {/* Right: Theme Toggle + Profile */}
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.iconButton}
                 onPress={onThemeToggle}
             >
                 <Text style={styles.themeIcon}>
-                    {isDarkMode ? '🌙' : '☀️'}
+                    {isDarkMode ? '☀️' : '🌙'}
                 </Text>
             </TouchableOpacity>
 

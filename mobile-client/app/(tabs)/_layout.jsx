@@ -4,14 +4,12 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function TabLayout() {
-    const colorScheme = useColorScheme();
     const { isAuthenticated, loading } = useAuth();
-
+    const { colors } = useTheme();
 
     if (loading) {
         return (
@@ -20,7 +18,6 @@ export default function TabLayout() {
             </View>
         );
     }
-
 
     if (!isAuthenticated) {
         return <Redirect href="/(auth)/login" />;
@@ -31,10 +28,14 @@ export default function TabLayout() {
             screenOptions={{
                 headerShown: false,
                 tabBarButton: HapticTab,
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+                tabBarActiveTintColor: colors.tint,
+                tabBarInactiveTintColor: colors.textSecondary,
+                tabBarStyle: {
+                    backgroundColor: colors.background,
+                    borderTopColor: colors.border,
+                },
             }}
         >
-            {/* Home tab - leftmost (hollow house icon) */}
             <Tabs.Screen
                 name="index"
                 options={{
@@ -45,7 +46,6 @@ export default function TabLayout() {
                 }}
             />
 
-            {/* Starred tab (keep current) */}
             <Tabs.Screen
                 name="starred"
                 options={{
@@ -56,7 +56,6 @@ export default function TabLayout() {
                 }}
             />
 
-            {/* Shared tab (person with shadow) */}
             <Tabs.Screen
                 name="shared"
                 options={{
@@ -67,7 +66,6 @@ export default function TabLayout() {
                 }}
             />
 
-            {/* Files tab - rightmost (was My Drive, renamed to Files) */}
             <Tabs.Screen
                 name="files"
                 options={{
@@ -78,21 +76,8 @@ export default function TabLayout() {
                 }}
             />
 
-            {/* Hide trash from bottom tabs - can access via settings/menu */}
-            <Tabs.Screen
-                name="trash"
-                options={{
-                    href: null, // Hide from tabs
-                }}
-            />
-
-            {/* Hide drive.jsx from tabs - it's just a component */}
-            <Tabs.Screen
-                name="drive"
-                options={{
-                    href: null, // Hide from tabs
-                }}
-            />
+            <Tabs.Screen name="trash" options={{ href: null }} />
+            <Tabs.Screen name="drive" options={{ href: null }} />
         </Tabs>
     );
 }

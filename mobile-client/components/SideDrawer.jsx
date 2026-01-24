@@ -24,8 +24,13 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
                 activeOpacity={1}
                 onPress={onClose}
             >
-                <View style={[styles.drawer, { backgroundColor: colors.surface }]}>
-                    <TouchableOpacity activeOpacity={1}>
+                <View
+                    style={[
+                        styles.drawer,
+                        { backgroundColor: colors.background },
+                    ]}
+                >
+                <TouchableOpacity activeOpacity={1}>
                         {/* Header Card */}
                         <View
                             style={[
@@ -105,7 +110,7 @@ export function SideDrawer({ visible, onClose, onLogout, onTrash, onRecents }) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.25)',
+        backgroundColor: 'rgba(0,0,0,0.45)',
         justifyContent: 'flex-start',
     },
     drawer: {

@@ -5,9 +5,24 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, StyleSheet, ScrollView, Alert } from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    Modal,
+    StyleSheet,
+    ScrollView,
+    Alert,
+} from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
-import { shareFile, getFilePermissions, updatePermission, removePermission } from '@/services/filesService';
+import {
+    shareFile,
+    getFilePermissions,
+    updatePermission,
+    removePermission,
+} from '@/services/filesService';
+import { useTheme } from '@/context/ThemeContext';
 
 export function ShareModal({ file, onClose }) {
     const [username, setUsername] = useState('');
@@ -15,7 +30,8 @@ export function ShareModal({ file, onClose }) {
     const [permissions, setPermissions] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Load existing permissions when modal opens
+    const { colors } = useTheme();
+
     useEffect(() => {
         loadPermissions();
     }, []);
@@ -23,7 +39,6 @@ export function ShareModal({ file, onClose }) {
     const loadPermissions = async () => {
         try {
             const data = await getFilePermissions(file.id);
-            console.log('ShareModal: Loaded permissions:', data);
             setPermissions(data || []);
         } catch (err) {
             console.error('Failed to load permissions:', err);
@@ -69,21 +84,44 @@ export function ShareModal({ file, onClose }) {
 
     return (
         <Modal
-            visible={true}
+            visible
             transparent
             animationType="slide"
             onRequestClose={onClose}
         >
             <View style={styles.overlay}>
-                <View style={styles.modal}>
-                    <Text style={styles.title}>Share "{file.name}"</Text>
+                <View
+                    style={[
+                        styles.modal,
+                        { backgroundColor: colors.backgroundSecondary },
+                    ]}
+                >
+                    <Text style={[styles.title, { color: colors.text }]}>
+                        Share "{file.name}"
+                    </Text>
 
                     {/* Add new user */}
-                    <View style={styles.addSection}>
-                        <Text style={styles.label}>Share with:</Text>
+                    <View
+                        style={[
+                            styles.addSection,
+                            { borderBottomColor: colors.border },
+                        ]}
+                    >
+                        <Text style={[styles.label, { color: colors.text }]}>
+                            Share with:
+                        </Text>
+
                         <TextInput
-                            style={styles.input}
+                            style={[
+                                styles.input,
+                                {
+                                    backgroundColor: colors.background,
+                                    color: colors.text,
+                                    borderColor: colors.border,
+                                },
+                            ]}
                             placeholder="Enter username"
+                            placeholderTextColor={colors.textSecondary}
                             value={username}
                             onChangeText={setUsername}
                             autoCapitalize="none"
@@ -93,14 +131,30 @@ export function ShareModal({ file, onClose }) {
                             <TouchableOpacity
                                 style={[
                                     styles.permissionButton,
-                                    permission === 'view' && styles.permissionButtonActive
+                                    {
+                                        backgroundColor:
+                                            permission === 'view'
+                                                ? colors.primary
+                                                : colors.backgroundSecondary,
+                                        borderColor:
+                                            permission === 'view'
+                                                ? colors.primary
+                                                : colors.border,
+                                    },
                                 ]}
                                 onPress={() => setPermission('view')}
                             >
-                                <Text style={[
-                                    styles.permissionText,
-                                    permission === 'view' && styles.permissionTextActive
-                                ]}>
+                                <Text
+                                    style={[
+                                        styles.permissionText,
+                                        {
+                                            color:
+                                                permission === 'view'
+                                                    ? colors.white
+                                                    : colors.text,
+                                        },
+                                    ]}
+                                >
                                     👁️ View
                                 </Text>
                             </TouchableOpacity>
@@ -108,21 +162,40 @@ export function ShareModal({ file, onClose }) {
                             <TouchableOpacity
                                 style={[
                                     styles.permissionButton,
-                                    permission === 'edit' && styles.permissionButtonActive
+                                    {
+                                        backgroundColor:
+                                            permission === 'edit'
+                                                ? colors.primary
+                                                : colors.backgroundSecondary,
+                                        borderColor:
+                                            permission === 'edit'
+                                                ? colors.primary
+                                                : colors.border,
+                                    },
                                 ]}
                                 onPress={() => setPermission('edit')}
                             >
-                                <Text style={[
-                                    styles.permissionText,
-                                    permission === 'edit' && styles.permissionTextActive
-                                ]}>
+                                <Text
+                                    style={[
+                                        styles.permissionText,
+                                        {
+                                            color:
+                                                permission === 'edit'
+                                                    ? colors.white
+                                                    : colors.text,
+                                        },
+                                    ]}
+                                >
                                     ✏️ Edit
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity
-                            style={[styles.shareButton, loading && styles.shareButtonDisabled]}
+                            style={[
+                                styles.shareButton,
+                                loading && styles.shareButtonDisabled,
+                            ]}
                             onPress={handleShare}
                             disabled={loading}
                         >
@@ -135,25 +208,61 @@ export function ShareModal({ file, onClose }) {
                     {/* Existing permissions */}
                     {permissions.length > 0 && (
                         <View style={styles.permissionsSection}>
-                            <Text style={styles.sectionTitle}>Shared with:</Text>
+                            <Text
+                                style={[
+                                    styles.sectionTitle,
+                                    { color: colors.text },
+                                ]}
+                            >
+                                Shared with:
+                            </Text>
+
                             <ScrollView style={styles.permissionsList}>
                                 {permissions.map((perm) => (
-                                    <View key={perm.id} style={styles.permissionItem}>
+                                    <View
+                                        key={perm.id}
+                                        style={[
+                                            styles.permissionItem,
+                                            { borderBottomColor: colors.border },
+                                        ]}
+                                    >
                                         <View style={styles.permissionInfo}>
-                                            <Text style={styles.permissionEmail}>
-                                                {perm.username || perm.user?.username || 'Unknown'}
+                                            <Text
+                                                style={[
+                                                    styles.permissionEmail,
+                                                    { color: colors.text },
+                                                ]}
+                                            >
+                                                {perm.username ||
+                                                    perm.user?.username ||
+                                                    'Unknown'}
                                             </Text>
-                                            <Text style={styles.permissionType}>
-                                                {(perm.access === 'write' || perm.permission === 'edit') ? '✏️ Can edit' : '👁️ Can view'}
+                                            <Text
+                                                style={[
+                                                    styles.permissionType,
+                                                    { color: colors.textSecondary },
+                                                ]}
+                                            >
+                                                {(perm.access === 'write' ||
+                                                    perm.permission === 'edit')
+                                                    ? '✏️ Can edit'
+                                                    : '👁️ Can view'}
                                             </Text>
                                         </View>
-                                        
+
                                         <View style={styles.permissionActions}>
                                             <TouchableOpacity
-                                                onPress={() => handleRemovePermission(perm.id)}
+                                                onPress={() =>
+                                                    handleRemovePermission(perm.id)
+                                                }
                                                 style={styles.iconButton}
                                             >
-                                                <Text style={[styles.iconButtonText, styles.deleteIconButton]}>
+                                                <Text
+                                                    style={[
+                                                        styles.iconButtonText,
+                                                        styles.deleteIconButton,
+                                                    ]}
+                                                >
                                                     🗑️
                                                 </Text>
                                             </TouchableOpacity>
@@ -165,8 +274,21 @@ export function ShareModal({ file, onClose }) {
                     )}
 
                     {/* Close button */}
-                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                        <Text style={styles.closeButtonText}>Close</Text>
+                    <TouchableOpacity
+                        style={[
+                            styles.closeButton,
+                            { backgroundColor: colors.background },
+                        ]}
+                        onPress={onClose}
+                    >
+                        <Text
+                            style={[
+                                styles.closeButtonText,
+                                { color: colors.text },
+                            ]}
+                        >
+                            Close
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -183,7 +305,6 @@ const styles = StyleSheet.create({
         padding: Spacing.lg,
     },
     modal: {
-        backgroundColor: AppColors.white,
         borderRadius: 16,
         padding: Spacing.lg,
         width: '100%',
@@ -199,7 +320,6 @@ const styles = StyleSheet.create({
         marginBottom: Spacing.lg,
         paddingBottom: Spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: AppColors.border,
     },
     label: {
         ...Typography.body,
@@ -208,7 +328,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: AppColors.border,
         borderRadius: 8,
         padding: Spacing.md,
         marginBottom: Spacing.md,
@@ -224,21 +343,10 @@ const styles = StyleSheet.create({
         padding: Spacing.md,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: AppColors.border,
-        backgroundColor: AppColors.backgroundSecondary,
         alignItems: 'center',
-    },
-    permissionButtonActive: {
-        backgroundColor: AppColors.primary,
-        borderColor: AppColors.primary,
     },
     permissionText: {
         ...Typography.body,
-        color: AppColors.text,
-    },
-    permissionTextActive: {
-        color: AppColors.white,
-        fontWeight: '600',
     },
     shareButton: {
         backgroundColor: AppColors.primary,
@@ -271,7 +379,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: Spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: AppColors.border,
     },
     permissionInfo: {
         flex: 1,
@@ -283,7 +390,6 @@ const styles = StyleSheet.create({
     },
     permissionType: {
         ...Typography.caption,
-        color: AppColors.textSecondary,
     },
     permissionActions: {
         flexDirection: 'row',
@@ -299,7 +405,6 @@ const styles = StyleSheet.create({
         color: '#d93025',
     },
     closeButton: {
-        backgroundColor: AppColors.backgroundSecondary,
         padding: Spacing.md,
         borderRadius: 8,
         alignItems: 'center',

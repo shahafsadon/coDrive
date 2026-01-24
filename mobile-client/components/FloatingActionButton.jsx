@@ -1,23 +1,56 @@
-/**
- * FloatingActionButton (FAB) Component
- * Shows create menu for files and folders
- * Simplified version matching Google Drive mobile
- */
-
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Modal,
+    Platform,
+    ActionSheetIOS,
+} from 'react-native';
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { AppColors, Typography, Spacing } from '@/constants/appStyles';
 
-export function FloatingActionButton({ 
-    onUploadFile, 
-    onUploadImage,
-    onCreateTextFile,
-    onCreateFolder
-}) {
+export function FloatingActionButton({
+                                         onUploadFile,
+                                         onUploadImage,
+                                         onCreateTextFile,
+                                         onCreateFolder,
+                                     }) {
     const [menuVisible, setMenuVisible] = useState(false);
 
-    const toggleMenu = () => {
-        setMenuVisible(!menuVisible);
+    const openMenu = () => {
+        if (Platform.OS === 'ios') {
+            ActionSheetIOS.showActionSheetWithOptions(
+                {
+                    options: [
+                        'Cancel',
+                        'Upload file',
+                        'Upload image',
+                        'Create text file',
+                        'Create folder',
+                    ],
+                    cancelButtonIndex: 0,
+                },
+                (index) => {
+                    switch (index) {
+                        case 1:
+                            onUploadFile && onUploadFile();
+                            break;
+                        case 2:
+                            onUploadImage && onUploadImage();
+                            break;
+                        case 3:
+                            onCreateTextFile && onCreateTextFile();
+                            break;
+                        case 4:
+                            onCreateFolder && onCreateFolder();
+                            break;
+                    }
+                }
+            );
+        } else {
+            setMenuVisible(true);
+        }
     };
 
     const handleAction = (action) => {
@@ -27,8 +60,8 @@ export function FloatingActionButton({
 
     return (
         <View style={styles.container}>
-            {/* Menu Modal */}
-            {menuVisible && (
+            {/* Android menu */}
+            {Platform.OS !== 'ios' && (
                 <Modal
                     transparent
                     visible={menuVisible}
@@ -39,7 +72,8 @@ export function FloatingActionButton({
                         style={styles.backdrop}
                         activeOpacity={1}
                         onPress={() => setMenuVisible(false)}
-                    >
+                    />
+                    <View style={styles.menuContainer}>
                         <View style={styles.menu}>
                             <TouchableOpacity
                                 style={styles.menuItem}
@@ -64,7 +98,7 @@ export function FloatingActionButton({
                                 <Text style={styles.menuIcon}>📄</Text>
                                 <Text style={styles.menuText}>Create text file</Text>
                             </TouchableOpacity>
-                            
+
                             <TouchableOpacity
                                 style={styles.menuItem}
                                 onPress={() => handleAction(onCreateFolder)}
@@ -73,17 +107,13 @@ export function FloatingActionButton({
                                 <Text style={styles.menuText}>Create folder</Text>
                             </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                 </Modal>
             )}
 
-            {/* Main FAB Button */}
-            <TouchableOpacity
-                style={[styles.fab, menuVisible && styles.fabActive]}
-                onPress={toggleMenu}
-                activeOpacity={0.9}
-            >
-                <Text style={styles.fabIcon}>{menuVisible ? '✕' : '+'}</Text>
+            {/* FAB */}
+            <TouchableOpacity style={styles.fab} onPress={openMenu}>
+                <Text style={styles.fabIcon}>+</Text>
             </TouchableOpacity>
         </View>
     );
@@ -103,37 +133,27 @@ const styles = StyleSheet.create({
         backgroundColor: AppColors.primary,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
         elevation: 8,
-    },
-    fabActive: {
-        backgroundColor: AppColors.primaryDark,
     },
     fabIcon: {
         fontSize: 28,
-        color: AppColors.white,
+        color: '#fff',
         fontWeight: 'bold',
     },
     backdrop: {
         flex: 1,
-        justifyContent: 'flex-end',
-        alignItems: 'flex-end',
         backgroundColor: 'rgba(0,0,0,0.3)',
-        paddingRight: Spacing.lg,
-        paddingBottom: 100,
+    },
+    menuContainer: {
+        position: 'absolute',
+        bottom: 100,
+        right: Spacing.lg,
     },
     menu: {
         backgroundColor: AppColors.white,
         borderRadius: 12,
         paddingVertical: Spacing.sm,
         minWidth: 200,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
         elevation: 10,
     },
     menuItem: {
@@ -143,7 +163,7 @@ const styles = StyleSheet.create({
         paddingVertical: Spacing.md,
     },
     menuIcon: {
-        fontSize: 24,
+        fontSize: 22,
         marginRight: Spacing.md,
     },
     menuText: {
