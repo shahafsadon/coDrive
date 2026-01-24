@@ -7,19 +7,24 @@ import { Platform } from 'react-native';
  * Get API base URL based on environment and platform
  */
 const getAPIBaseURL = () => {
-    // ENV
+    // 1. ENV always wins
     if (process.env.EXPO_PUBLIC_API_URL) {
-        logger.debug('API', `Using API URL from env: ${process.env.EXPO_PUBLIC_API_URL}`);
+        logger.debug(
+            'API',
+            `Using API URL from env: ${process.env.EXPO_PUBLIC_API_URL}`
+        );
         return process.env.EXPO_PUBLIC_API_URL;
     }
 
+    // 2. Web fallback
     if (Platform.OS === 'web') {
         return 'http://localhost:3000/api';
     }
 
-    //  Expo Go
-    return 'http://192.168.1.31:3000/api';
+    // 3. Emulator fallback (Android)
+    return 'http://10.0.2.2:3000/api';
 };
+
 
 
 const API_BASE_URL = getAPIBaseURL();
