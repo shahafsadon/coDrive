@@ -21,37 +21,10 @@ if (!process.env.MONGO_URI) {
 
 // Enable CORS for all origins in development
 // In production, specify allowed origins
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // Allow localhost and development URLs
-        const corsOptions = {
-            origin: true,
-            credentials: true,
-        };
-
-        const isAllowed = allowedOrigins.some(allowed => {
-            if (allowed instanceof RegExp) {
-                return allowed.test(origin);
-            }
-            return origin === allowed;
-        });
-        
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            console.warn(`CORS: Blocked request from origin: ${origin}`);
-            callback(null, true); // Allow anyway for development
-        }
-    },
+app.use(cors({
+    origin: true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-user-id'],
-};
-
-app.use(cors(corsOptions));
+}));
 
 app.use(express.json({
     type: ['application/json', 'application/*+json'],
