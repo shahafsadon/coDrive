@@ -184,4 +184,5 @@ It integrates authentication, file management, sharing, and modern UI features w
 
 Further details on running the system and demonstrating the implemented features
 are provided in the following Wiki sections.
+
 ← [Back to Wiki Home](./README.md)
